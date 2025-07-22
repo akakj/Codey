@@ -17,15 +17,6 @@ const About = () => {
         And this is where we are right now. I hope you enjoy this website!
       </p>
     </article>
-
-    /* <div
-      className="min-h-screen
-        bg-gradient-to-br 
-        from-green-200 
-        via-blue-200 
-        to-white
-        text-gray-900"
-    >*/
   );
 };
 
