@@ -17,10 +17,10 @@ const Navbar = () => {
           />
         </Link>
         <Link
-          href="/questions"
+          href="/problems"
           className="text-gray-600 hover:text-gray-900 dark:text-[#c9c6c5] dark:hover:text-white transition-colors"
         >
-          Questions
+          Problems
         </Link>
         <Link
           href="/about"

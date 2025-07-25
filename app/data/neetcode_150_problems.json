@@ -1,0 +1,64 @@
+{
+  "problems": [
+    {
+      "problemID": 1,
+      "title": "Contains Duplicate",
+      "difficulty": "Easy",
+      "description": "Given an integer array nums, return true if any value appears at least twice in the array, and return false if every element is distinct.",
+      "hints": [
+        "Try using a HashSet to store seen numbers",
+        "Compare the length of the set with the length of the array"
+      ],
+      "solutions": [],
+      "algorithm": "Arrays & Hashing"
+    },
+    {
+      "problemID": 2,
+      "title": "Valid Anagram",
+      "difficulty": "Easy",
+      "description": "Given two strings s and t, return true if t is an anagram of s, and false otherwise. An Anagram is a word or phrase formed by rearranging the letters of a different word or phrase, typically using all the original letters exactly once.",
+      "hints": [
+        "Try using a character frequency counter",
+        "Could you solve it using sorting?"
+      ],
+      "solutions": [],
+      "algorithm": "Arrays & Hashing"
+    },
+    {
+      "problemID": 3,
+      "title": "Two Sum",
+      "difficulty": "Easy",
+      "description": "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target. You may assume that each input would have exactly one solution, and you may not use the same element twice.",
+      "hints": [
+        "Try using a hash map to store complements",
+        "For each number, check if its complement exists in the hash map"
+      ],
+      "solutions": [],
+      "algorithm": "Arrays & Hashing"
+    },
+    {
+      "problemID": 4,
+      "title": "Group Anagrams",
+      "difficulty": "Medium",
+      "description": "Given an array of strings strs, group the anagrams together. You can return the answer in any order.",
+      "hints": [
+        "Think about how to identify anagrams efficiently",
+        "Could you use sorted strings as keys in a hash map?"
+      ],
+      "solutions": [],
+      "algorithm": "Arrays & Hashing"
+    },
+    {
+      "problemID": 5,
+      "title": "Top K Frequent Elements",
+      "difficulty": "Medium",
+      "description": "Given an integer array nums and an integer k, return the k most frequent elements. You may return the answer in any order.",
+      "hints": [
+        "Use a hash map to count frequencies",
+        "Consider using a heap or bucket sort"
+      ],
+      "solutions": [],
+      "algorithm": "Arrays & Hashing"
+    }
+  ]
+}
