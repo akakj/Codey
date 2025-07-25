@@ -59,6 +59,150 @@
       ],
       "solutions": [],
       "algorithm": "Arrays & Hashing"
+    },
+     {
+      "problemID": 6,
+      "title": "Product of Array Except Self",
+      "difficulty": "Medium",
+      "description": "Given an integer array nums, return an array answer such that answer[i] is equal to the product of all the elements of nums except nums[i]. The product of any prefix or suffix of nums is guaranteed to fit in a 32-bit integer.",
+      "hints": [
+        "Could you solve it without using division?",
+        "Think about using prefix and suffix products"
+      ],
+      "solutions": [],
+      "algorithm": "Arrays & Hashing"
+    },
+    {
+      "problemID": 7,
+      "title": "Valid Sudoku",
+      "difficulty": "Medium",
+      "description": "Determine if a 9 x 9 Sudoku board is valid. Only the filled cells need to be validated according to the following rules: Each row must contain the digits 1-9 without repetition, each column must contain the digits 1-9 without repetition, and each of the nine 3 x 3 sub-boxes of the grid must contain the digits 1-9 without repetition.",
+      "hints": [
+        "Consider using hash sets for each row, column, and 3x3 box",
+        "How can you efficiently check all three rules at once?"
+      ],
+      "solutions": [],
+      "algorithm": "Arrays & Hashing"
+    },
+    {
+      "problemID": 8,
+      "title": "Encode and Decode Strings",
+      "difficulty": "Medium",
+      "description": "Design an algorithm to encode a list of strings to a string. The encoded string is then sent over the network and is decoded back to the original list of strings.",
+      "hints": [
+        "Think about how to handle delimiter conflicts",
+        "Could you include the length of each string in the encoding?"
+      ],
+      "solutions": [],
+      "algorithm": "Arrays & Hashing"
+    },
+    {
+      "problemID": 9,
+      "title": "Longest Consecutive Sequence",
+      "difficulty": "Medium",
+      "description": "Given an unsorted array of integers nums, return the length of the longest consecutive elements sequence. You must write an algorithm that runs in O(n) time.",
+      "hints": [
+        "Try using a hash set to store all numbers",
+        "For each number, check if it's the start of a sequence"
+      ],
+      "solutions": [],
+      "algorithm": "Arrays & Hashing"
+    },
+    {
+      "problemID": 10,
+      "title": "Valid Palindrome",
+      "difficulty": "Easy",
+      "description": "A phrase is a palindrome if, after converting all uppercase letters into lowercase letters and removing all non-alphanumeric characters, it reads the same forward and backward. Given a string s, return true if it is a palindrome, or false otherwise.",
+      "hints": [
+        "Use two pointers from both ends",
+        "Consider using string cleaning functions"
+      ],
+      "solutions": [],
+      "algorithm": "Two Pointers"
+    },
+    {
+      "problemID": 11,
+      "title": "Two Sum II",
+      "difficulty": "Medium",
+      "description": "Given a 1-indexed array of integers numbers that is already sorted in non-decreasing order, find two numbers such that they add up to a specific target number.",
+      "hints": [
+        "Use the sorted property of the array",
+        "Try using two pointers from both ends"
+      ],
+      "solutions": [],
+      "algorithm": "Two Pointers"
+    },
+    {
+      "problemID": 12,
+      "title": "3Sum",
+      "difficulty": "Medium",
+      "description": "Given an integer array nums, return all triplets [nums[i], nums[j], nums[k]] such that i != j, i != k, and j != k, and nums[i] + nums[j] + nums[k] == 0. The solution set must not contain duplicate triplets.",
+      "hints": [
+        "Try sorting the array first",
+        "Use two pointers after fixing one number"
+      ],
+      "solutions": [],
+      "algorithm": "Two Pointers"
+    },
+    {
+      "problemID": 13,
+      "title": "Container With Most Water",
+      "difficulty": "Medium",
+      "description": "You are given an integer array height of length n. There are n vertical lines drawn such that the two endpoints of the ith line are (i, 0) and (i, height[i]). Find two lines that together with the x-axis form a container, such that the container contains the most water.",
+      "hints": [
+        "Try using two pointers at both ends",
+        "Move the pointer with the smaller height inward"
+      ],
+      "solutions": [],
+      "algorithm": "Two Pointers"
+    },
+    {
+      "problemID": 14,
+      "title": "Trapping Rain Water",
+      "difficulty": "Hard",
+      "description": "Given n non-negative integers representing an elevation map where the width of each bar is 1, compute how much water it can trap after raining.",
+      "hints": [
+        "Think about using two arrays for left and right max heights",
+        "Could you solve it using two pointers?"
+      ],
+      "solutions": [],
+      "algorithm": "Two Pointers"
+    },
+    {
+      "problemID": 15,
+      "title": "Best Time to Buy and Sell Stock",
+      "difficulty": "Easy",
+      "description": "You are given an array prices where prices[i] is the price of a given stock on the ith day. You want to maximize your profit by choosing a single day to buy one stock and choosing a different day in the future to sell that stock. Return the maximum profit you can achieve from this transaction.",
+      "hints": [
+        "Track the minimum price seen so far",
+        "Calculate profit at each step using current price minus minimum"
+      ],
+      "solutions": [],
+      "algorithm": "Sliding Window"
+    },
+    {
+      "problemID": 16,
+      "title": "Longest Substring Without Repeating Characters",
+      "difficulty": "Medium",
+      "description": "Given a string s, find the length of the longest substring without repeating characters.",
+      "hints": [
+        "Use a sliding window with a hash set",
+        "Move the window's start pointer when finding a duplicate"
+      ],
+      "solutions": [],
+      "algorithm": "Sliding Window"
+    },
+    {
+      "problemID": 17,
+      "title": "Longest Repeating Character Replacement",
+      "difficulty": "Medium",
+      "description": "You are given a string s and an integer k. You can choose any character of the string and change it to any other uppercase English character. You can perform this operation at most k times. Return the length of the longest substring containing the same letter you can get after performing the above operations.",
+      "hints": [
+        "Track frequency of characters in current window",
+        "Window size - most frequent char ≤ k"
+      ],
+      "solutions": [],
+      "algorithm": "Sliding Window"
     }
   ]
 }

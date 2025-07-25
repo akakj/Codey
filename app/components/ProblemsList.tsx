@@ -1,6 +1,9 @@
 'use client';
 import React, { useState, useMemo } from "react";
 import SearchBar from "./SearchBar";
+import { cn } from "@/lib/utils";
+import { getDifficulty } from "@/lib/difficulty";
+
 
 interface Problem {
   problemID: number;
@@ -70,15 +73,21 @@ export default function ProblemsList({ problems }: ProblemsListProps) {
       />
 
       <ul>
-        {filtered.map((p) => (
-          <li
-            key={p.problemID}
-            className="mb-2 border-b pb-2 flex justify-between items-center"
-          >
-            <span className="font-semibold text-lg">{p.title}</span>
-            <span className="text-sm text-gray-500">{p.difficulty}</span>
-          </li>
-        ))}
+        {filtered.map((p) => {
+          const colorClass = getDifficulty(p.difficulty);
+
+          return (
+            <li
+              key={p.problemID}
+              className="mb-2 border-b pb-2 flex justify-between items-center"
+            >
+              <span className="font-semibold text-lg">{p.title}</span>
+              <span className={cn("text-sm font-medium", colorClass)}>
+                {p.difficulty}
+              </span>
+            </li>
+          )
+        })}
       </ul>
     </div>
   );

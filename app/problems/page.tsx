@@ -4,7 +4,7 @@ import problemsData from "../data/neetcode_150_problems.json";
 
 const ProblemsPage = () => {
   const problems = problemsData.problems;
-  return <div className = "p-4">
+  return <div className = "pt-4 px-10 sm:px-6 lg:px-18">
     <ProblemsList problems={ problems } />
   </div>;
 };
