@@ -1,8 +1,9 @@
-"use client";
+'use client';
 import React, { useState, useMemo } from "react";
 import SearchBar from "./SearchBar";
 import { cn } from "@/lib/utils";
 import { getDifficulty } from "@/lib/difficulty";
+import { SortableHeader } from "./SortableHeader";
 
 interface Problem {
   problemID: number;
@@ -18,6 +19,24 @@ export default function ProblemsList({ problems }: ProblemsListProps) {
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<string[]>([]);
   const [sort, setSort] = useState("");
+
+  type SortColumn = { type: 'alpha' | 'difficulty'; label: string };
+  const columns: SortColumn[] = [
+    { type: 'alpha',      label: 'Problem'    },
+    { type: 'difficulty', label: 'Difficulty' },
+  ];
+
+  const handleSortClick = (type: 'alpha' | 'difficulty') => {
+    const asc = `${type}-asc`;
+    const desc = `${type}-desc`;
+    if (sort === '') {
+      setSort(asc);
+    } else if (sort === asc) {
+      setSort(desc);
+    } else {
+      setSort('');
+    }
+  };
 
   const filtered = useMemo(() => {
     let list = problems;
@@ -78,18 +97,15 @@ export default function ProblemsList({ problems }: ProblemsListProps) {
                   md:text-base">
           <thead className="bg-muted/25 dark:bg-muted/30">
             <tr>
-              <th
-                scope="col"
-                className="px-4 py-2 text-left text-sm font-medium text-gray-500 dark:text-gray-400"
-              >
-                Problem Name
-              </th>
-              <th
-                scope="col"
-                className="px-4 py-2 text-left text-sm font-medium text-gray-500 dark:text-gray-400"
-              >
-                Difficulty
-              </th>
+              {columns.map(col => (
+                <SortableHeader
+                  key={col.type}
+                  type={col.type}
+                  label={col.label}
+                  sort={sort}
+                  onSortClick={handleSortClick}
+                />
+              ))}
             </tr>
           </thead>
           <tbody>

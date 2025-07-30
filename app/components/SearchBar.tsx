@@ -1,9 +1,11 @@
-"use client";
+'use client';
 import React from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { getDifficulty } from "@/lib/difficulty";
+import { Input } from "@/components/ui/input";
+import { TbSearch } from "react-icons/tb";
 
 interface SearchBarProps {
   search: string;
@@ -17,10 +19,8 @@ interface SearchBarProps {
 export default function SearchBar({
   search,
   filters,
-  sort,
   onSearchChange,
   onFiltersChange,
-  onSortChange,
 }: SearchBarProps) {
   const difficulties = ["Easy", "Medium", "Hard"];
 
@@ -34,13 +34,21 @@ export default function SearchBar({
 
   return (
     <div className="flex items-center justify-between mb-4">
-      <input
-        type="text"
-        placeholder="Search for a problem..."
-        value={search}
-        onChange={(e) => onSearchChange(e.target.value)}
-        className="border rounded-lg px-2 py-1 flex-grow mr-4 ui-elements"
-      />
+      {/* search input with icon */}
+      <div className="relative w-full max-w-[350px] mr-4">
+        <TbSearch
+          className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500"
+          size={20}
+        />
+        <Input
+          type="text"
+          placeholder="Search for a problem..."
+          value={search}
+          onChange={(e) => onSearchChange(e.target.value)}
+          className="w-full border rounded-xl pl-10 pr-2 py-1 ui-elements"
+        />
+      </div>
+
 
       <div className="flex items-center space-x-6 mr-4">
         {difficulties.map((d) => {
@@ -63,20 +71,7 @@ export default function SearchBar({
         })}
       </div>
 
-      <select
-        value={sort}
-        onChange={(e) => onSortChange(e.target.value)}
-        className="w-32 px-2 py-1 rounded-lg border ui-elements"
-      >
-        <option value="" disabled hidden>
-          Sort By
-        </option>
-        <option value="">Default</option>
-        <option value="difficulty-asc">Difficulty ↑</option>
-        <option value="difficulty-desc">Difficulty ↓</option>
-        <option value="alpha-asc">Alphabetical (a–z)</option>
-        <option value="alpha-desc">Alphabetical (z–a)</option>
-      </select>
+      
     </div>
   );
 }

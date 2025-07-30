@@ -142,6 +142,8 @@ body[data-scroll-locked] {
 
 @layer utilities {
   .ui-elements {
-    @apply border-[#8b8d93] dark:border-[#a8b0bc];
+    @apply border-[#93959c] dark:border-[#828a97];
   }
 }
+
+
