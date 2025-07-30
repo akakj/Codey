@@ -1,9 +1,8 @@
-'use client';
+"use client";
 import React, { useState, useMemo } from "react";
 import SearchBar from "./SearchBar";
 import { cn } from "@/lib/utils";
 import { getDifficulty } from "@/lib/difficulty";
-
 
 interface Problem {
   problemID: number;
@@ -72,23 +71,50 @@ export default function ProblemsList({ problems }: ProblemsListProps) {
         onSortChange={setSort}
       />
 
-      <ul>
-        {filtered.map((p) => {
-          const colorClass = getDifficulty(p.difficulty);
-
-          return (
-            <li
-              key={p.problemID}
-              className="mb-2 border-b pb-2 flex justify-between items-center"
-            >
-              <span className="font-semibold text-lg">{p.title}</span>
-              <span className={cn("text-sm font-medium", colorClass)}>
-                {p.difficulty}
-              </span>
-            </li>
-          )
-        })}
-      </ul>
+      <div className="mt-4 overflow-hidden rounded-md border border-border">
+        <table className="min-w-full divide-y divide-border
+                  text-xs 
+                  sm:text-sm   
+                  md:text-base">
+          <thead className="bg-muted/25 dark:bg-muted/30">
+            <tr>
+              <th
+                scope="col"
+                className="px-4 py-2 text-left text-sm font-medium text-gray-500 dark:text-gray-400"
+              >
+                Problem Name
+              </th>
+              <th
+                scope="col"
+                className="px-4 py-2 text-left text-sm font-medium text-gray-500 dark:text-gray-400"
+              >
+                Difficulty
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {filtered.map((p) => {
+              const colorClass = getDifficulty(p.difficulty);
+              return (
+                <tr
+                  key={p.problemID}
+                  className="even:bg-muted/20 dark:even:bg-muted/30 font-semibold"
+                >
+                  <td className="px-4 py-3 whitespace-nowrap">{p.title}</td>
+                  <td
+                    className={cn(
+                      "px-4 py-3 whitespace-nowrap text-sm font-semibold",
+                      colorClass
+                    )}
+                  >
+                    {p.difficulty}
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

@@ -35,7 +35,7 @@ export default function AboutLayout({ children }: AboutLayoutProps) {
       `
       }
     >
-      <div className="pt-20 px-10 sm:px-6 lg:px-8">{children}</div>
+      <div className="pt-20 sm:px-15 xs:px-6 lg:px-40">{children}</div>
     </section>
   );
 }

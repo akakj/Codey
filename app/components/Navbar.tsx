@@ -32,12 +32,12 @@ const Navbar = () => {
 
       {/* Right: theme toggle + account */}
       <div className="flex items-center space-x-4">
-        {/* 1️⃣ Theme toggle */}
+        {/*Theme toggle */}
         <div>
           <ThemeToggle />
         </div>
 
-        {/* 2️⃣ Account link */}
+        {/* Account link */}
         <div>
           <Link
             href="/account"
