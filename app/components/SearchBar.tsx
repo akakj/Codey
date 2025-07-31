@@ -6,6 +6,14 @@ import { cn } from "@/lib/utils";
 import { getDifficulty } from "@/lib/difficulty";
 import { Input } from "@/components/ui/input";
 import { TbSearch } from "react-icons/tb";
+import {
+  Popover,
+  PopoverTrigger,
+  PopoverContent,
+} from "@/components/ui/popover";
+
+import { Button } from "@/components/ui/button";
+import { FiFilter } from "react-icons/fi";
 
 interface SearchBarProps {
   search: string;
@@ -50,26 +58,47 @@ export default function SearchBar({
       </div>
 
 
-      <div className="flex items-center space-x-6 mr-4">
-        {difficulties.map((d) => {
-          const id = `difficulty-${d.toLowerCase()}`;
-          const colorClass = getDifficulty(d as "Easy" | "Medium" | "Hard");
-
-          return (
-            <div key={d} className="flex items-center space-x-2">
-              <Checkbox
-                id={id}
-                checked={filters.includes(d)}
-                onCheckedChange={() => toggleDifficulty(d)}
-                className="ui-elements"
-              />
-              <Label htmlFor={id} className={cn("font-semibold", colorClass)}>
-                {d}
-              </Label>
-            </div>
-          );
-        })}
-      </div>
+      <Popover>
+        <PopoverTrigger asChild>
+          <Button variant="outline" size="icon" className= "cursor-pointer text-gray-600 dark:text-gray-300 border rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700">
+            <FiFilter size={20} />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent
+          align="start"
+          side="bottom"
+          className="w-48 bg-gray-100 dark:bg-slate-800 p-4 rounded-xl shadow-lg"
+        >
+          <h3 className="text-sm font-semibold mb-2 text-gray-700 dark:text-gray-200">
+            Difficulty
+          </h3>
+          <div className="flex flex-col space-y-2">
+            {difficulties.map((d) => {
+              const id = `filter-${d.toLowerCase()}`;
+              const colorClass = getDifficulty(d as "Easy" | "Medium" | "Hard");
+              const checked = filters.includes(d);
+              return (
+                <div key={d} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={id}
+                    checked={checked}
+                    onCheckedChange={() => toggleDifficulty(d)}
+                  />
+                  <Label
+                    htmlFor={id}
+                    className={cn(
+                      "cursor-pointer",
+                      checked ? colorClass : "text-gray-700 dark:text-gray-300"
+                    )}
+                  >
+                    {d}
+                  </Label>
+                </div>
+              );
+            })}
+          </div>
+        </PopoverContent>
+      </Popover>
 
       
     </div>
