@@ -4,7 +4,7 @@ const About = () => {
   return (
     <article>
       <h1 className="text-2xl left-2 font-semibold">About this Website</h1>
-      <p className="pt-2 font-sans font-medium">
+      <p className="pt-2 font-sans font-normal">
         This website was created by a computer-science student preparing for
         technical interviews for job and internship applications. After solving
         a few LeetCode problems and discovering NeetCode, I decided to create my
