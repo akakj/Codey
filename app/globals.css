@@ -52,7 +52,8 @@ html {
 }
 
 body {
-  padding: 1rem;
+  margin: 0;
+  padding: 0;
 }
 
 :root {
@@ -129,7 +130,6 @@ body[data-scroll-locked] {
   margin-right: 0 !important;
   padding-right: 0 !important;
 }
-
 
 @layer base {
   * {

@@ -4,9 +4,11 @@ import SearchBar from "./SearchBar";
 import { cn } from "@/lib/utils";
 import { getDifficulty } from "@/lib/difficulty";
 import { SortableHeader } from "./SortableHeader";
+import Link from "next/link";
 
 interface Problem {
   problemID: number;
+  slug: string;
   title: string;
   difficulty: string;
 }
@@ -116,7 +118,11 @@ export default function ProblemsList({ problems }: ProblemsListProps) {
                   key={p.problemID}
                   className="even:bg-muted/20 dark:even:bg-muted/30 font-semibold"
                 >
-                  <td className="px-4 py-3 whitespace-nowrap">{p.title}</td>
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <Link href={`/problems/${p.slug}`} className="hover:text-blue-700 dark:hover:text-blue-300">
+                      {p.title}
+                    </Link>
+                    </td>
                   <td
                     className={cn(
                       "px-4 py-3 whitespace-nowrap text-sm font-semibold",
