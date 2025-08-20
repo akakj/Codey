@@ -1,19 +1,20 @@
 import React from 'react';
 import { notFound } from "next/navigation";
 import ProblemWorkspace from "@/app/components/ProblemWorkspace/ProblemWorkspace";
-import problemsData from "@/app/data/neetcode_150_problems.json";
+import rawData from "@/app/data/neetcode_150_problems.json";
+import { ProblemsFile } from "@/lib/problem";
 import { StarterMap } from "@/lib/languages"
 
 export default function ProblemPage({ params }: { params: { slug: string } }) {
-  const problem = problemsData.problems.find((p: any) => p.slug === params.slug);
+  const data = rawData as ProblemsFile;
+  const problem = data.problems.find(p => p.slug === params.slug);
   if (!problem) return notFound();
   
-   const starterCodeByLang: StarterMap = problem.starterCode ?? {};
 
   return (
     <ProblemWorkspace
       problem={{
-        id: problem.problemID,
+        problemID: problem.problemID,
         slug: problem.slug,
         title: problem.title,
         difficulty: problem.difficulty,
@@ -23,7 +24,7 @@ export default function ProblemPage({ params }: { params: { slug: string } }) {
         hints: problem.hints,
         testCases: problem.testCases,
         algorithm: problem.algorithm,
-        starterCodeByLang,
+        starterCode: problem.starterCode,
       }}
     />
   );

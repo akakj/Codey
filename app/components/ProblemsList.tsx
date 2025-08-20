@@ -2,22 +2,12 @@
 import React, { useState, useMemo } from "react";
 import SearchBar from "./SearchBar";
 import { cn } from "@/lib/utils";
+import { ProblemsFile } from "@/lib/problem";
 import { getDifficulty } from "@/lib/difficulty";
 import { SortableHeader } from "./SortableHeader";
 import Link from "next/link";
 
-interface Problem {
-  problemID: number;
-  slug: string;
-  title: string;
-  difficulty: string;
-}
-
-interface ProblemsListProps {
-  problems: Problem[];
-}
-
-export default function ProblemsList({ problems }: ProblemsListProps) {
+export default function ProblemsList({ problems }: ProblemsFile) {
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<string[]>([]);
   const [sort, setSort] = useState("");

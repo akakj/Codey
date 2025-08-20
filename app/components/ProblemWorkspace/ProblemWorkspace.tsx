@@ -1,27 +1,13 @@
 import React from 'react';
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import { Problem } from "@/lib/problem";
 import { getDifficulty } from "@/lib/difficulty";
 import ProblemData from './ProblemData';
 import CodeEditor from './CodeEditor'; 
 import ConsoleCases from './ConsoleCases';
 
-type Lang = "javascript" | "python3" | "java" | "csharp";
-type StarterMap = Partial<Record<Lang, string>>;
-type WorkspaceProblem = {
-  id: number;
-  slug: string;
-  title: string;
-  difficulty: string;
-  description: string;
-  sampleTestCase: string;
-  examples: string[];
-  hints: string[],
-  testCases: { input: any; output: any }[];
-  starterCodeByLang: StarterMap;
-  algorithm?: string;
-};
 
-export default function ProblemWorkspace({ problem }: { problem: WorkspaceProblem }) {
+export default function ProblemWorkspace({ problem }: { problem: Problem }) {
   return (
     <div className="px-[2px] sm:px-[5px] py-[2px] sm:py-[5px]">
     <div className="w-full h-[91dvh] rounded-lg border overflow-hidden ">
