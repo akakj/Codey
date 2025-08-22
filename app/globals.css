@@ -46,9 +46,7 @@
 html {
   @apply text-xs      
             sm:text-sm  
-            md:text-base
-            
-            
+            md:text-base;
 }
 
 body {
@@ -61,7 +59,7 @@ body {
   --background: #f4f4f4;
   --foreground: #0a0a0a;
   --card: #ffffff;
-  --card-foreground: #0a0a0a;
+  --card-foreground: #d9cbcb;
   --popover: #ffffff;
   --popover-foreground: #0a0a0a;
   --primary: #171717;
@@ -131,6 +129,42 @@ body[data-scroll-locked] {
   padding-right: 0 !important;
 }
 
+.prose .example-block {
+  border: 1px solid hsl(var(--border));
+  background: hsl(var(--muted));
+  border-radius: 0.5rem;
+  padding: 0.75rem 1rem;
+  margin: 0.75rem 0;
+}
+
+.prose .example-io {
+  font-family: var(
+    --font-mono,
+    ui-monospace,
+    SFMono-Regular,
+    Menlo,
+    Monaco,
+    Consolas,
+    "Liberation Mono",
+    "Courier New",
+    monospace
+  );
+  white-space: pre-wrap;
+}
+
+.prose code {
+  padding: 0.1em 0.3em;
+  border-radius: 0.3rem;
+  border-width: 1px;
+  border-color:#545454;
+  background: #60606038;
+}
+
+.dark .prose code {
+  border-color:#737373;
+  background: #2222228d;
+}
+
 @layer base {
   * {
     @apply border-border outline-ring/50;
@@ -145,5 +179,3 @@ body[data-scroll-locked] {
     @apply border-[#93959c] dark:border-[#828a97];
   }
 }
-
-
