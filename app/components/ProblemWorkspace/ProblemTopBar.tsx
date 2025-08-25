@@ -1,152 +1,254 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
+import { useMemo, useState } from "react";
+import rawData from "@/app/data/neetcode_150_problems.json";
+import type { ProblemsFile, ProblemLite } from "@/lib/problem";
+import { ThemeToggle } from "../ThemeToggle";
+import { getDifficulty } from "@/lib/difficulty";
+import { cn } from "@/lib/utils";
+
 import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import { ChevronLeft, ChevronRight, Home, ListOrdered } from "lucide-react";
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { ChevronLeft, ChevronRight, List, Search, Funnel } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
-import problemsJson from "@/app/data/neetcode_150_problems.json";
-// If you already have a ProblemsFile type, you can import it and cast:
-// import type { ProblemsFile } from "@/lib/problem";
-// const data = problemsJson as ProblemsFile;
+import { SortableHeader } from "@/app/components/SortableHeader";
 
-type ProblemLite = {
-  problemID: number;
-  slug: string;
-  title: string;
-  difficulty: "Easy" | "Medium" | "Hard" | string;
-};
+export default function ProblemTopBar({
+  currentSlug,
+}: {
+  currentSlug: string;
+}) {
+  const data = rawData as ProblemsFile;
 
-export default function ProblemTopBar({ currentSlug }: { currentSlug: string }) {
-  const router = useRouter();
-  const problems = (problemsJson as any).problems as ProblemLite[];
+  const problems: ProblemLite[] = useMemo(
+    () =>
+      data.problems.map((p) => ({
+        problemID: p.problemID,
+        slug: p.slug,
+        title: p.title,
+        difficulty: p.difficulty,
+      })),
+    [data]
+  );
 
-  const idx = useMemo(
+  const index = useMemo(
     () => problems.findIndex((p) => p.slug === currentSlug),
     [problems, currentSlug]
   );
 
-  const atFirst = idx <= 0;
-  const atLast = idx < 0 || idx >= problems.length - 1;
+  const prev = index > 0 ? problems[index - 1] : null;
+  const next =
+    index >= 0 && index < problems.length - 1 ? problems[index + 1] : null;
 
-  const goPrev = () => !atFirst && router.push(`/problems/${problems[idx - 1].slug}`);
-  const goNext = () => !atLast && router.push(`/problems/${problems[idx + 1].slug}`);
+  const difficulties = ["Easy", "Medium", "Hard"] as const;
+  type Difficulty = typeof difficulties[number];
 
-  // Browse overlay state (Dialog can also manage its own state via open/onOpenChange)
-  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const [filters, setFilters] = useState<Difficulty[]>([]);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [sort, setSort] = useState("");
+
+  const toggleDifficulty = (d: Difficulty) =>
+  setFilters((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]));
+
+
+  const handleSortClick = (type: "alpha" | "difficulty") => {
+    const asc = `${type}-asc`;
+    const desc = `${type}-desc`;
+    setSort((s) => (s === "" ? asc : s === asc ? desc : ""));
+  };
+
+  const filteredSorted = useMemo(() => {
+    let list = problems;
+    const s = q.trim().toLowerCase();
+    if (s) list = list.filter((p) => p.title.toLowerCase().includes(s) || p.slug.toLowerCase().includes(s));
+
+    if (filters.length)
+      list = list.filter((p) => filters.includes(p.difficulty as Difficulty));
+    if (sort) {
+      const order: Record<string, number> = { Easy: 1, Medium: 2, Hard: 3 };
+      if (sort === "alpha-asc")
+        list = [...list].sort((a, b) => a.title.localeCompare(b.title));
+      if (sort === "alpha-desc")
+        list = [...list].sort((a, b) => b.title.localeCompare(a.title));
+      if (sort === "difficulty-asc")
+        list = [...list].sort(
+          (a, b) => order[a.difficulty] - order[b.difficulty]
+        );
+      if (sort === "difficulty-desc")
+        list = [...list].sort(
+          (a, b) => order[b.difficulty] - order[a.difficulty]
+        );
+    }
+    return list;
+  }, [problems, q, filters, sort]);
 
   return (
-    <div className="sticky top-0 z-30 w-full border-b bg-background/80 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="mx-auto flex h-12 items-center gap-2 px-3 sm:px-4">
-        {/* Left cluster: Home + Prev/Next */}
-        <div className="flex items-center gap-1">
-          <Button asChild variant="ghost" size="icon" aria-label="Home">
-            <Link href="/problems">
-              <Home className="h-5 w-5" />
+    <nav className="fixed top-0 inset-x-0 bg-white dark:bg-[#111111] shadow-sm h-16 z-50 flex items-center justify-between px-4 rounded-b-sm">
+      <div className="flex items-center space-x-4">
+        <Link href="/" className="flex-shrink-0" aria-label="Home">
+          <Image
+            src="/home-icon.png"
+            alt="Home"
+            width={32}
+            height={32}
+            priority
+          />
+        </Link>
+
+        <Sheet>
+          <SheetTrigger asChild>
+            <button className="text-gray-600 hover:text-gray-900 dark:text-[#c9c6c5] dark:hover:text-white transition-colors inline-flex items-center gap-2 hover:cursor-pointer">
+              <List className="h-4 w-4" />
+              <span>Problem List</span>
+            </button>
+          </SheetTrigger>
+          <SheetContent
+            side="left"
+            className="p-0 w-[100vw] max-w-none sm:max-w-none sm:w-[90vw] md:w-[70vw] lg:w-[60vw]"
+          >
+            <SheetHeader className="px-4 pt-3 pb-0 -mb-3">
+              <SheetTitle className="text-xl font-bold">
+                Problem List
+              </SheetTitle>
+            </SheetHeader>
+
+            <div className="px-3 py-2 border-b">
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1">
+                  <Search
+                    className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground"
+                    aria-hidden="true"
+                  />
+                  <Input
+                    value={q}
+                    onChange={(e) => setQ(e.target.value)}
+                    placeholder="Search for a problem..."
+                    className="h-9 pl-8 pr-2 rounded-xl text-sm w-full max-w-[360px]"
+                  />
+                </div>
+
+                
+              </div>
+            </div>
+
+            {/* Table container */}
+            <div className="px-4 py-3">
+              <div className="overflow-hidden rounded-md border border-border">
+                <div className="max-h-[calc(100vh-11rem)] overflow-auto">
+                  <table className="min-w-full text-sm">
+                    <thead className="sticky top-0 z-10 bg-gray-300 dark:bg-[#22272d]">
+                      <tr>
+                        <SortableHeader
+                          type="alpha"
+                          label="Problem"
+                          sort={sort}
+                          onSortClick={handleSortClick}
+                        />
+                        <SortableHeader
+                          type="difficulty"
+                          label="Difficulty"
+                          sort={sort}
+                          onSortClick={handleSortClick}
+                        />
+                      </tr>
+                    </thead>
+
+                    <tbody>
+                      {filteredSorted.map((p) => {
+                        const diffClass = getDifficulty(p.difficulty);
+                        const isCurrent = p.slug === currentSlug;
+                        return (
+                          <tr
+                            key={p.slug}
+                            className={cn(
+                              "hover:bg-muted/50",
+                              isCurrent &&
+                                "bg-gray-900 text-white dark:bg-white dark:text-black"
+                            )}
+                          >
+                            <td className="px-4 py-2">
+                              <Link
+                                href={`/problems/${p.slug}`}
+                                className="block truncate font-medium"
+                              >
+                                {p.title}
+                              </Link>
+                            </td>
+                            <td
+                              className={cn(
+                                "px-4 py-2 text-xs font-semibold",
+                                diffClass
+                              )}
+                            >
+                              {p.difficulty}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </SheetContent>
+        </Sheet>
+
+        {/* Prev / Next */}
+        <div className="hidden sm:flex items-center gap-1">
+          <Button
+            asChild
+            variant="ghost"
+            size="sm"
+            disabled={!prev}
+            className="gap-1"
+          >
+            <Link href={prev ? `/problems/${prev.slug}` : "#"} prefetch>
+              <ChevronLeft className="h-4 w-4" />
+              <span className="hidden md:inline"></span>
             </Link>
           </Button>
-
           <Button
+            asChild
             variant="ghost"
-            size="icon"
-            aria-label="Previous problem"
-            onClick={goPrev}
-            disabled={atFirst}
+            size="sm"
+            disabled={!next}
+            className="gap-1"
           >
-            <ChevronLeft className="h-5 w-5" />
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="icon"
-            aria-label="Next problem"
-            onClick={goNext}
-            disabled={atLast}
-          >
-            <ChevronRight className="h-5 w-5" />
+            <Link href={next ? `/problems/${next.slug}` : "#"} prefetch>
+              <span className="hidden md:inline"></span>
+              <ChevronRight className="h-4 w-4" />
+            </Link>
           </Button>
         </div>
-
-        <Separator orientation="vertical" className="mx-2 hidden h-6 sm:block" />
-
-        {/* Center: title + index */}
-        <div className="min-w-0 flex-1 truncate">
-          {idx >= 0 ? (
-            <div className="truncate text-sm sm:text-base">
-              <span className="font-medium">{problems[idx].title}</span>
-              <span className="ml-2 text-muted-foreground">
-                {idx + 1} / {problems.length}
-              </span>
-            </div>
-          ) : (
-            <div className="text-sm text-muted-foreground">Problem</div>
-          )}
-        </div>
-
-        <Separator orientation="vertical" className="mx-2 hidden h-6 sm:block" />
-
-        {/* Right: Browse overlay trigger */}
-        <Dialog open={open} onOpenChange={setOpen}>
-          <DialogTrigger asChild>
-            <Button size="sm" variant="outline" className="gap-2">
-              <ListOrdered className="h-4 w-4" />
-              Browse
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Browse Problems</DialogTitle>
-            </DialogHeader>
-
-            <Command shouldFilter>
-              <CommandInput placeholder="Search problems..." />
-              <CommandList>
-                <CommandEmpty>No results found.</CommandEmpty>
-                <CommandGroup heading="All">
-                  {problems.map((p, i) => (
-                    <CommandItem
-                      key={p.slug}
-                      onSelect={() => {
-                        setOpen(false);
-                        router.push(`/problems/${p.slug}`);
-                      }}
-                      className="flex items-center justify-between"
-                    >
-                      <div className="min-w-0 truncate">
-                        <span className="mr-2 text-muted-foreground">{i + 1}.</span>
-                        <span className="truncate">{p.title}</span>
-                      </div>
-                      <span
-                        className={[
-                          "ml-2 rounded-full px-2 py-0.5 text-xs",
-                          p.difficulty === "Easy" && "bg-emerald-500/10 text-emerald-500",
-                          p.difficulty === "Medium" && "bg-amber-500/10 text-amber-500",
-                          p.difficulty === "Hard" && "bg-rose-500/10 text-rose-500",
-                        ]
-                          .filter(Boolean)
-                          .join(" ")}
-                      >
-                        {p.difficulty}
-                      </span>
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </DialogContent>
-        </Dialog>
       </div>
-    </div>
+
+      <div className="flex items-center space-x-4">
+        <ThemeToggle />
+        <Link
+          href="/account"
+          className="text-gray-600 hover:text-gray-900 dark:text-[#c9c6c5] dark:hover:text-white transition-colors"
+        >
+          Account
+        </Link>
+      </div>
+    </nav>
   );
 }

@@ -4,20 +4,26 @@ import ProblemWorkspace from "@/app/components/ProblemWorkspace/ProblemWorkspace
 import rawData from "@/app/data/neetcode_150_problems.json";
 import { ProblemsFile } from "@/lib/problem";
 
-export default function ProblemPage({
+export default async function ProblemPage({
   params,
   searchParams,
 }: {
-  params: { slug: string };
-  searchParams: { tab?: string };
+  params: Promise<{ slug: string }>;
+  searchParams:  Promise<{ tab?: string | string[] }>;
 }) {
+  const [{ slug }, sp] = await Promise.all([params, searchParams]);
+
+  const tabParam = Array.isArray(sp.tab) ? sp.tab[0] : sp.tab;
+  const initialTab = tabParam ?? "description";
+
   const data = rawData as ProblemsFile;
-  const problem = data.problems.find(p => p.slug === params.slug);
+  const problem = data.problems.find((p) => p.slug === slug);
   if (!problem) return notFound();
+
 
   return (
     <ProblemWorkspace
-      initialTab={searchParams?.tab ?? "description"}
+      initialTab={initialTab}
       problem={{
         problemID: problem.problemID,
         slug: problem.slug,

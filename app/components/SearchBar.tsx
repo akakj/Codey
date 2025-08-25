@@ -5,7 +5,6 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { getDifficulty } from "@/lib/difficulty";
 import { Input } from "@/components/ui/input";
-import { TbSearch } from "react-icons/tb";
 import {
   Popover,
   PopoverTrigger,
@@ -13,7 +12,7 @@ import {
 } from "@/components/ui/popover";
 
 import { Button } from "@/components/ui/button";
-import { FiFilter } from "react-icons/fi";
+import { Search, Funnel } from 'lucide-react';
 
 interface SearchBarProps {
   search: string;
@@ -42,9 +41,8 @@ export default function SearchBar({
 
   return (
     <div className="flex items-center justify-between mb-4">
-      {/* search input with icon */}
       <div className="relative w-full max-w-[350px] mr-4">
-        <TbSearch
+        <Search
           className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500"
           size={20}
         />
@@ -57,11 +55,10 @@ export default function SearchBar({
         />
       </div>
 
-
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="outline" size="icon" className= "cursor-pointer text-gray-600 dark:text-gray-300 border rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700">
-            <FiFilter size={20} />
+            <Funnel size={20} />
           </Button>
         </PopoverTrigger>
         <PopoverContent
@@ -99,8 +96,6 @@ export default function SearchBar({
           </div>
         </PopoverContent>
       </Popover>
-
-      
     </div>
   );
 }

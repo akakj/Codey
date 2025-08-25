@@ -1,6 +1,6 @@
 import React from "react";
-import ProblemsList from "../components/ProblemsList";
-import rawData from "../data/neetcode_150_problems.json"; 
+import ProblemsList from "@/app/components/ProblemsList";
+import rawData from "@/app/data/neetcode_150_problems.json";
 import { ProblemsFile } from "@/lib/problem";
 
 const ProblemsPage = () => {

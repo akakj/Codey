@@ -19,6 +19,13 @@ export interface Problem {
   algorithm?: string;
 }
 
+export type ProblemLite = {
+  problemID: number;
+  slug: string;
+  title: string;
+  difficulty: "Easy" | "Medium" | "Hard" | string;
+};
+
 export interface ProblemsFile {
   problems: Problem[];
 }

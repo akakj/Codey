@@ -16,7 +16,6 @@ export function SortableHeader({ type, label, sort, onSortClick }: SortableHeade
   const isAsc = sort === ascKey;
   const isDesc = sort === descKey;
 
-  // colors
   const activeClass = 'text-black dark:text-gray-100';
   const inactiveClass = 'text-gray-500 dark:text-gray-400';
 
