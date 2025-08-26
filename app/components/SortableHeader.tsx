@@ -8,9 +8,10 @@ interface SortableHeaderProps {
   label: string;
   sort: string;
   onSortClick: (type: 'alpha' | 'difficulty') => void;
+  mobileHide?: string;
 }
 
-export function SortableHeader({ type, label, sort, onSortClick }: SortableHeaderProps) {
+export function SortableHeader({ type, label, sort, onSortClick, mobileHide }: SortableHeaderProps) {
   const ascKey = `${type}-asc`;
   const descKey = `${type}-desc`;
   const isAsc = sort === ascKey;
@@ -22,7 +23,7 @@ export function SortableHeader({ type, label, sort, onSortClick }: SortableHeade
   return (
     <th
       onClick={() => onSortClick(type)}
-      className="px-4 py-2 text-left text-sm font-medium text-gray-600 dark:text-gray-400 cursor-pointer select-none"
+      className={cn("px-4 py-2 text-left text-sm font-medium text-gray-600 dark:text-gray-400 cursor-pointer select-none", mobileHide)}
     >
       <div className="flex items-center space-x-1">
         <span>{label}</span>

@@ -58,16 +58,11 @@ export default function ProblemTopBar({
     index >= 0 && index < problems.length - 1 ? problems[index + 1] : null;
 
   const difficulties = ["Easy", "Medium", "Hard"] as const;
-  type Difficulty = typeof difficulties[number];
+  type Difficulty = (typeof difficulties)[number];
 
   const [q, setQ] = useState("");
   const [filters, setFilters] = useState<Difficulty[]>([]);
-  const [filterOpen, setFilterOpen] = useState(false);
   const [sort, setSort] = useState("");
-
-  const toggleDifficulty = (d: Difficulty) =>
-  setFilters((prev) => (prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d]));
-
 
   const handleSortClick = (type: "alpha" | "difficulty") => {
     const asc = `${type}-asc`;
@@ -78,7 +73,11 @@ export default function ProblemTopBar({
   const filteredSorted = useMemo(() => {
     let list = problems;
     const s = q.trim().toLowerCase();
-    if (s) list = list.filter((p) => p.title.toLowerCase().includes(s) || p.slug.toLowerCase().includes(s));
+    if (s)
+      list = list.filter(
+        (p) =>
+          p.title.toLowerCase().includes(s) || p.slug.toLowerCase().includes(s)
+      );
 
     if (filters.length)
       list = list.filter((p) => filters.includes(p.difficulty as Difficulty));
@@ -122,7 +121,7 @@ export default function ProblemTopBar({
           </SheetTrigger>
           <SheetContent
             side="left"
-            className="p-0 w-[100vw] max-w-none sm:max-w-none sm:w-[90vw] md:w-[70vw] lg:w-[60vw]"
+            className="p-0 w-[100vw] max-w-none sm:max-w-none sm:w-[90vw] md:w-[75vw] lg:w-[60vw]"
           >
             <SheetHeader className="px-4 pt-3 pb-0 -mb-3">
               <SheetTitle className="text-xl font-bold">
@@ -144,8 +143,6 @@ export default function ProblemTopBar({
                     className="h-9 pl-8 pr-2 rounded-xl text-sm w-full max-w-[360px]"
                   />
                 </div>
-
-                
               </div>
             </div>
 
@@ -153,7 +150,7 @@ export default function ProblemTopBar({
             <div className="px-4 py-3">
               <div className="overflow-hidden rounded-md border border-border">
                 <div className="max-h-[calc(100vh-11rem)] overflow-auto">
-                  <table className="min-w-full text-sm">
+                  <table className="w-full text-sm">
                     <thead className="sticky top-0 z-10 bg-gray-300 dark:bg-[#22272d]">
                       <tr>
                         <SortableHeader
@@ -167,6 +164,7 @@ export default function ProblemTopBar({
                           label="Difficulty"
                           sort={sort}
                           onSortClick={handleSortClick}
+                          mobileHide="hidden sm:table-cell"
                         />
                       </tr>
                     </thead>
@@ -194,7 +192,7 @@ export default function ProblemTopBar({
                             </td>
                             <td
                               className={cn(
-                                "px-4 py-2 text-xs font-semibold",
+                                "px-4 py-2 text-xs font-semibold hidden sm:table-cell",
                                 diffClass
                               )}
                             >
