@@ -21,25 +21,15 @@ export default function ProblemWorkspace({
               <ProblemData problem={problem} initialTab={initialTab} />
             </div>
           </ResizablePanel>
-
           <ResizableHandle />
 
           <ResizablePanel defaultSize={60} minSize={35}>
-            <ResizablePanelGroup direction="vertical" className="h-full">
-              <ResizablePanel defaultSize={80} minSize={40}>
-                <div className="h-full overflow-auto">
-                  <CodeEditor />
-                </div>
-              </ResizablePanel>
-
-              <ResizableHandle />
-
-              <ResizablePanel defaultSize={30} minSize={15}>
-                <div className="h-full overflow-auto">
-                  <ConsoleCases />
-                </div>
-              </ResizablePanel>
-            </ResizablePanelGroup>
+            <div className="h-full overflow-auto">
+              <CodeEditor 
+              problemSlug = {problem.slug } 
+              starterCodeByLang={problem.starterCode} 
+              />
+            </div>
           </ResizablePanel>
         </ResizablePanelGroup>
       </div>
