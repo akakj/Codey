@@ -1,4 +1,4 @@
-'use client';
+"use client";
 
 import Link from "next/link";
 import { useEffect, useRef, useState } from "react";
@@ -7,7 +7,11 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { FileText, History, StickyNote } from "lucide-react";
 
-export default function TabsHeaderClient({ initialTab }: { initialTab: string }) {
+export default function TabsHeaderClient({
+  initialTab,
+}: {
+  initialTab: string;
+}) {
   const router = useRouter();
   const pathname = usePathname();
   const search = useSearchParams();
@@ -21,7 +25,7 @@ export default function TabsHeaderClient({ initialTab }: { initialTab: string })
     if (!wrapRef.current) return;
     const ro = new ResizeObserver(([entry]) => {
       const w = entry.contentRect.width;
-      setCompact(prev => (prev !== (w < 360) ? (w < 360) : prev));
+      setCompact((prev) => (prev !== w < 360 ? w < 360 : prev));
     });
     ro.observe(wrapRef.current);
     return () => ro.disconnect();
@@ -51,14 +55,24 @@ export default function TabsHeaderClient({ initialTab }: { initialTab: string })
           )}
         >
           <TabsTrigger value="description" asChild className={triggerCls}>
-            <Link href="?tab=description" replace scroll={false} aria-label="Description">
-              <FileText className="shrink-0"/>
+            <Link
+              href="?tab=description"
+              replace
+              scroll={false}
+              aria-label="Description"
+            >
+              <FileText className="shrink-0" />
               {!compact && <span className="truncate">Description</span>}
             </Link>
           </TabsTrigger>
 
           <TabsTrigger value="submissions" asChild className={triggerCls}>
-            <Link href="?tab=submissions" replace scroll={false} aria-label="Submissions">
+            <Link
+              href="?tab=submissions"
+              replace
+              scroll={false}
+              aria-label="Submissions"
+            >
               <History className="shrink-0" />
               {!compact && <span className="truncate">Submissions</span>}
             </Link>

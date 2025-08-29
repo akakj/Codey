@@ -8,7 +8,7 @@ export default async function ProblemLayout({
   children: ReactNode;
   params: Promise<{ slug: string }>;
 }) {
-  const { slug } = await params; 
+  const { slug } = await params;
   return (
     <div>
       <ProblemTopBar currentSlug={slug} />

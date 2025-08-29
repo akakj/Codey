@@ -1,9 +1,13 @@
-import React from 'react';
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
+import React from "react";
+import {
+  ResizablePanelGroup,
+  ResizablePanel,
+  ResizableHandle,
+} from "@/components/ui/resizable";
 import { Problem } from "@/lib/problem";
-import ProblemData from './ProblemData';
-import CodeEditor from './CodeEditor';
-import ConsoleCases from './ConsoleCases';
+import ProblemData from "./ProblemData";
+import CodeEditor from "../editor/CodeEditor";
+import ConsoleCases from "./ConsoleCases";
 
 export default function ProblemWorkspace({
   problem,
@@ -25,9 +29,9 @@ export default function ProblemWorkspace({
 
           <ResizablePanel defaultSize={60} minSize={35}>
             <div className="h-full overflow-auto">
-              <CodeEditor 
-              problemSlug = {problem.slug } 
-              starterCodeByLang={problem.starterCode} 
+              <CodeEditor
+                problemSlug={problem.slug}
+                starterCodeByLang={problem.starterCode}
               />
             </div>
           </ResizablePanel>

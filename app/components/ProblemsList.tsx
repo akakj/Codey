@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import React, { useState, useMemo } from "react";
 import SearchBar from "./SearchBar";
 import { cn } from "@/lib/utils";
@@ -12,21 +12,21 @@ export default function ProblemsList({ problems }: ProblemsFile) {
   const [filters, setFilters] = useState<string[]>([]);
   const [sort, setSort] = useState("");
 
-  type SortColumn = { type: 'alpha' | 'difficulty'; label: string };
+  type SortColumn = { type: "alpha" | "difficulty"; label: string };
   const columns: SortColumn[] = [
-    { type: 'alpha',      label: 'Problem'    },
-    { type: 'difficulty', label: 'Difficulty' },
+    { type: "alpha", label: "Problem" },
+    { type: "difficulty", label: "Difficulty" },
   ];
 
-  const handleSortClick = (type: 'alpha' | 'difficulty') => {
+  const handleSortClick = (type: "alpha" | "difficulty") => {
     const asc = `${type}-asc`;
     const desc = `${type}-desc`;
-    if (sort === '') {
+    if (sort === "") {
       setSort(asc);
     } else if (sort === asc) {
       setSort(desc);
     } else {
-      setSort('');
+      setSort("");
     }
   };
 
@@ -83,13 +83,15 @@ export default function ProblemsList({ problems }: ProblemsFile) {
       />
 
       <div className="mt-4 overflow-hidden rounded-md border border-border">
-        <table className="min-w-full divide-y divide-border
+        <table
+          className="min-w-full divide-y divide-border
                   text-xs 
                   sm:text-sm   
-                  md:text-base">
+                  md:text-base"
+        >
           <thead className="bg-muted/25 dark:bg-muted/30">
             <tr>
-              {columns.map(col => (
+              {columns.map((col) => (
                 <SortableHeader
                   key={col.type}
                   type={col.type}
@@ -109,10 +111,13 @@ export default function ProblemsList({ problems }: ProblemsFile) {
                   className="even:bg-muted/20 dark:even:bg-muted/30 font-semibold"
                 >
                   <td className="px-4 py-3 whitespace-nowrap">
-                    <Link href={`/problems/${p.slug}`} className="hover:text-blue-700 dark:hover:text-blue-300">
+                    <Link
+                      href={`/problems/${p.slug}`}
+                      className="hover:text-blue-700 dark:hover:text-blue-300"
+                    >
                       {p.title}
                     </Link>
-                    </td>
+                  </td>
                   <td
                     className={cn(
                       "px-4 py-3 whitespace-nowrap text-sm font-semibold",

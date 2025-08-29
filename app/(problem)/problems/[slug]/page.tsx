@@ -1,8 +1,22 @@
 import React from 'react';
+import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ProblemWorkspace from "@/app/components/ProblemWorkspace/ProblemWorkspace";
 import rawData from "@/app/data/neetcode_150_problems.json";
 import { ProblemsFile } from "@/lib/problem";
+
+type Props = {
+  params: { slug: string };
+  searchParams: { tab?: string | string[] };
+};
+
+export function generateMetadata({ params }: Props): Metadata {
+  const data = rawData as ProblemsFile;
+  const problem = data.problems.find(p => p.slug === params.slug);
+  return {
+    title: `${problem?.title ?? "Problem"}`,
+  };
+}
 
 export default async function ProblemPage({
   params,

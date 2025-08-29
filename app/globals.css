@@ -66,9 +66,9 @@ body {
   --primary-foreground: #fafafa;
   --secondary: #f5f5f5;
   --secondary-foreground: #171717;
-  --muted: #9c9c9c;
+  --muted: #d7dae0b9;
   --muted-foreground: #434343;
-  --accent: #f5f5f5;
+  --accent: #e0e0e0ba;
   --accent-foreground: #171717;
   --destructive: #e7000b;
   --border: #c7c7c7;
@@ -156,8 +156,8 @@ body[data-scroll-locked] {
   padding: 0.1em 0.3em;
   border-radius: 0.3rem;
   border-width: 1px;
-  border-color:#545454;
-  background: #60606038;
+  border-color:#6e6e6e;
+  background: #94949438;
 }
 
 .dark .prose code {

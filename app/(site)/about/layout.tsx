@@ -8,8 +8,7 @@ interface AboutLayoutProps {
 export default function AboutLayout({ children }: AboutLayoutProps) {
   return (
     <section
-      className={
-        `
+      className={`
         fixed
         inset-0
         -z-10
@@ -32,10 +31,11 @@ export default function AboutLayout({ children }: AboutLayoutProps) {
         dark:animate-gradient
 
         dark:text-white
-      `
-      }
+      `}
     >
-      <div className="pt-20 sm:px-15 xs:px-10 md:px-30 lg:px-40">{children}</div>
+      <div className="pt-20 sm:px-15 xs:px-10 md:px-30 lg:px-40">
+        {children}
+      </div>
     </section>
   );
 }

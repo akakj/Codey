@@ -14,7 +14,10 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'Codey',
+  title: {
+    default: "Codey",
+    template: "%s - Codey", // anything like "Two Sum - Codey"
+  },
   description: 'A Leetcode-like platform for coding challenges',
   icons: {
     // the classic favicon.ico

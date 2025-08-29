@@ -1,4 +1,4 @@
-'use client';
+"use client";
 import React from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/popover";
 
 import { Button } from "@/components/ui/button";
-import { Search, Funnel } from 'lucide-react';
+import { Search, Funnel } from "lucide-react";
 
 interface SearchBarProps {
   search: string;
@@ -57,7 +57,11 @@ export default function SearchBar({
 
       <Popover>
         <PopoverTrigger asChild>
-          <Button variant="outline" size="icon" className= "cursor-pointer text-gray-600 dark:text-gray-300 border rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700">
+          <Button
+            variant="outline"
+            size="icon"
+            className="cursor-pointer text-gray-600 dark:text-gray-300 border rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700"
+          >
             <Funnel size={20} />
           </Button>
         </PopoverTrigger>

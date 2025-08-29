@@ -18,7 +18,10 @@ export default function ProblemData({
 
       <div className="mt-3">
         {/* Re-render panel when ?tab= changes */}
-        <Suspense key={initialTab} fallback={<div className="h-64 rounded-md animate-pulse bg-muted" />}>
+        <Suspense
+          key={initialTab}
+          fallback={<div className="h-64 rounded-md animate-pulse bg-muted" />}
+        >
           {initialTab === "description" && <Description problem={problem} />}
           {initialTab === "submissions" && <Submissions problem={problem} />}
           {initialTab === "notes" && <Notes problem={problem} />}
