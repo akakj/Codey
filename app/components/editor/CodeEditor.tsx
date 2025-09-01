@@ -27,11 +27,13 @@ export default function CodeEditor({
   starterCodeByLang = {},
   onLanguageChange,
   initialConsoleOpen = true,
+  initialCases,  
 }: {
   problemSlug: string;
   starterCodeByLang?: StarterMap;
   onLanguageChange?: (lang: Lang) => void;
   initialConsoleOpen?: boolean;
+  initialCases?: { input: any; output?: any }[];
 }) {
   const starters = starterCodeByLang;
 
@@ -171,6 +173,8 @@ export default function CodeEditor({
           output={output}
           onRun={() => {}}
           onSubmit={() => {}}
+          problemSlug={problemSlug}    
+          initialCases={initialCases} 
         />
       </ResizablePanelGroup>
     </div>

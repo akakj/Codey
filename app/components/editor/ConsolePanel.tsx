@@ -5,7 +5,7 @@ import { ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { ChevronDown, Terminal, SquareCheck } from "lucide-react";
+import { ChevronDown, Terminal, SquareCheck, CloudUpload } from "lucide-react";
 import type { ImperativePanelHandle } from "react-resizable-panels";
 import ConsoleCases from "../ProblemWorkspace/ConsoleCases";
 
@@ -17,11 +17,15 @@ export function ConsolePanel({
   output,
   onRun,
   onSubmit,
+  problemSlug,
+  initialCases,
 }: {
   initialOpen?: boolean;
   output: string;
   onRun?: () => void;
   onSubmit?: () => void;
+  problemSlug: string;
+  initialCases?: { input: any; output?: any }[];
 }) {
   const panelRef = React.useRef<ImperativePanelHandle>(null);
   const [size, setSize] = React.useState<number>(initialOpen ? EXPANDED : 10);
@@ -81,15 +85,17 @@ export function ConsolePanel({
               <div className="ml-auto flex gap-1">
                 <Button
                   variant="secondary"
-                  className="hover:cursor-pointer bg-gray-300 dark:bg-gray-700 hover:bg-[#99a1af93] dark:hover:bg-gray-600"
+                  className="hover:cursor-pointer bg-[#d1d5dcc9] dark:bg-gray-700 hover:bg-[#99a1af93] dark:hover:bg-gray-600"
                   onClick={onRun}
                 >
                   Run
                 </Button>
                 <Button
-                  className="bg-green-600 dark:bg-green-400 hover:cursor-pointer hover:bg-[#008f34] dark:hover:bg-[#00ff80]"
+                  className="text-[#008932] dark:text-green-500 hover:cursor-pointer ring-1 hover:bg-[#00d54eb3] dark:hover:bg-green-600 dark:hover:text-black"
                   onClick={onSubmit}
+                  variant="outline"
                 >
+                    < CloudUpload />
                   Submit
                 </Button>
               </div>
@@ -100,7 +106,10 @@ export function ConsolePanel({
             {/* body */}
             <div className="flex-1 overflow-auto p-3">
               <TabsContent value="cases" className="m-0 h-full">
-                <ConsoleCases />
+                <ConsoleCases
+                  problemSlug={problemSlug}
+                  initialCases={initialCases}
+                />
               </TabsContent>
               <TabsContent value="output" className="m-0 h-full">
                 <pre className="text-sm whitespace-pre-wrap">{output}</pre>
