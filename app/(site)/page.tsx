@@ -1,6 +1,9 @@
 import React from 'react';
+import { createClient } from '@/utils/supabase/server'
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getUser()
   return (
     <div
       className="
@@ -10,7 +13,7 @@ export default function Home() {
           transition-all duration-300
         "
     >
-      <h1 className="">Hello World!</h1>
+      <h1 className="">Hello!</h1>
     </div>
   );
 }

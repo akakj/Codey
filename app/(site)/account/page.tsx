@@ -1,16 +1,22 @@
-import React from 'react';
-import type { Metadata } from "next";
+import React from "react";
+import Link from "next/link";
+import { redirect } from "next/navigation";
+import { createClient } from "@/utils/supabase/server";
+import { AccountClient } from "@/app/components/client/AccountClient";
 
-export const metadata: Metadata = {
-  title: "Account",
-};
+export const metadata = { title: "Account" };
 
-const Account = () => {
+export default async function AccountPage() {
+  const supabase = await createClient();
+  const { data, error } = await supabase.auth.getUser();
+
+  if (error || !data?.user) {
+    redirect("/login");
+  }
+
+  const email = data.user.email ?? "";
+
   return (
-    <div>
-      
-    </div>
-  )
+    <AccountClient email={data.user.email ?? ''} />
+  );
 }
-
-export default Account

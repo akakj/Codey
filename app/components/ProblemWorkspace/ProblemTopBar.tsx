@@ -18,22 +18,15 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { ChevronLeft, ChevronRight, List, Search, Funnel } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Label } from "@/components/ui/label";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-
 import { SortableHeader } from "@/app/components/SortableHeader";
 
 export default function ProblemTopBar({
   currentSlug,
+  user,
 }: {
   currentSlug: string;
+  user: any | null;
 }) {
   const data = rawData as ProblemsFile;
 
@@ -240,12 +233,21 @@ export default function ProblemTopBar({
 
       <div className="flex items-center space-x-4">
         <ThemeToggle />
-        <Link
-          href="/account"
-          className="text-gray-600 hover:text-gray-900 dark:text-[#c9c6c5] dark:hover:text-white transition-colors"
-        >
-          Account
-        </Link>
+        {user ? (
+          <Link
+            href="/account"
+            className="text-gray-600 hover:text-gray-900 dark:text-[#c9c6c5] dark:hover:text-white transition-colors"
+          >
+            Account
+          </Link>
+        ) : (
+          <Link
+            href="/login"
+            className="text-gray-600 hover:text-gray-900 dark:text-[#c9c6c5] dark:hover:text-white transition-colors"
+          >
+            Log in
+          </Link>
+        )}
       </div>
     </nav>
   );

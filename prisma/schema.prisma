@@ -23,10 +23,7 @@ model User {
 model Problem {
   id         Int      @id @default(autoincrement())
   title      String
-  difficulty String
-  description String
-  hints     String[]
-  testCases Json   @default("[]") @db.JsonB
+  difficulty String //+ slug?
 }
 
 model Submission {
@@ -36,6 +33,6 @@ model Submission {
   code       String   @db.Text
   language   String 
   passed     Boolean  @default(false)
-  createdAt  DateTime @default(now())
+  createdAt  DateTime @default(now()) //memory + runtime
 }
 

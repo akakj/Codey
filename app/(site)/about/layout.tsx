@@ -1,4 +1,3 @@
-// app/about/layout.tsx
 import React, { ReactNode } from "react";
 
 interface AboutLayoutProps {
