@@ -10,11 +10,16 @@ type Props = {
   searchParams: { tab?: string | string[] };
 };
 
-export function generateMetadata({ params }: Props): Metadata {
+export async function generateMetadata(
+  { params }: { params: Promise<{ slug: string }> }
+): Promise<Metadata> {
+  const { slug } = await params;
+
   const data = rawData as ProblemsFile;
-  const problem = data.problems.find(p => p.slug === params.slug);
+  const problem = data.problems.find((p) => p.slug === slug);
+
   return {
-    title: `${problem?.title ?? "Problem"}`,
+    title: problem?.title ?? "Problem",
   };
 }
 

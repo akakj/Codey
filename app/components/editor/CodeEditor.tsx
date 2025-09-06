@@ -23,12 +23,14 @@ const CODE_NS = "Codey:code";
 const codeKey = (slug: string, lang: Lang) => `${CODE_NS}:${slug}:${lang}`;
 
 export default function CodeEditor({
+  isLoggedIn,
   problemSlug,
   starterCodeByLang = {},
   onLanguageChange,
   initialConsoleOpen = true,
   initialCases,  
 }: {
+  isLoggedIn: boolean;
   problemSlug: string;
   starterCodeByLang?: StarterMap;
   onLanguageChange?: (lang: Lang) => void;
@@ -169,6 +171,7 @@ export default function CodeEditor({
         <ResizableHandle />
 
         <ConsolePanel
+          isLoggedIn={isLoggedIn}
           initialOpen={initialConsoleOpen}
           output={output}
           onRun={() => {}}

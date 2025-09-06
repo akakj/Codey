@@ -13,6 +13,7 @@ const MIN = 6;
 const EXPANDED = 40;
 
 export function ConsolePanel({
+  isLoggedIn,
   initialOpen = true,
   output,
   onRun,
@@ -20,6 +21,7 @@ export function ConsolePanel({
   problemSlug,
   initialCases,
 }: {
+  isLoggedIn: boolean;
   initialOpen?: boolean;
   output: string;
   onRun?: () => void;
@@ -83,21 +85,34 @@ export function ConsolePanel({
               </TabsList>
 
               <div className="ml-auto flex gap-1">
-                <Button
-                  variant="secondary"
-                  className="hover:cursor-pointer bg-[#d1d5dcc9] dark:bg-gray-700 hover:bg-[#99a1af93] dark:hover:bg-gray-600"
-                  onClick={onRun}
-                >
-                  Run
-                </Button>
-                <Button
-                  className="text-[#008932] dark:text-green-500 hover:cursor-pointer ring-1 hover:bg-[#00d54eb3] dark:hover:bg-green-600 dark:hover:text-black"
-                  onClick={onSubmit}
-                  variant="outline"
-                >
-                    < CloudUpload />
-                  Submit
-                </Button>
+                {isLoggedIn ? (
+                  <>
+                    <Button
+                      variant="secondary"
+                      className="hover:cursor-pointer bg-[#d1d5dcc9] dark:bg-gray-700 hover:bg-[#99a1af93] dark:hover:bg-gray-600"
+                      onClick={onRun}
+                    >
+                      Run
+                    </Button>
+                    <Button
+                      className="text-[#008932] dark:text-green-500 hover:cursor-pointer ring-1 hover:bg-[#00d54eb3] dark:hover:bg-[#00c950db] dark:hover:text-black"
+                      onClick={onSubmit}
+                      variant="outline"
+                    >
+                      <CloudUpload />
+                      Submit
+                    </Button>
+                  </>
+                ) : (
+                  <div className="ml-auto flex items-center min-w-0">
+                    <p className="shrink-0 whitespace-nowrap text-right text-sm text-muted-foreground">
+                      <a href="/login" className="underline">
+                        Log in
+                      </a>
+                      {" to run or submit"}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
 
