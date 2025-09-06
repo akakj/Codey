@@ -2,6 +2,7 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
+import { validatePassword } from '@/lib/password';
 
 export type AuthState = {
   ok: boolean;
@@ -40,6 +41,12 @@ export async function authAction(
   }
 
   if (mode === 'signup') {
+
+    const strength = validatePassword(password, email);
+    if (!strength.ok) {
+      return { ok: false, message: strength.message, mode, fields: { email } };
+    }
+
     const origin = process.env.NEXT_PUBLIC_SITE_URL;
 
     const { error } = await supabase.auth.signUp({

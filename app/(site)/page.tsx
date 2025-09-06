@@ -1,9 +1,12 @@
 import React from 'react';
-import { createClient } from '@/utils/supabase/server'
+import { createClient } from '@/utils/supabase/server';
 
 export default async function Home() {
   const supabase = await createClient();
-  const { data, error } = await supabase.auth.getUser()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  
   return (
     <div
       className="
@@ -13,7 +16,16 @@ export default async function Home() {
           transition-all duration-300
         "
     >
-      <h1 className="">Hello!</h1>
+      {user ? (
+        <div>
+          <p>Welcome back! Here is your progress so far</p>
+        </div>
+         
+        ) : (
+          <div>
+            <p>What is Codey?</p>
+          </div>
+        )}
     </div>
   );
 }
