@@ -96,12 +96,9 @@ Codey/
 
 ## 🗺️ Roadmap
 
-* [ ] Seed initial problem set
 * [ ] Code execution sandbox & test cases
 * [ ] Submissions, verdicts, and leaderboards
-* [ ] Auth, profiles, and saved progress
-* [ ] Problem tags, filters, and search
-* [ ] Dark mode and accessibility passes
+* [ ] User Progress on Home page displayed
 
 ---
 
