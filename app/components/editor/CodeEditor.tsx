@@ -127,7 +127,7 @@ export default function CodeEditor({
 
   const monacoId = (L: Lang) => (L === "python3" ? "python" : L);
 
-  const [output] = useState("Run to see output");
+  const [output] = useState("Run to see the output");
 
   return (
     <div className="flex h-full flex-col">

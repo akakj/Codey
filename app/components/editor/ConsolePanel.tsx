@@ -95,7 +95,7 @@ export function ConsolePanel({
                       Run
                     </Button>
                     <Button
-                      className="text-[#008932] dark:text-green-500 hover:cursor-pointer ring-1 hover:bg-[#00d54eb3] dark:hover:bg-[#00c950db] dark:hover:text-black"
+                      className="text-[#008932] dark:text-green-500 hover:cursor-pointer ring-1 hover:bg-[#00d54eb3] dark:hover:bg-green-500 dark:hover:text-black"
                       onClick={onSubmit}
                       variant="outline"
                     >
@@ -134,7 +134,6 @@ export function ConsolePanel({
         </div>
       </ResizablePanel>
 
-      {/* keep the group handle rendered by parent */}
       <ResizableHandle />
     </>
   );

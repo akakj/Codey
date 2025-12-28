@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertCircleIcon, CheckCircle2Icon } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
 
 function SubmitButton() {
   const { pending } = useFormStatus();
@@ -29,8 +30,14 @@ function ChangePasswordClient() {
         <Input name="next" type={showPassword ? "text" : "password"} placeholder="New password" required />
         <Input name="confirm" type={showPassword ? "text" : "password"} placeholder="Confirm new password" required />
 
-        <div className ="mt-2">
-          <p className ="cursor-pointer"onClick = { () => setShowPassword(!showPassword) }>Show passwords</p>
+        <div className ="flex items-center gap-2 mt-2">
+          <Checkbox
+          className="hover:cursor-pointer"
+          id="show-passwords"
+          checked={showPassword}
+          onCheckedChange={(v) => setShowPassword(!showPassword)}
+        />
+          <p className ="cursor-pointer hover:text-blue-900 dark:hover:text-blue-100" onClick = { () => setShowPassword(!showPassword) }>Show passwords</p>
         </div>
 
         <SubmitButton />

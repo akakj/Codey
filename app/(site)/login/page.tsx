@@ -7,7 +7,7 @@ import Link from "next/link";
 import { authAction, type AuthState } from "./actions";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { AlertCircleIcon, CheckCircle2Icon } from "lucide-react";
+import { AlertCircleIcon, CheckCircle2Icon, Eye, EyeOff } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 function SubmitButton({ label }: { label: string }) {
@@ -65,26 +65,32 @@ export default function LoginPage() {
             defaultValue={state?.fields?.email ?? ""}
           />
 
-          {!isReset && (<div>
-            <Input
-              name="password"
-              type={showPassword ? "text" : "password"}
-              placeholder="Password"
-              required
-              className="w-full mt-4"
-            />
+          {!isReset && (
+            <div className="relative mt-4">
+              <Input
+                name="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Password"
+                required
+                className="w-full pr-10"
+              />
 
-            <div className="mt-3">
-            <p
-              className="cursor-pointer text-sm text-blue-800 dark:text-blue-100"
-              onClick={() => setShowPassword(!showPassword)}
-            >
-              Show password
-            </p>
-          </div>
-          </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 cursor-pointer"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+                onClick={() => setShowPassword((prev) => !prev)}
+              >
+                {showPassword ? (
+                  <EyeOff className="h-4 w-4" />
+                ) : (
+                  <Eye className="h-4 w-4" />
+                )}
+              </Button>
+            </div>
           )}
-
 
           <SubmitButton
             label={

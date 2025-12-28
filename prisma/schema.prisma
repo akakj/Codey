@@ -14,25 +14,66 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model User {
-  id       String   @id @default(cuid())
-  email    String   @unique
-  name     String?
+/**
+ * Identity: Supabase Auth is the source of truth (auth.users).
+ * profiles.id == auth.users.id (UUID). We add that FK via SQL (see section 2).
+ */
+model Profile {
+  id         String   @id @db.Uuid
+  name       String?
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  submissions Submission[]
+  statuses    UserProblemStatus[]
+
+  @@map("profiles") // table: public.profiles
 }
 
 model Problem {
   id         Int      @id @default(autoincrement())
+  slug       String   @unique
   title      String
-  difficulty String //+ slug?
+  difficulty String   // keep simple; you can switch to an enum later
+
+  // Relations
+  submissions Submission[]
+  statuses    UserProblemStatus[]
+
+  @@map("problems") // table: public.problems
 }
 
 model Submission {
   id         Int      @id @default(autoincrement())
-  userId     String
+  userId     String   @db.Uuid
   problemId  Int
   code       String   @db.Text
-  language   String 
+  language   String
   passed     Boolean  @default(false)
-  createdAt  DateTime @default(now()) //memory + runtime
+  memory     Int?     // bytes (optional)
+  runtime    Int?     // ms (optional)
+  createdAt  DateTime @default(now()) @db.Timestamptz(6)
+
+  // Relations
+  user    Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@index([userId, problemId, createdAt])
+  @@map("submissions") // table: public.submissions
 }
 
+model UserProblemStatus {
+  id               Int       @id @default(autoincrement())
+  userId           String    @db.Uuid
+  problemId        Int
+  completed        Boolean   @default(false)
+  lastSubmittedAt  DateTime? @db.Timestamptz(6)
+
+  // Relations
+  user    Profile @relation(fields: [userId], references: [id], onDelete: Cascade)
+  problem Problem @relation(fields: [problemId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, problemId])  // one status row per user+problem
+  @@index([userId, completed])
+  @@map("user_problem_status") // table: public.user_problem_status
+}

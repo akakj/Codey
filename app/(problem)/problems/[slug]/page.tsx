@@ -39,7 +39,6 @@ export default async function ProblemPage({
   const problem = data.problems.find((p) => p.slug === slug);
   if (!problem) return notFound();
 
-
   return (
     <ProblemWorkspace
       initialTab={initialTab}
