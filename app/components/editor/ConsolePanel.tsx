@@ -8,6 +8,10 @@ import { Separator } from "@/components/ui/separator";
 import { ChevronDown, Terminal, SquareCheck, CloudUpload } from "lucide-react";
 import type { ImperativePanelHandle } from "react-resizable-panels";
 import ConsoleCases from "../ProblemWorkspace/ConsoleCases";
+import { executeCode } from "./api";
+import type { Lang } from "@/lib/languages";
+import { Loader2 } from "lucide-react";
+
 
 const MIN = 6;
 const EXPANDED = 40;
@@ -15,17 +19,15 @@ const EXPANDED = 40;
 export function ConsolePanel({
   isLoggedIn,
   initialOpen = true,
-  output,
-  onRun,
-  onSubmit,
+  value,
+  language,
   problemSlug,
   initialCases,
 }: {
   isLoggedIn: boolean;
   initialOpen?: boolean;
-  output: string;
-  onRun?: () => void;
-  onSubmit?: () => void;
+  value: string;
+  language: Lang;
   problemSlug: string;
   initialCases?: { input: any; output?: any }[];
 }) {
@@ -33,11 +35,32 @@ export function ConsolePanel({
   const [size, setSize] = React.useState<number>(initialOpen ? EXPANDED : 10);
   const isExpanded = size > MIN + 2;
 
+  const [output, setOutput] = React.useState<string>("");
+  const [isLoading, setIsLoading] = React.useState<boolean>(false);
+  const [isError, setIsError] = React.useState<boolean>(false);
+
   const toggle = () => {
     const cur = panelRef.current?.getSize() ?? size;
     panelRef.current?.resize(cur <= MIN + 2 ? EXPANDED : MIN);
   };
 
+  const runCode = async () => {
+    const sourceCode = value;
+    if (!sourceCode) return;
+
+    try {
+      setIsLoading(true);
+      const { run: result } = await executeCode(language, sourceCode);
+      console.log("Execution result:", result);
+      setOutput(result.output);
+      result.stderr ? setIsError(true) : setIsError(false);
+    } catch (error) {
+      console.error("Error executing code:", error);
+      setIsError(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
   return (
     <>
       <ResizablePanel
@@ -90,13 +113,19 @@ export function ConsolePanel({
                     <Button
                       variant="secondary"
                       className="hover:cursor-pointer bg-[#d1d5dcc9] dark:bg-gray-700 hover:bg-[#99a1af93] dark:hover:bg-gray-600"
-                      onClick={onRun}
+                      onClick={runCode}
+                      disabled={isLoading}
                     >
-                      Run
+                      {isLoading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        </>
+                      ) : (
+                        "Run"
+                      )}
                     </Button>
                     <Button
                       className="text-[#008932] dark:text-green-500 hover:cursor-pointer ring-1 hover:bg-[#00d54eb3] dark:hover:bg-green-500 dark:hover:text-black"
-                      onClick={onSubmit}
                       variant="outline"
                     >
                       <CloudUpload />
@@ -127,7 +156,10 @@ export function ConsolePanel({
                 />
               </TabsContent>
               <TabsContent value="output" className="m-0 h-full">
-                <pre className="text-sm whitespace-pre-wrap">{output}</pre>
+                <pre 
+                className={`text-sm whitespace-pre-wrap ${isError ? "text-red-400" : ""}`}>
+                  {output ? output : "Run your code to see the output"}
+                </pre>
               </TabsContent>
             </div>
           </Tabs>

@@ -204,7 +204,7 @@ export default function ConsoleCases({
             <div className="text-sm text-muted-foreground">{name} =</div>
             <Textarea
               rows={1}
-              className="font-mono bg-muted/30 resize-none !min-h-0 h-10"
+              className="font-mono bg-muted/30 resize-none min-h-0! h-10"
               value={cases[active]?.[name] ?? ""}
               onChange={(e) => updateField(name, e.target.value)}
               spellCheck={false}

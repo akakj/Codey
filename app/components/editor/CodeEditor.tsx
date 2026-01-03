@@ -127,8 +127,6 @@ export default function CodeEditor({
 
   const monacoId = (L: Lang) => (L === "python3" ? "python" : L);
 
-  const [output] = useState("Run to see the output");
-
   return (
     <div className="flex h-full flex-col">
       <ResizablePanelGroup direction="vertical" className="flex-1">
@@ -173,9 +171,8 @@ export default function CodeEditor({
         <ConsolePanel
           isLoggedIn={isLoggedIn}
           initialOpen={initialConsoleOpen}
-          output={output}
-          onRun={() => {}}
-          onSubmit={() => {}}
+          value={value}
+          language={lang}
           problemSlug={problemSlug}    
           initialCases={initialCases} 
         />
