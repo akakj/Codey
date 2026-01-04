@@ -179,6 +179,7 @@ export default function CodeEditor({
           problemSlug={problemSlug}    
           initialCases={initialCases}
           entryPointByLang={entryPointByLang}
+          starterCodeByLang={starterCodeByLang}
         />
       </ResizablePanelGroup>
     </div>

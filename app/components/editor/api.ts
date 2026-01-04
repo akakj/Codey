@@ -1,6 +1,6 @@
 import axios from "axios";
 import { LANGS_VERSIONS, type Lang } from "@/lib/languages";
-import type { EntryPoint } from "@/lib/problem"; // add this type (shown below)
+import type { EntryPoint } from "@/lib/problem";
 
 const API = axios.create({
   baseURL: "https://emkc.org/api/v2/piston",
@@ -11,26 +11,148 @@ function toPistonLanguage(lang: Lang): string {
   return lang === "python3" ? "python" : lang;
 }
 
-function extractSingleArg(input: any) {
-  if (input && typeof input === "object" && !Array.isArray(input)) {
-    const keys = Object.keys(input);
-    if (keys.length === 1) return input[keys[0]];
+// type required ofr java and c#
+type ParamSpec = { name: string; type: string };
+
+function splitTopLevelCommas(s: string): string[] {
+  const out: string[] = [];
+  let cur = "";
+  let depthAngle = 0;
+
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (ch === "<") depthAngle++;
+    else if (ch === ">") depthAngle = Math.max(0, depthAngle - 1);
+
+    if (ch === "," && depthAngle === 0) {
+      out.push(cur);
+      cur = "";
+    } else {
+      cur += ch;
+    }
   }
-  return input;
+  if (cur.trim()) out.push(cur);
+  return out;
 }
 
-// Helpers to detect if Java/C# code has its own main method
-function hasJavaMain(code: string) {
-  return /public\s+static\s+void\s+main\s*\(/.test(code);
-}
-function hasCSharpMain(code: string) {
-  return /\bstatic\s+void\s+Main\s*\(/.test(code);
+function parseJavaParamsFromStarter(starter: string, methodName: string): ParamSpec[] {
+  const re = new RegExp(`\\b${methodName}\\s*\\(([^)]*)\\)`, "m");
+  const m = starter.match(re);
+  if (!m) return [];
+  const inside = m[1].trim();
+  if (!inside) return [];
+
+  return splitTopLevelCommas(inside).map((p) => {
+    const part = p.trim();
+    const mm = part.match(/(.+)\s+([A-Za-z_]\w*)$/);
+    if (!mm) return { type: "Object", name: "arg" };
+    return { type: mm[1].trim(), name: mm[2].trim() };
+  });
 }
 
-// insert main into Java class to call method tests
-function injectIntoJavaClass(code: string, className: string, insert: string) {
-  const classRe = new RegExp(`\\bclass\\s+${className}\\b`);
-  const m = classRe.exec(code);
+function parseCSharpParamsFromStarter(starter: string, methodName: string): ParamSpec[] {
+  const re = new RegExp(`\\b${methodName}\\s*\\(([^)]*)\\)`, "m");
+  const m = starter.match(re);
+  if (!m) return [];
+  const inside = m[1].trim();
+  if (!inside) return [];
+
+  return splitTopLevelCommas(inside).map((p) => {
+    const part = p.trim();
+    const mm = part.match(/(.+)\s+([A-Za-z_]\w*)$/);
+    if (!mm) return { type: "object", name: "arg" };
+    return { type: mm[1].trim(), name: mm[2].trim() };
+  });
+}
+
+// build args from testcase input
+function buildArgsFromInput(input: any, params?: ParamSpec[]): any[] {
+  // If input is { a:..., b:... } and we know param names, order by params.
+  if (input && typeof input === "object" && !Array.isArray(input)) {
+    if (params && params.length) return params.map((p) => input[p.name]);
+    // fallback: JSON insertion order (usually same as in file)
+    return Object.keys(input).map((k) => input[k]);
+  }
+  // single primitive/array
+  return [input];
+}
+
+// Java/C# typed literal generation (extend over time) 
+function javaExpr(v: any, type: string): string {
+  const t = type.replace(/\s+/g, "");
+  if (v === null || v === undefined) return "null";
+
+  if (t === "int" || t === "Integer") return String(Number(v));
+  if (t === "long" || t === "Long") return String(Number(v)) + "L";
+  if (t === "double" || t === "Double") return String(Number(v));
+  if (t === "boolean" || t === "Boolean") return v ? "true" : "false";
+  if (t === "String") return JSON.stringify(String(v));
+  if (t === "char") return `'${String(v)[0] ?? ""}'`;
+
+  if (t === "int[]") {
+    const arr = Array.isArray(v) ? v : [];
+    return `new int[]{${arr.map((x) => String(Number(x))).join(",")}}`;
+  }
+  if (t === "String[]") {
+    const arr = Array.isArray(v) ? v : [];
+    return `new String[]{${arr.map((x) => JSON.stringify(String(x))).join(",")}}`;
+  }
+  if (t === "int[][]") {
+    const outer = Array.isArray(v) ? v : [];
+    const rows = outer.map((row: any) => {
+      const r = Array.isArray(row) ? row : [];
+      return `new int[]{${r.map((x: any) => String(Number(x))).join(",")}}`;
+    });
+    return `new int[][]{${rows.join(",")}}`;
+  }
+
+  const listMatch = t.match(/^List<(.*)>$/);
+  if (listMatch) {
+    const inner = listMatch[1];
+    const arr = Array.isArray(v) ? v : [];
+    const elems = arr.map((x) => javaExpr(x, inner)).join(",");
+    return `java.util.Arrays.asList(${elems})`;
+  }
+
+  // fallback
+  return "null";
+}
+
+function csExpr(v: any, type: string): string {
+  const t = type.replace(/\s+/g, "");
+  if (v === null || v === undefined) return "null";
+
+  if (t === "int") return String(Number(v));
+  if (t === "long") return String(Number(v)) + "L";
+  if (t === "double" || t === "float") return String(Number(v));
+  if (t === "bool" || t === "boolean") return v ? "true" : "false";
+  if (t === "string") return JSON.stringify(String(v));
+  if (t === "char") return `'${String(v)[0] ?? ""}'`;
+
+  if (t === "int[]") {
+    const arr = Array.isArray(v) ? v : [];
+    return `new int[]{${arr.map((x) => String(Number(x))).join(",")}}`;
+  }
+  if (t === "string[]") {
+    const arr = Array.isArray(v) ? v : [];
+    return `new string[]{${arr.map((x) => JSON.stringify(String(x))).join(",")}}`;
+  }
+
+  const listMatch = t.match(/^(?:List|IList)<(.*)>$/);
+  if (listMatch) {
+    const inner = listMatch[1];
+    const arr = Array.isArray(v) ? v : [];
+    const elems = arr.map((x) => csExpr(x, inner)).join(",");
+    return `new System.Collections.Generic.List<${inner}>{${elems}}`;
+  }
+
+  return "null";
+}
+
+/** ---------- inject into class body (Java/C#) ---------- */
+function injectIntoClass(code: string, className: string, insert: string) {
+  const re = new RegExp(`\\bclass\\s+${className}\\b`);
+  const m = re.exec(code);
   if (!m) return null;
 
   const start = code.indexOf("{", m.index);
@@ -43,7 +165,6 @@ function injectIntoJavaClass(code: string, className: string, insert: string) {
     else if (ch === "}") {
       depth--;
       if (depth === 0) {
-        // Insert right before the class closing brace
         return code.slice(0, i) + "\n" + insert + "\n" + code.slice(i);
       }
     }
@@ -51,79 +172,103 @@ function injectIntoJavaClass(code: string, className: string, insert: string) {
   return null;
 }
 
-// Build files for Piston execution based on language and entry point
-function buildFiles(
-  language: Lang,
-  userCode: string,
-  cases: { input: any }[],
-  entryPoint?: EntryPoint
-) {
-  const args = cases.map((tc) => extractSingleArg(tc.input));
-  const safeArgs = args.length ? args : [""];
+function hasJavaMain(code: string) {
+  return /public\s+static\s+void\s+main\s*\(/.test(code);
+}
+function hasCSharpMain(code: string) {
+  return /\bstatic\s+void\s+Main\s*\(/.test(code);
+}
 
-  // -------- Python --------
+/** ---------- build piston files (multi-arg support) ---------- */
+function buildFiles(opts: {
+  language: Lang;
+  userCode: string;
+  cases: { input: any }[];
+  entryPoint?: EntryPoint;
+  starterForLang?: string; // to parse param types for Java/C#
+}) {
+  const { language, userCode, cases, entryPoint, starterForLang } = opts;
+  const safeCases = cases.length ? cases : [{ input: "" }];
+
+  // PYTHON: no types needed; just spread args
   if (language === "python3") {
-    if (!entryPoint) {
-      return [{ name: "main.py", content: userCode }];
-    }
+    if (!entryPoint) return [{ name: "main.py", content: userCode }];
 
-    if (entryPoint.kind === "method") {
-      const runner = `
+    const argLists = safeCases.map((tc) => buildArgsFromInput(tc.input));
+    const runner =
+      entryPoint.kind === "method"
+        ? `
 from solution import ${entryPoint.className}
 import json, traceback
 
+tests = json.loads(${JSON.stringify(JSON.stringify(argLists))})
+
 if __name__ == "__main__":
-    tests = json.loads(${JSON.stringify(JSON.stringify(safeArgs))})
     sol = ${entryPoint.className}()
-    for x in tests:
+    for args in tests:
         try:
-            res = getattr(sol, "${entryPoint.name}")(x)
+            res = getattr(sol, "${entryPoint.name}")(*args)
             if res is not None:
                 print(res)
         except Exception:
             traceback.print_exc()
-`;
-      return [
-        { name: "main.py", content: runner },
-        { name: "solution.py", content: userCode },
-      ];
-    }
-
-    const runner = `
-import json, traceback
+`
+        : `
 from solution import ${entryPoint.name} as entry_fn
+import json, traceback
+
+tests = json.loads(${JSON.stringify(JSON.stringify(argLists))})
 
 if __name__ == "__main__":
-    tests = json.loads(${JSON.stringify(JSON.stringify(safeArgs))})
-    for x in tests:
+    for args in tests:
         try:
-            res = entry_fn(x)
+            res = entry_fn(*args)
             if res is not None:
                 print(res)
         except Exception:
             traceback.print_exc()
 `;
+
     return [
       { name: "main.py", content: runner },
       { name: "solution.py", content: userCode },
     ];
   }
 
-  // -------- JavaScript --------
+  // JAVASCRIPT: no types needed; just spread args
   if (language === "javascript") {
-    if (!entryPoint) {
-      return [{ name: "main.js", content: userCode }];
-    }
+    if (!entryPoint) return [{ name: "main.js", content: userCode }];
 
+    const argLists = safeCases.map((tc) => buildArgsFromInput(tc.input));
     if (entryPoint.kind === "function") {
       const exportShim = `\n\ntry { module.exports = { ${entryPoint.name} }; } catch (e) {}\n`;
       const runner = `
 const { ${entryPoint.name} } = require("./solution");
-const tests = ${JSON.stringify(safeArgs)};
+const tests = ${JSON.stringify(argLists)};
 
-for (const x of tests) {
+for (const args of tests) {
   try {
-    const res = ${entryPoint.name}(x);
+    const res = ${entryPoint.name}(...args);
+    if (res !== undefined) console.log(res);
+  } catch (e) {
+    console.error(e && e.stack ? e.stack : String(e));
+  }
+}
+`;
+      return [
+        { name: "main.js", content: runner },
+        { name: "solution.js", content: userCode + exportShim },
+      ];
+    } else {
+      const exportShim = `\n\ntry { module.exports = { ${entryPoint.className}: ${entryPoint.className} }; } catch (e) {}\n`;
+      const runner = `
+const mod = require("./solution");
+const tests = ${JSON.stringify(argLists)};
+
+for (const args of tests) {
+  try {
+    const sol = new mod.${entryPoint.className}();
+    const res = sol.${entryPoint.name}(...args);
     if (res !== undefined) console.log(res);
   } catch (e) {
     console.error(e && e.stack ? e.stack : String(e));
@@ -135,116 +280,119 @@ for (const x of tests) {
         { name: "solution.js", content: userCode + exportShim },
       ];
     }
-
-    const exportShim = `\n\ntry { module.exports = { ${entryPoint.className}: ${entryPoint.className} }; } catch (e) {}\n`;
-    const runner = `
-const mod = require("./solution");
-const tests = ${JSON.stringify(safeArgs)};
-
-for (const x of tests) {
-  try {
-    const sol = new mod.${entryPoint.className}();
-    const res = sol.${entryPoint.name}(x);
-    if (res !== undefined) console.log(res);
-  } catch (e) {
-    console.error(e && e.stack ? e.stack : String(e));
-  }
-}
-`;
-    return [
-      { name: "main.js", content: runner },
-      { name: "solution.js", content: userCode + exportShim },
-    ];
   }
 
-  // -------- Java --------
+  // JAVA: need types => parse from starter, then inject main into Solution
   if (language === "java") {
-  if (!entryPoint || entryPoint.kind !== "method") {
-    // fallback: run raw
-    return [{ name: "Solution.java", content: userCode }];
-  }
+    if (!entryPoint || entryPoint.kind !== "method") {
+      return [{ name: "Solution.java", content: userCode }];
+    }
+    if (hasJavaMain(userCode)) {
+      return [{ name: "Solution.java", content: userCode }];
+    }
 
-  // If user already has main(), don't inject
-  if (hasJavaMain(userCode)) {
-    return [{ name: "Solution.java", content: userCode }];
-  }
+    const params = starterForLang
+      ? parseJavaParamsFromStarter(starterForLang, entryPoint.name)
+      : [];
 
-  const methodName = entryPoint.name;
-  const className = entryPoint.className; // should be "Solution"
-  const args = cases.map((tc) => extractSingleArg(tc.input));
-  const safeArgs = args.length ? args : [""];
+    const argLists = safeCases.map((tc) => buildArgsFromInput(tc.input, params));
 
-  // For now: strings only (your palindrome)
-  const stringArgs = safeArgs.map((a) => JSON.stringify(String(a))).join(", ");
+    // generate per-case calls
+    const callLines = argLists
+      .slice(0, 2) // keep run snappy; change to more later
+      .map((args, i) => {
+        const exprs =
+          params.length
+            ? params.map((p, idx) => javaExpr(args[idx], p.type)).join(", ")
+            : args.map((v) => javaExpr(v, "String")).join(", ");
+        return `
+      // Case ${i + 1}
+      Object res${i} = sol.${entryPoint.name}(${exprs});
+      if (res${i} != null) System.out.println(res${i});
+`;
+      })
+      .join("\n");
 
-  const mainInsert = `
+    const mainInsert = `
   public static void main(String[] args) {
-    ${className} sol = new ${className}();
-    String[] tests = new String[] { ${stringArgs} };
-    for (String s : tests) {
-      try {
-        Object res = sol.${methodName}(s);
-        if (res != null) System.out.println(res);
-      } catch (Exception e) {
-        e.printStackTrace();
-      }
+    ${entryPoint.className} sol = new ${entryPoint.className}();
+    try {${callLines}
+    } catch (Exception e) {
+      e.printStackTrace();
     }
   }
 `;
 
-  const injected = injectIntoJavaClass(userCode, className, mainInsert);
+    const injected = injectIntoClass(userCode, entryPoint.className, mainInsert);
+    return [{ name: "Solution.java", content: injected ?? userCode }];
+  }
 
-  return [{ name: "Solution.java", content: injected ?? userCode }];
-}
-
-  // -------- C# --------
-  if (hasCSharpMain(userCode) || !entryPoint || entryPoint.kind !== "method") {
+  // C#: need types => parse from starter, then inject Main into Solution
+  if (!entryPoint || entryPoint.kind !== "method") {
+    return [{ name: "Program.cs", content: userCode }];
+  }
+  if (hasCSharpMain(userCode)) {
     return [{ name: "Program.cs", content: userCode }];
   }
 
-  const methodName = entryPoint.name;
-  const stringArgs = safeArgs.map((a) => JSON.stringify(String(a))).join(", ");
+  const params = starterForLang
+    ? parseCSharpParamsFromStarter(starterForLang, entryPoint.name)
+    : [];
 
-  const runner = `
-public class Program {
+  const argLists = safeCases.map((tc) => buildArgsFromInput(tc.input, params));
+
+  const callLines = argLists
+    .slice(0, 2)
+    .map((args, i) => {
+      const exprs =
+        params.length
+          ? params.map((p, idx) => csExpr(args[idx], p.type)).join(", ")
+          : args.map((v) => csExpr(v, "string")).join(", ");
+      return `
+    // Case ${i + 1}
+    var res${i} = sol.${entryPoint.name}(${exprs});
+    if (res${i} != null) System.Console.WriteLine(res${i});
+`;
+    })
+    .join("\n");
+
+  const mainInsert = `
   public static void Main() {
     var sol = new ${entryPoint.className}();
-    var tests = new string[] { ${stringArgs} };
-    foreach (var s in tests) {
-      try {
-        var res = sol.${methodName}(s);
-        if (res != null) System.Console.WriteLine(res);
-      } catch (System.Exception e) {
-        System.Console.Error.WriteLine(e.ToString());
-      }
+    try {${callLines}
+    } catch (System.Exception e) {
+      System.Console.Error.WriteLine(e.ToString());
     }
   }
-}
 `;
-  return [
-    { name: "Program.cs", content: runner },
-    { name: "Solution.cs", content: userCode },
-  ];
+
+  const injected = injectIntoClass(userCode, entryPoint.className, mainInsert);
+  return [{ name: "Program.cs", content: injected ?? userCode }];
 }
 
 export async function executeCode(
   language: Lang,
   sourceCode: string,
   cases: { input: any; output?: any }[] = [],
-  entryPoint?: EntryPoint
+  entryPoint?: EntryPoint,
+  starterForLang?: string
 ) {
   const pistonLanguage = toPistonLanguage(language);
   const version = LANGS_VERSIONS[language];
 
-  const files = buildFiles(language, sourceCode, cases, entryPoint);
+  const files = buildFiles({
+    language,
+    userCode: sourceCode,
+    cases,
+    entryPoint,
+    starterForLang,
+  });
 
   const response = await API.post("/execute", {
     language: pistonLanguage,
     version,
     files,
     stdin: "",
-    compile_timeout: 10000,
-    run_timeout: 3000,
   });
 
   return response.data;

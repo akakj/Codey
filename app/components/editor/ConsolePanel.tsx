@@ -9,7 +9,7 @@ import { ChevronDown, Terminal, SquareCheck, CloudUpload } from "lucide-react";
 import type { ImperativePanelHandle } from "react-resizable-panels";
 import ConsoleCases from "../ProblemWorkspace/ConsoleCases";
 import { executeCode } from "./api";
-import type { Lang } from "@/lib/languages";
+import type { Lang, StarterMap } from "@/lib/languages";
 import { Loader2 } from "lucide-react";
 
 import type { EntryPointByLang } from "@/lib/problem";
@@ -25,7 +25,8 @@ export function ConsolePanel({
   language,
   problemSlug,
   initialCases,
-  entryPointByLang
+  entryPointByLang,
+  starterCodeByLang,
 }: {
   isLoggedIn: boolean;
   initialOpen?: boolean;
@@ -34,6 +35,7 @@ export function ConsolePanel({
   problemSlug: string;
   initialCases?: { input: any; output?: any }[];
   entryPointByLang?: EntryPointByLang;
+  starterCodeByLang?: StarterMap;
 }) {
   const panelRef = React.useRef<ImperativePanelHandle>(null);
   const [size, setSize] = React.useState<number>(initialOpen ? EXPANDED : 10);
@@ -54,7 +56,7 @@ export function ConsolePanel({
 
     try {
       setIsLoading(true);
-      const { run: result } = await executeCode(language, sourceCode, initialCases ?? [], entryPointByLang?.[language]);
+      const { run: result } = await executeCode(language, sourceCode, initialCases ?? [], entryPointByLang?.[language], starterCodeByLang?.[language]);
       console.log("Execution result:", result);
       setOutput(result.output);
       result.stderr ? setIsError(true) : setIsError(false);
