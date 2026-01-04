@@ -1,6 +1,6 @@
 import React from "react";
 import ProblemsList from "@/app/components/ProblemsList";
-import rawData from "@/app/data/neetcode_150_problems.json";
+import rawData from "@/app/data/neetcode_150_problems_with_entry.json";
 import { ProblemsFile } from "@/lib/problem";
 import type { Metadata } from "next";
 

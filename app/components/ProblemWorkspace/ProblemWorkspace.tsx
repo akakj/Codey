@@ -17,10 +17,12 @@ export default async function ProblemWorkspace({
   initialTab?: string;
 }) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   return (
-    <div className="px-[2px] sm:px-[5px] py-[2px] sm:py-[5px]">
+    <div className="px-0.5 sm:px-1 py-0.5 sm:py-1">
       <div className="w-full h-[91dvh] rounded-lg border overflow-hidden">
         <ResizablePanelGroup direction="horizontal" className="h-full">
           <ResizablePanel defaultSize={40} minSize={0}>
@@ -36,7 +38,8 @@ export default async function ProblemWorkspace({
                 isLoggedIn={!!user}
                 problemSlug={problem.slug}
                 starterCodeByLang={problem.starterCode}
-                initialCases={problem.testCases.slice(0, 2)} 
+                initialCases={problem.testCases.slice(0, 2)}
+                entryPointByLang={problem.entryPoint}
               />
             </div>
           </ResizablePanel>

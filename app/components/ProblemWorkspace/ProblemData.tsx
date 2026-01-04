@@ -3,7 +3,7 @@ import type { Problem } from "@/lib/problem";
 import TabsHeaderClient from "./TabsHeaderClient";
 import Description from "./tabs/Description";
 import Submissions from "./tabs/Submissions";
-import Notes from "./tabs/Notes";
+import Solution from "./tabs/Solution";
 
 export default function ProblemData({
   problem,
@@ -24,7 +24,7 @@ export default function ProblemData({
         >
           {initialTab === "description" && <Description problem={problem} />}
           {initialTab === "submissions" && <Submissions problem={problem} />}
-          {initialTab === "notes" && <Notes problem={problem} />}
+          {initialTab === "solutions" && <Solution problem={problem} />}
         </Suspense>
       </div>
     </div>

@@ -1,9 +1,16 @@
 import type { StarterMap } from "@/lib/languages";
+import type { Lang } from "@/lib/languages";
 
 export interface TestCase {
   input: any;
   expectedOutput: any;
 }
+
+export type EntryPoint =
+  | { kind: "function"; name: string }
+  | { kind: "method"; className: string; name: string };
+
+export type EntryPointByLang = Partial<Record<Lang, EntryPoint>>;
 
 export interface Problem {
   problemID: number;
@@ -17,6 +24,7 @@ export interface Problem {
   testCases: TestCase[];
   starterCode: StarterMap;
   algorithm?: string;
+  entryPoint?: EntryPointByLang;
 }
 
 export type ProblemLite = {

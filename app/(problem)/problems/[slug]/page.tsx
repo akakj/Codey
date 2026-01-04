@@ -2,7 +2,7 @@ import React from 'react';
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ProblemWorkspace from "@/app/components/ProblemWorkspace/ProblemWorkspace";
-import rawData from "@/app/data/neetcode_150_problems.json";
+import rawData from "@/app/data/neetcode_150_problems_with_entry.json";
 import { ProblemsFile } from "@/lib/problem";
 
 type Props = {
@@ -54,6 +54,7 @@ export default async function ProblemPage({
         testCases: problem.testCases,
         algorithm: problem.algorithm,
         starterCode: problem.starterCode,
+        entryPoint: problem.entryPoint,
       }}
     />
   );

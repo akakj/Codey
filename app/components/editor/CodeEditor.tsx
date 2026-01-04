@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/resizable";
 import { EditorToolbar } from "./EditorToolbar";
 import { ConsolePanel } from "./ConsolePanel";
+import type { EntryPointByLang } from "@/lib/problem";
 
 const LANG_STORAGE_KEY = "Codey:lastLanguage";
 const CODE_NS = "Codey:code";
@@ -28,7 +29,8 @@ export default function CodeEditor({
   starterCodeByLang = {},
   onLanguageChange,
   initialConsoleOpen = true,
-  initialCases,  
+  initialCases,
+  entryPointByLang,  
 }: {
   isLoggedIn: boolean;
   problemSlug: string;
@@ -36,6 +38,7 @@ export default function CodeEditor({
   onLanguageChange?: (lang: Lang) => void;
   initialConsoleOpen?: boolean;
   initialCases?: { input: any; output?: any }[];
+  entryPointByLang?: EntryPointByLang;
 }) {
   const starters = starterCodeByLang;
 
@@ -174,7 +177,8 @@ export default function CodeEditor({
           value={value}
           language={lang}
           problemSlug={problemSlug}    
-          initialCases={initialCases} 
+          initialCases={initialCases}
+          entryPointByLang={entryPointByLang}
         />
       </ResizablePanelGroup>
     </div>

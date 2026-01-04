@@ -12,6 +12,8 @@ import { executeCode } from "./api";
 import type { Lang } from "@/lib/languages";
 import { Loader2 } from "lucide-react";
 
+import type { EntryPointByLang } from "@/lib/problem";
+
 
 const MIN = 6;
 const EXPANDED = 40;
@@ -23,6 +25,7 @@ export function ConsolePanel({
   language,
   problemSlug,
   initialCases,
+  entryPointByLang
 }: {
   isLoggedIn: boolean;
   initialOpen?: boolean;
@@ -30,6 +33,7 @@ export function ConsolePanel({
   language: Lang;
   problemSlug: string;
   initialCases?: { input: any; output?: any }[];
+  entryPointByLang?: EntryPointByLang;
 }) {
   const panelRef = React.useRef<ImperativePanelHandle>(null);
   const [size, setSize] = React.useState<number>(initialOpen ? EXPANDED : 10);
@@ -50,7 +54,7 @@ export function ConsolePanel({
 
     try {
       setIsLoading(true);
-      const { run: result } = await executeCode(language, sourceCode);
+      const { run: result } = await executeCode(language, sourceCode, initialCases ?? [], entryPointByLang?.[language]);
       console.log("Execution result:", result);
       setOutput(result.output);
       result.stderr ? setIsError(true) : setIsError(false);

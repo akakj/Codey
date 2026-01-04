@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { FileText, History, StickyNote } from "lucide-react";
+import { FileText, History, Lightbulb } from "lucide-react";
 
 export default function TabsHeaderClient({
   initialTab,
@@ -78,10 +78,15 @@ export default function TabsHeaderClient({
             </Link>
           </TabsTrigger>
 
-          <TabsTrigger value="notes" asChild className={triggerCls}>
-            <Link href="?tab=notes" replace scroll={false} aria-label="Notes">
-              <StickyNote className="shrink-0" />
-              {!compact && <span className="truncate">Notes</span>}
+          <TabsTrigger value="solutions" asChild className={triggerCls}>
+            <Link
+              href="?tab=solutions"
+              replace
+              scroll={false}
+              aria-label="Solution"
+            >
+              <Lightbulb className="shrink-0" />
+              {!compact && <span className="truncate">Solution</span>}
             </Link>
           </TabsTrigger>
         </TabsList>

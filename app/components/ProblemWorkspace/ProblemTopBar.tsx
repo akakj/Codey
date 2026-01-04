@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useMemo, useState } from "react";
-import rawData from "@/app/data/neetcode_150_problems.json";
+import rawData from "@/app/data/neetcode_150_problems_with_entry.json";
 import type { ProblemsFile, ProblemLite } from "@/lib/problem";
 import { ThemeToggle } from "../ThemeToggle";
 import { getDifficulty } from "@/lib/difficulty";
@@ -95,7 +95,7 @@ export default function ProblemTopBar({
   return (
     <nav className="fixed top-0 inset-x-0 bg-white dark:bg-[#111111] shadow-sm h-16 z-50 flex items-center justify-between px-4 rounded-b-sm">
       <div className="flex items-center space-x-4">
-        <Link href="/" className="flex-shrink-0" aria-label="Home">
+        <Link href="/" className="shrink-0" aria-label="Home">
           <Image
             src="/home-icon.png"
             alt="Home"
@@ -114,7 +114,7 @@ export default function ProblemTopBar({
           </SheetTrigger>
           <SheetContent
             side="left"
-            className="p-0 w-[100vw] max-w-none sm:max-w-none sm:w-[90vw] md:w-[75vw] lg:w-[60vw]"
+            className="p-0 w-screen max-w-none sm:max-w-none sm:w-[90vw] md:w-[75vw] lg:w-[60vw]"
           >
             <SheetHeader className="px-4 pt-3 pb-0 -mb-3">
               <SheetTitle className="text-xl font-bold">
@@ -133,7 +133,7 @@ export default function ProblemTopBar({
                     value={q}
                     onChange={(e) => setQ(e.target.value)}
                     placeholder="Search for a problem..."
-                    className="h-9 pl-8 pr-2 rounded-xl text-sm w-full max-w-[360px]"
+                    className="h-9 pl-8 pr-2 rounded-xl text-sm w-full max-w-90"
                   />
                 </div>
               </div>
