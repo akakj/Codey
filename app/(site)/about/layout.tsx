@@ -22,12 +22,7 @@ export default function AboutLayout({ children }: AboutLayoutProps) {
 
         text-gray-900
 
-        dark:bg-gradient-to-br
-        dark:from-blue-700
-        dark:via-indigo-800
-        dark:to-purple-900
-        dark:bg-[length:200%_200%]
-        dark:animate-gradient
+        dark:bg-[linear-gradient(90deg,#4b6cb7_0%,#182848_100%)]
 
         dark:text-white
       `}
@@ -38,3 +33,4 @@ export default function AboutLayout({ children }: AboutLayoutProps) {
     </section>
   );
 }
+

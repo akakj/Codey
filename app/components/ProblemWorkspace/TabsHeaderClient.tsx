@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
-import { FileText, History, Lightbulb } from "lucide-react";
+import { FileText, History, Puzzle } from "lucide-react";
 
 export default function TabsHeaderClient({
   initialTab,
@@ -85,7 +85,7 @@ export default function TabsHeaderClient({
               scroll={false}
               aria-label="Solution"
             >
-              <Lightbulb className="shrink-0" />
+              <Puzzle className="shrink-0" />
               {!compact && <span className="truncate">Solution</span>}
             </Link>
           </TabsTrigger>

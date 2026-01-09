@@ -6,17 +6,24 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, X, RotateCcw } from "lucide-react";
 import {
-  Tooltip, TooltipProvider, TooltipTrigger, TooltipContent,
+  Tooltip,
+  TooltipProvider,
+  TooltipTrigger,
+  TooltipContent,
 } from "@/components/ui/tooltip";
 
-type CaseFields = Record<string, string>; 
+type CaseFields = Record<string, string>;
 type JsonCase = { input: any; output?: any };
 
 const CASES_NS = (slug: string) => `Codey:cases:${slug}`;
 
 //stringify
 const s = (v: any) => {
-  try { return JSON.stringify(v); } catch { return String(v); }
+  try {
+    return JSON.stringify(v);
+  } catch {
+    return String(v);
+  }
 };
 
 // Convert a test case's input to editable fields
@@ -33,25 +40,65 @@ function loadFromStorage(slug: string): CaseFields[] | null {
   if (typeof window === "undefined") return null;
   const raw = localStorage.getItem(CASES_NS(slug));
   if (!raw) return null;
-  try { return JSON.parse(raw) as CaseFields[]; } catch { return null; }
+  try {
+    return JSON.parse(raw) as CaseFields[];
+  } catch {
+    return null;
+  }
 }
 
 function deepEqual(a: any, b: any) {
-  try { return JSON.stringify(a) === JSON.stringify(b); } catch { return false; }
+  try {
+    return JSON.stringify(a) === JSON.stringify(b);
+  } catch {
+    return false;
+  }
+}
+
+function tryParseJson(text: string): any {
+  const trimmed = text.trim();
+  if (trimmed === "") return "";
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    // keep raw if no t valid JSON
+    return text;
+  }
+}
+
+function fieldsToJsonCase(fields: CaseFields): JsonCase {
+  const keys = Object.keys(fields);
+
+  // single input
+  if (keys.length === 1 && keys[0] === "input") {
+    return { input: tryParseJson(fields["input"]) ?? "" };
+  }
+
+  // multiple, named inputs
+  const obj: Record<string, any> = {};
+  for (const k of keys) obj[k] = tryParseJson(fields[k] ?? "");
+  return { input: obj };
+}
+
+function allFieldsToJsonCases(all: CaseFields[]): JsonCase[] {
+  return all.map(fieldsToJsonCase);
 }
 
 export default function ConsoleCases({
   problemSlug,
   initialCases,
   maxCases = 4,
+  onCasesChange,
 }: {
   problemSlug: string;
-  initialCases?: JsonCase[]; // already sliced to first 2 by parent
+  initialCases?: JsonCase[];
   maxCases?: number;
+  onCasesChange?: (cases: JsonCase[]) => void;
 }) {
   // Build defaults once per problem
   const defaultCases = React.useMemo<CaseFields[]>(() => {
-    if (initialCases?.length) return initialCases.map(tc => toFields(tc.input));
+    if (initialCases?.length)
+      return initialCases.map((tc) => toFields(tc.input));
     return [{ input: "" }];
   }, [problemSlug, initialCases]);
 
@@ -64,8 +111,11 @@ export default function ConsoleCases({
   React.useEffect(() => {
     setHydrated(true); // client only
     const stored = loadFromStorage(problemSlug);
-    setCases(stored ?? defaultCases);
+    const nextCases = stored ?? defaultCases;
+    setCases(nextCases);
     setActive(0);
+
+    onCasesChange?.(allFieldsToJsonCases(nextCases));
   }, [problemSlug, defaultCases]);
 
   // Persist only after hydration (prevents clobbering saved cases)
@@ -74,33 +124,44 @@ export default function ConsoleCases({
     try {
       localStorage.setItem(CASES_NS(problemSlug), JSON.stringify(cases));
     } catch {}
-  }, [cases, problemSlug, hydrated]);
+
+    // notify parent
+    onCasesChange?.(allFieldsToJsonCases(cases));
+  }, [cases, problemSlug, hydrated, onCasesChange]);
 
   const reachedLimit = hydrated && cases.length >= maxCases;
 
   const addCase = () => {
     if (cases.length >= maxCases) return;
     const source =
-    cases[active] ??
-    defaultCases[0] ??
-    ({ input: "" } as CaseFields);
+      cases[active] ?? defaultCases[0] ?? ({ input: "" } as CaseFields);
     const clone: CaseFields = { ...source };
     setCases((prev) => [...prev, clone]);
     setActive(cases.length);
   };
 
   const removeAt = (index: number) => {
-    if (cases.length <= 1) return;
-    const next = cases.slice(); //shallow copy
-    next.splice(index, 1);
-    setCases(next);
-    if (active >= next.length) setActive(next.length - 1);
+    setCases((prev) => {
+      if (prev.length <= 1) return prev; // never remove last
+      const next = prev.slice();
+      next.splice(index, 1);
+      return next;
+    });
+
+    setActive((cur) => {
+      const nextLen = cases.length - 1;
+      if (nextLen <= 0) return 0;
+      if (index < cur) return cur - 1;
+      if (cur >= nextLen) return nextLen - 1;
+      return cur;
+    });
   };
 
   const updateField = (name: string, val: string) => {
-    setCases(prev => {
+    setCases((prev) => {
       const next = prev.slice();
-      next[active] = { ...next[active], [name]: val };
+      const current = next[active] ?? ({} as CaseFields);
+      next[active] = { ...current, [name]: val };
       return next;
     });
   };
@@ -116,6 +177,7 @@ export default function ConsoleCases({
     } catch {}
   };
 
+  const currentCase = cases[active] ?? defaultCases[0] ?? {};
   const fieldNames = Object.keys(cases[active] ?? { input: "" }); // textarea for the current case
 
   return (
@@ -139,7 +201,11 @@ export default function ConsoleCases({
                     role="button"
                     tabIndex={0}
                     aria-label={`Remove Case ${i + 1}`}
-                    onClick={(e) => { e.stopPropagation(); e.preventDefault(); removeAt(i); }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      removeAt(i);
+                    }}
                     className="
                       absolute -top-2 -right-1 h-4 w-4 rounded-full
                       flex items-center justify-center 
@@ -170,11 +236,13 @@ export default function ConsoleCases({
                   <Plus className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="bottom">Clone current test case</TooltipContent>
+              <TooltipContent side="bottom">
+                Clone current test case
+              </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         )}
-        
+
         {/* Right-side Reset */}
         <div className="ml-auto">
           <TooltipProvider>
@@ -191,7 +259,9 @@ export default function ConsoleCases({
                   <RotateCcw className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="left">Reset test cases to defaults</TooltipContent>
+              <TooltipContent side="left">
+                Reset test cases to defaults
+              </TooltipContent>
             </Tooltip>
           </TooltipProvider>
         </div>
