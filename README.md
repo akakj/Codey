@@ -1,28 +1,72 @@
 # Codey
 
-A **LeetCode-like** website for coding challenges. *I started grinding LeetCode so I decided to create my own version.*
+A platform for practicing and analysing problem-solving coding challenges, designed with a focus on performance, scalability, and developer experience.
 
-**Status: The website is still in progress.**
-
----
-
-## 🧠 What is this?
-
-Codey is a practice platform where you can browse problems, read statements, and (soon) write and run code in-browser. It’s built to be fast, clean, and easy to extend.
-
-> Repo tech highlights: Next.js (App Router) + TypeScript, Tailwind CSS, shadcn/ui components, Prisma, and Supabase utilities.
+**Status:** Active development — **Run** and **custom user test cases** are implemented. **Submit** and **Solutions** features are in progress.
 
 ---
 
-## ✨ Features (WIP)
+## Overview
 
-* Problem listing & detail pages
-* Difficulty tags and metadata
-* In-browser editor & runner (planned)
-* Submissions history, results, and leaderboards (planned)
-* Auth & profiles
+Codey is a browser-based coding challenge platform that allows users to write, run, and evaluate solutions against structured test cases, while laying the groundwork for meaningful progress tracking and performance insights.
+
+The project is built using production-style practices, with an emphasis on API-driven design, frontend–backend coordination, and maintainability.
 
 ---
+
+## Core features
+
+### Implemented
+- Problem catalogue with metadata and categorisation
+- **150 curated coding problems** across multiple topics
+- In-browser code editor
+- **Code execution pipeline (Run)**
+- **Custom user-defined test cases**
+
+### In progress
+- **Submit flow** (persisted submissions and final verdicts)
+- **Solutions tab** (editorial and reference implementations)
+
+### Planned
+- User statistics and analytics:
+  - Total problems solved
+  - Problems solved by topic
+  - Average time spent per problem
+  - Attempt and success rates
+- Submission history
+- User profiles
+
+---
+
+## Technical highlights
+
+- API-first and modular architecture
+- Strong separation of concerns between UI, execution, and data layers
+- Performance-focused UX (optimistic updates, caching)
+- Secure authentication and execution boundaries
+- Structured to support future features without major refactors
+
+---
+
+## Tech stack
+
+- **Frontend:** Next.js (App Router), TypeScript, Tailwind CSS, shadcn/ui
+- **Backend / Data:** Supabase, PostgreSQL (Removed Prisma for better database migrations)
+- **Tooling & DevOps:** GitHub Actions (CI/CD), ESLint, Prettier
+- **Deployment:** Vercel
+
+---
+
+## Getting started
+
+### Prerequisites
+- Node.js (LTS)
+- PostgreSQL database
+
+### Install dependencies
+```bash
+npm install
+
 
 ## 🚀 Getting Started
 
