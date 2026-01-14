@@ -138,14 +138,6 @@ Codey/
 
 ---
 
-## 🗺️ Roadmap
-
-* [ ] Code execution sandbox & test cases
-* [ ] Submissions, verdicts, and leaderboards
-* [ ] User Progress on Home page displayed
-
----
-
 ## 🤝 Contributing
 
 Open an issue or PR with suggestions. This is a personal learning project inspired by LeetCode.
