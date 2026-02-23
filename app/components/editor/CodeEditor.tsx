@@ -133,7 +133,7 @@ export default function CodeEditor({
   return (
     <div className="flex h-full flex-col">
       <ResizablePanelGroup direction="vertical" className="flex-1">
-        <ResizablePanel defaultSize={94} minSize={30}>
+        <ResizablePanel defaultSize={60} minSize={30}>
           <div className="flex h-full flex-col">
             <EditorToolbar
               lang={lang}

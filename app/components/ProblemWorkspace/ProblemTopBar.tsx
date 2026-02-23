@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import rawData from "@/app/data/neetcode_150_problems_with_entry.json";
 import type { ProblemsFile, ProblemLite } from "@/lib/problem";
 import { ThemeToggle } from "../ThemeToggle";
@@ -46,12 +46,38 @@ export default function ProblemTopBar({
     [problems, currentSlug]
   );
 
-  const prev = index > 0 ? problems[index - 1] : null;
-  const next =
-    index >= 0 && index < problems.length - 1 ? problems[index + 1] : null;
+  const prev =  problems.length
+  ? problems[(index - 1 + problems.length) % problems.length]
+  : null;
+  const next = problems.length
+  ? problems[(index + 1) % problems.length]
+  : null;
 
   const difficulties = ["Easy", "Medium", "Hard"] as const;
   type Difficulty = (typeof difficulties)[number];
+
+  const [open, setOpen] = useState(false);
+
+  // points to the scrollable div
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+
+  // points to the current row
+  const currentRowRef = useRef<HTMLTableRowElement | null>(null);
+
+  useEffect(() => {
+    if(!open) return; // only scroll when opening the sheet
+
+    // wait for sheet content to render
+    const id = requestAnimationFrame(() => {
+      currentRowRef.current?.scrollIntoView({
+        block: "center",
+        inline: "nearest",
+        behavior: "instant" as ScrollBehavior,
+      });
+    });
+
+    return () => cancelAnimationFrame(id);
+  });
 
   const [q, setQ] = useState("");
   const [filters, setFilters] = useState<Difficulty[]>([]);
@@ -105,7 +131,7 @@ export default function ProblemTopBar({
           />
         </Link>
 
-        <Sheet>
+        <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
             <button className="text-gray-600 hover:text-gray-900 dark:text-[#c9c6c5] dark:hover:text-white transition-colors inline-flex items-center gap-2 hover:cursor-pointer">
               <List className="h-4 w-4" />
@@ -114,7 +140,7 @@ export default function ProblemTopBar({
           </SheetTrigger>
           <SheetContent
             side="left"
-            className="p-0 w-screen max-w-none sm:max-w-none sm:w-[90vw] md:w-[75vw] lg:w-[60vw]"
+            className="p-0 w-screen max-w-none sm:max-w-none sm:w-[90vw] md:w-[70vw] lg:w-[55vw]"
           >
             <SheetHeader className="px-4 pt-3 pb-0 -mb-3">
               <SheetTitle className="text-xl font-bold">
@@ -142,7 +168,7 @@ export default function ProblemTopBar({
             {/* Table container */}
             <div className="px-4 py-3">
               <div className="overflow-hidden rounded-md border border-border">
-                <div className="max-h-[calc(100vh-11rem)] overflow-auto">
+                <div className="max-h-[calc(100vh-11rem)] overflow-auto"  ref={scrollRef}>
                   <table className="w-full text-sm">
                     <thead className="sticky top-0 z-10 bg-gray-300 dark:bg-[#22272d]">
                       <tr>
@@ -169,6 +195,7 @@ export default function ProblemTopBar({
                         return (
                           <tr
                             key={p.slug}
+                            ref={isCurrent ? currentRowRef : null}
                             className={cn(
                               "hover:bg-muted/50",
                               isCurrent &&

@@ -2,15 +2,15 @@ import axios from "axios";
 import { LANGS_VERSIONS, type Lang } from "@/lib/languages";
 import type { EntryPoint } from "@/lib/problem";
 
-const API = axios.create({
-  baseURL: "https://emkc.org/api/v2/piston",
+/*const API = axios.create({
+  baseURL: "https://api.jdoodle.com/v1",
   headers: { "Content-Type": "application/json" },
-});
+});*/
 
 const RESULT_PREFIX = "@@RESULT@@";
 
-function toPistonLanguage(lang: Lang): string {
-  return lang === "python3" ? "python" : lang;
+function toJDoodleLanguage(lang: Lang): string {
+  return lang === "javascript" ? "nodejs" : lang;
 }
 
 // type required for Java and C#
@@ -229,26 +229,26 @@ function hasCSharpMain(code: string) {
   return /\bstatic\s+void\s+Main\s*\(/.test(code);
 }
 
-/** ---------- build piston files (multi-arg support) ---------- */
-function buildFiles(opts: {
+/** ---------- NEW: build a single JDoodle script ---------- */
+function buildJDoodleScript(opts: {
   language: Lang;
   userCode: string;
   cases: { input: any }[];
   entryPoint?: EntryPoint;
-  starterForLang?: string; // to parse param types for Java/C#
-}) {
+  starterForLang?: string;
+}): string {
   const { language, userCode, cases, entryPoint, starterForLang } = opts;
   const safeCases = cases.length ? cases : [{ input: "" }];
 
-  // PYTHON
+  // PYTHON: put user code first, then runner that calls symbols directly (no imports)
   if (language === "python3") {
-    if (!entryPoint) return [{ name: "main.py", content: userCode }];
+    if (!entryPoint) return userCode;
 
     const argLists = safeCases.map((tc) => buildArgsFromInput(tc.input));
+
     const runner =
       entryPoint.kind === "method"
         ? `
-from solution import ${entryPoint.className}
 import json, traceback
 
 tests = json.loads(${JSON.stringify(JSON.stringify(argLists))})
@@ -267,7 +267,6 @@ if __name__ == "__main__":
             emit({"case": idx, "ok": False, "error": traceback.format_exc()})
 `
         : `
-from solution import ${entryPoint.name} as entry_fn
 import json, traceback
 
 tests = json.loads(${JSON.stringify(JSON.stringify(argLists))})
@@ -278,35 +277,25 @@ def emit(obj):
 if __name__ == "__main__":
     for idx, args in enumerate(tests, start=1):
         try:
-            res = entry_fn(*args)
+            res = ${entryPoint.name}(*args)
             out = "" if res is None else str(res)
             emit({"case": idx, "ok": True, "output": out})
         except Exception:
             emit({"case": idx, "ok": False, "error": traceback.format_exc()})
 `;
 
-    return [
-      { name: "main.py", content: runner },
-      { name: "solution.py", content: userCode },
-    ];
+    return `${userCode}\n\n${runner}\n`;
   }
 
-  // JAVASCRIPT
+  // JAVASCRIPT: user code first, then runner; no require/module.exports needed
   if (language === "javascript") {
-    if (!entryPoint) return [{ name: "main.js", content: userCode }];
+    if (!entryPoint) return userCode;
 
     const argLists = safeCases.map((tc) => buildArgsFromInput(tc.input));
 
-    if (entryPoint.kind === "function") {
-      const exportShim = `\n\ntry { module.exports = { ${entryPoint.name} }; } catch (e) {}\n`;
-      const runner = `
-const { ${entryPoint.name} } = require("./solution");
-const tests = ${JSON.stringify(argLists)};
-
-function emit(obj) {
-  process.stdout.write(${JSON.stringify(RESULT_PREFIX)} + JSON.stringify(obj) + "\\n");
-}
-
+    const invoke =
+      entryPoint.kind === "function"
+        ? `
 for (let i = 0; i < tests.length; i++) {
   const args = tests[i];
   try {
@@ -321,27 +310,12 @@ for (let i = 0; i < tests.length; i++) {
     emit({ case: i + 1, ok: false, error: e && e.stack ? String(e.stack) : String(e) });
   }
 }
-`;
-      return [
-        { name: "main.js", content: runner },
-        { name: "solution.js", content: userCode + exportShim },
-      ];
-    }
-
-    // method
-    const exportShim = `\n\ntry { module.exports = { ${entryPoint.className}: ${entryPoint.className} }; } catch (e) {}\n`;
-    const runner = `
-const mod = require("./solution");
-const tests = ${JSON.stringify(argLists)};
-
-function emit(obj) {
-  process.stdout.write(${JSON.stringify(RESULT_PREFIX)} + JSON.stringify(obj) + "\\n");
-}
-
+`
+        : `
 for (let i = 0; i < tests.length; i++) {
   const args = tests[i];
   try {
-    const sol = new mod.${entryPoint.className}();
+    const sol = new ${entryPoint.className}();
     const res = sol.${entryPoint.name}(...args);
     emit({
       case: i + 1,
@@ -354,25 +328,26 @@ for (let i = 0; i < tests.length; i++) {
   }
 }
 `;
-    return [
-      { name: "main.js", content: runner },
-      { name: "solution.js", content: userCode + exportShim },
-    ];
+
+    const runner = `
+const tests = ${JSON.stringify(argLists)};
+function emit(obj) {
+  process.stdout.write(${JSON.stringify(RESULT_PREFIX)} + JSON.stringify(obj) + "\\n");
+}
+${invoke}
+`;
+
+    return `${userCode}\n\n${runner}\n`;
   }
 
-  // JAVA
+  // JAVA: ensure there is a main; if entryPoint is a method, inject a main into the class
   if (language === "java") {
-    if (!entryPoint || entryPoint.kind !== "method") {
-      return [{ name: "Solution.java", content: userCode }];
-    }
-    if (hasJavaMain(userCode)) {
-      return [{ name: "Solution.java", content: userCode }];
-    }
+    if (!entryPoint || entryPoint.kind !== "method") return userCode;
+    if (hasJavaMain(userCode)) return userCode;
 
     const params = starterForLang
       ? parseJavaParamsFromStarter(starterForLang, entryPoint.name)
       : [];
-
     const argLists = safeCases.map((tc) => buildArgsFromInput(tc.input, params));
 
     const callLines = argLists
@@ -380,9 +355,7 @@ for (let i = 0; i < tests.length; i++) {
         const exprs = params.length
           ? params.map((p, idx) => javaExpr(args[idx], p.type)).join(", ")
           : args.map((v) => javaExpr(v, "String")).join(", ");
-
         const caseNum = i + 1;
-
         return `
     try {
       Object res = sol.${entryPoint.name}(${exprs});
@@ -419,23 +392,17 @@ for (let i = 0; i < tests.length; i++) {
   }
 `;
 
-    const injected = injectIntoClass(userCode, entryPoint.className, mainInsert);
-    return [{ name: "Solution.java", content: injected ?? userCode }];
+    return injectIntoClass(userCode, entryPoint.className, mainInsert) ?? userCode;
   }
 
-  // C#
+  // C#: same idea: ensure Main exists; inject if needed
   if (language === "csharp") {
-    if (!entryPoint || entryPoint.kind !== "method") {
-      return [{ name: "Program.cs", content: userCode }];
-    }
-    if (hasCSharpMain(userCode)) {
-      return [{ name: "Program.cs", content: userCode }];
-    }
+    if (!entryPoint || entryPoint.kind !== "method") return userCode;
+    if (hasCSharpMain(userCode)) return userCode;
 
     const params = starterForLang
       ? parseCSharpParamsFromStarter(starterForLang, entryPoint.name)
       : [];
-
     const argLists = safeCases.map((tc) => buildArgsFromInput(tc.input, params));
 
     const callLines = argLists
@@ -444,9 +411,7 @@ for (let i = 0; i < tests.length; i++) {
           params.length
             ? params.map((p, idx) => csExpr(args[idx], p.type)).join(", ")
             : args.map((v) => csExpr(v, "string")).join(", ");
-
         const caseNum = i + 1;
-
         return `
     try {
       var res = sol.${entryPoint.name}(${exprs});
@@ -476,12 +441,11 @@ for (let i = 0; i < tests.length; i++) {
   }
 `;
 
-    const injected = injectIntoClass(userCode, entryPoint.className, mainInsert);
-    return [{ name: "Program.cs", content: injected ?? userCode }];
+    return injectIntoClass(userCode, entryPoint.className, mainInsert) ?? userCode;
   }
 
   // fallback
-  return [{ name: "main.txt", content: userCode }];
+  return userCode;
 }
 
 export async function executeCode(
@@ -491,10 +455,9 @@ export async function executeCode(
   entryPoint?: EntryPoint,
   starterForLang?: string
 ) {
-  const pistonLanguage = toPistonLanguage(language);
-  const version = LANGS_VERSIONS[language];
+  const jdoodleLanguage = toJDoodleLanguage(language);
 
-  const files = buildFiles({
+  const script = buildJDoodleScript({
     language,
     userCode: sourceCode,
     cases,
@@ -502,12 +465,29 @@ export async function executeCode(
     starterForLang,
   });
 
-  const response = await API.post("/execute", {
-    language: pistonLanguage,
-    version,
-    files,
-    stdin: "",
+  const res = await fetch("/api/execute", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      script,
+      stdin: "",
+      language: jdoodleLanguage,
+      versionIndex: "0",
+    }),
   });
 
-  return response.data;
+  const text = await res.text();
+
+  let data: any = null;
+  try {
+  data = text ? JSON.parse(text) : null;
+  } catch (e) {
+    throw new Error(`Non-JSON response (${res.status}): ${text.slice(0, 300)}`);
+  }
+
+  if (!res.ok) {
+    throw new Error(`HTTP ${res.status}: ${JSON.stringify(data)}`);
+  }
+
+  return data;
 }

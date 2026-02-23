@@ -179,3 +179,6 @@ body[data-scroll-locked] {
     @apply border-[#93959c] dark:border-[#828a97];
   }
 }
+
+ul { list-style: disc; padding-left: 1.25rem; }
+

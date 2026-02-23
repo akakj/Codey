@@ -139,21 +139,24 @@ export function ConsolePanel({
         starterCodeByLang?.[language]
       );
 
-      const stdout: string = data?.run?.stdout ?? "";
-      const stderr: string = data?.run?.stderr ?? "";
+      const stdout: string = typeof data?.output === "string" ? data.output : "";
+      const stderr: string =
+        typeof data?.error === "string" && data.error.trim()
+          ? data.error
+          : typeof data?.compilationStatus === "string" && data.compilationStatus.trim()
+            ? data.compilationStatus
+            : "";
 
+      // parse @@RESULT@@ lines out of stdout
       const runs = parseStdoutByCase(stdout);
 
+      // If JDoodle returned an error string, attach it like you did with piston stderr
       if (stderr.trim()) {
         if (runs.length) {
           for (const r of runs) {
-            r.logs = (
-              (r.logs ?? "").trimEnd() +
-              "\n--- stderr ---\n" +
-              stderr
-            ).trim();
+            r.logs = ((r.logs ?? "").trimEnd() + "\n--- stderr ---\n" + stderr).trim();
             r.ok = false;
-            if (!r.error) r.error = "Runtime error";
+            if (!r.error) r.error = "Runtime/Compile error";
           }
         } else {
           const n = Math.min(
@@ -164,16 +167,15 @@ export function ConsolePanel({
           const errRuns = Array.from({ length: n }, (_, i) => ({
             caseNum: i + 1,
             ok: false,
-            error: "Runtime error",
+            error: "Runtime/Compile error",
             logs: `--- stderr ---\n${stderr}`.trim(),
           }));
 
-          // replace runs entirely (since there were no parsed cases)
           runs.splice(0, runs.length, ...errRuns);
         }
       }
 
-      // If we somehow got no runs, show raw stdout as a single case
+      // If we got no @@RESULT@@ markers, show raw stdout as a single case
       const finalRuns =
         runs.length > 0
           ? runs
