@@ -11,10 +11,12 @@ export function MonacoCodeBlock({
   code,
   lang,
   height = 460,
+  fontSize = 14
 }: {
   code: string;
   lang: Lang;
   height?: number;
+  fontSize?: number;
 }) {
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
@@ -38,7 +40,7 @@ export function MonacoCodeBlock({
           minimap: { enabled: false },
           wordWrap: "off",
           tabSize: 2,
-          fontSize: 14,
+          fontSize:fontSize,
           smoothScrolling: true,
           cursorBlinking: "phase",
           renderWhitespace: "selection",

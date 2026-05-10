@@ -30,7 +30,7 @@ export default function CodeEditor({
   onLanguageChange,
   initialConsoleOpen = true,
   initialCases,
-  entryPointByLang,  
+  entryPointByLang,
 }: {
   isLoggedIn: boolean;
   problemSlug: string;

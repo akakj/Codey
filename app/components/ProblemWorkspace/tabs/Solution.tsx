@@ -16,9 +16,10 @@ function CodeBlock({ code }: { code: string }) {
   );
 }
 
-export default async function Solution({ problem }: { problem: Problem }) {
+export default async function Solution({ problem, mobileOnly }: { problem: Problem; mobileOnly?: boolean }) {
   const sol = getSolutionBySlug(problem.slug);
-
+  const solutionFontSize = mobileOnly ? 10 : 14;
+  const solutionHeight = mobileOnly ? 360 : 460;
   if (!sol) {
     return (
       <div className="space-y-3 m-2">
@@ -62,6 +63,8 @@ export default async function Solution({ problem }: { problem: Problem }) {
     codeByLang={codeByLang}
     availableLangs={availableLangs}
     initialLang={initialLang}
+    fontSize={solutionFontSize}
+    height={solutionHeight}
       />
         ) : sol.runner?.code ? (
           <CodeBlock code={sol.runner.code} />

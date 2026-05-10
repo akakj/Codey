@@ -9,10 +9,14 @@ export function SolutionCodeTabs({
   codeByLang,
   availableLangs,
   initialLang,
+  fontSize,
+  height
 }: {
   codeByLang: Partial<Record<Lang, string>>;
   availableLangs: Lang[];
   initialLang: Lang;
+  fontSize?: number;
+  height?: number;
 }) {
   const [lang, setLang] = useState<Lang>(initialLang);
 
@@ -32,6 +36,7 @@ export function SolutionCodeTabs({
           code={codeByLang[lang] ?? ""}
           lang={lang}
           height={450}
+          fontSize={fontSize}
         />
       </TabsContent>
     </Tabs>

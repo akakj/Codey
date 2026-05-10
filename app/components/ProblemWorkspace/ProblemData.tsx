@@ -8,9 +8,11 @@ import Solution from "./tabs/Solution";
 export default function ProblemData({
   problem,
   initialTab = "description",
+  mobileOnly = false
 }: {
   problem: Problem;
   initialTab?: string;
+  mobileOnly?: boolean;
 }) {
   return (
     <div className="w-full p-3">
@@ -24,7 +26,9 @@ export default function ProblemData({
         >
           {initialTab === "description" && <Description problem={problem} />}
           {initialTab === "submissions" && <Submissions problem={problem} />}
-          {initialTab === "solutions" && <Solution problem={problem} />}
+          {initialTab === "solutions" && (
+            <Solution problem={problem} mobileOnly={mobileOnly} />
+          )}
         </Suspense>
       </div>
     </div>

@@ -27,8 +27,9 @@ export default async function ProblemWorkspace({
       <div className="w-full h-[91dvh] rounded-lg border overflow-hidden">
         {/* Mobile: only problem panel */}
         <div className="h-full sm:hidden">
+          <MobileOnlyAlert />
           <div className="h-full overflow-auto">
-            <ProblemData problem={problem} initialTab={initialTab} />
+            <ProblemData problem={problem} initialTab={initialTab} mobileOnly={true} />
           </div>
         </div>
 
@@ -36,7 +37,6 @@ export default async function ProblemWorkspace({
         <div className="hidden h-full sm:block">
           <ResizablePanelGroup direction="horizontal" className="h-full">
             <ResizablePanel defaultSize={40} minSize={0}>
-              <MobileOnlyAlert />
               <div className="h-full overflow-auto">
                 <ProblemData problem={problem} initialTab={initialTab} />
               </div>
