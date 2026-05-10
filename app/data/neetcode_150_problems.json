@@ -406,7 +406,7 @@
       ],
       "algorithm": "Array, Hash Table, Sorting",
       "starterCode": {
-        "python3": "class Solution:\n    def containsDuplicate(self, nums: List[int]) -> bool:\n        ",
+        "python3": "class Solution:\n    def containsDuplicate(self, nums) -> bool:\n        ",
         "javascript": "/**\n * @param {number[]} nums\n * @return {boolean}\n */\nvar containsDuplicate = function(nums) {\n    \n};",
         "java": "class Solution {\n    public boolean containsDuplicate(int[] nums) {\n        \n    }\n}",
         "csharp": "public class Solution {\n    public bool ContainsDuplicate(int[] nums) {\n        \n    }\n}"

@@ -19,7 +19,11 @@ import type { EntryPointByLang } from "@/lib/problem";
 const MIN = 6;
 const EXPANDED = 40;
 
-type JsonCase = { input: any; output?: any };
+type JsonCase = {
+  input: any;
+  expectedOutput?: any; // present for default cases
+  isUser?: boolean;     // true for user-added cases
+};
 
 const RESULT_PREFIX = "@@RESULT@@";
 
@@ -57,7 +61,7 @@ function parseStdoutByCase(stdout: string): CaseRun[] {
     }
   }
 
-  // if leftover logs exist after the last result, append to last case (rare, but safe)
+  // if leftover logs exist after the last result, append to last case
   if (pendingLogs.length && runs.length) {
     const last = runs[runs.length - 1];
     last.logs = (
@@ -86,7 +90,7 @@ export function ConsolePanel({
   value: string;
   language: Lang;
   problemSlug: string;
-  initialCases?: { input: any; output?: any }[];
+  initialCases?: JsonCase[];
   entryPointByLang?: EntryPointByLang;
   starterCodeByLang?: StarterMap;
 }) {
@@ -175,7 +179,7 @@ export function ConsolePanel({
         }
       }
 
-      // If we got no @@RESULT@@ markers, show raw stdout as a single case
+      // If got no @@RESULT@@ markers, show raw stdout as a single case
       const finalRuns =
         runs.length > 0
           ? runs

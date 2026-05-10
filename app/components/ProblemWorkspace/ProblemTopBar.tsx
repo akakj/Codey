@@ -135,12 +135,12 @@ export default function ProblemTopBar({
           <SheetTrigger asChild>
             <button className="text-gray-600 hover:text-gray-900 dark:text-[#c9c6c5] dark:hover:text-white transition-colors inline-flex items-center gap-2 hover:cursor-pointer">
               <List className="h-4 w-4" />
-              <span>Problem List</span>
+              <span className="text-gray-700 dark:text-gray-300">Problem List</span>
             </button>
           </SheetTrigger>
           <SheetContent
             side="left"
-            className="p-0 w-screen max-w-none sm:max-w-none sm:w-[90vw] md:w-[70vw] lg:w-[55vw]"
+            className="p-0 w-screen max-w-none sm:max-w-none sm:w-[90vw] md:w-[70vw] lg:w-[50vw]"
           >
             <SheetHeader className="px-4 pt-3 pb-0 -mb-3">
               <SheetTitle className="text-xl font-bold">

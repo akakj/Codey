@@ -110,10 +110,10 @@ export default function ProblemsList({ problems }: ProblemsFile) {
                   key={p.problemID}
                   className="even:bg-muted/20 dark:even:bg-muted/30 font-semibold"
                 >
-                  <td className="px-4 py-3 whitespace-nowrap">
+                  <td className="px-4 py-3 align-top">
                     <Link
                       href={`/problems/${p.slug}`}
-                      className="hover:text-blue-700 dark:hover:text-blue-300"
+                      className="block text-base hover:text-blue-700 dark:hover:text-blue-300 whitespace-normal wrap-break-word"
                     >
                       {p.title}
                     </Link>

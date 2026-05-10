@@ -64,33 +64,6 @@ export default function ConsoleOutput({
         </TabsList>
       </Tabs>
 
-      {/* Output return null if none */}
-      <div className="shrink-0">
-        <div className="mb-2 text-sm font-medium">Output</div>
-        <div className="h-auto overflow-auto rounded-md border border-border bg-muted/20 p-3">
-          {!cur ? null : !cur.ok ? (
-            <pre className="text-sm whitespace-pre-wrap text-red-400">
-              {cur.error || "(error)"}
-            </pre>
-          ) : (
-            <pre
-              className={`text-sm whitespace-pre-wrap ${
-                isError ? "text-red-400" : ""
-              }`}
-            >
-              {(() => {
-                const out = prettyOutput(cur);
-                return out && out.length ? (
-                  out
-                ) : (
-                  <span className="text-red-400">null</span>
-                );
-              })()}
-            </pre>
-          )}
-        </div>
-      </div>
-
       {/* Stdout only shown if there is any */}
       {cur?.logs?.trim()?.length ? (
         <div className="shrink-0">
@@ -102,6 +75,34 @@ export default function ConsoleOutput({
           </div>
         </div>
       ) : null}
+
+      {/* Output return null if none */}
+      <div className="shrink-0">
+        <div className="mb-2 text-sm font-medium">Output</div>
+        <div className="h-auto overflow-auto rounded-md border border-border bg-muted/20 p-3">
+          {!cur ? null : !cur.ok ? (
+            <pre className="text-sm whitespace-pre-wrap text-red-800 dark:text-red-400">
+              {cur.error || "(error)"}
+            </pre>
+          ) : (
+            <pre
+              className={`text-sm whitespace-pre-wrap ${
+                isError ? "text-red-800 dark:text-red-400" : ""
+              }`}
+            >
+              {(() => {
+                const out = prettyOutput(cur);
+                return out && out.length ? (
+                  out
+                ) : (
+                  <span className="text-red-800 dark:text-red-400">null</span>
+                );
+              })()}
+            </pre>
+          )}
+        </div>
+      </div>
+
     </div>
   );
 }

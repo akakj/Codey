@@ -3,12 +3,9 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ProblemWorkspace from "@/app/components/ProblemWorkspace/ProblemWorkspace";
 import rawData from "@/app/data/neetcode_150_problems_with_entry.json";
+import solutions from "@/app/data/solutions.json";
 import { ProblemsFile } from "@/lib/problem";
 
-type Props = {
-  params: { slug: string };
-  searchParams: { tab?: string | string[] };
-};
 
 export async function generateMetadata(
   { params }: { params: Promise<{ slug: string }> }
