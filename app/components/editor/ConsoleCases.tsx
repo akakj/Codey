@@ -177,7 +177,6 @@ export default function ConsoleCases({
     } catch {}
   };
 
-  const currentCase = cases[active] ?? defaultCases[0] ?? {};
   const fieldNames = Object.keys(cases[active] ?? { input: "" }); // textarea for the current case
 
   return (

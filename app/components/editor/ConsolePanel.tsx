@@ -27,12 +27,70 @@ type JsonCase = {
 
 const RESULT_PREFIX = "@@RESULT@@";
 
+// Type guard to check if a test case has an expected output
+function hasExpectedOutput(
+  testCase: JsonCase | undefined
+): testCase is JsonCase & { expectedOutput: any } {
+  return !!testCase && Object.prototype.hasOwnProperty.call(testCase, "expectedOutput");
+}
+
+// Check if two values are deeply equal (used for matching user cases to default cases to show expected output)
+function deepEqual(a: any, b: any) {
+  try {
+    return JSON.stringify(a) === JSON.stringify(b);
+  } catch {
+    return false;
+  }
+}
+
+// Format expected output for display, with special handling for Python booleans
+function formatExpectedOutput(value: any, language: Lang): string {
+  const isPython = String(language).toLowerCase().includes("python");
+
+  if (isPython && typeof value === "boolean") {
+    return value ? "True" : "False";
+  }
+
+  try {
+    const json = JSON.stringify(value, null, 2);
+    return json === undefined ? String(value) : json;
+  } catch {
+    return String(value);
+  }
+}
+
+// Attach expected outputs to case runs by matching user cases to default cases
+function attachExpectedOutputs(
+  runs: CaseRun[],
+  currentCases: JsonCase[],
+  sourceCases: JsonCase[] | undefined,
+  language: Lang
+): CaseRun[] {
+  if (!sourceCases?.length) {
+    return runs.map((run) => ({ ...run, expectedOutput: undefined }));
+  }
+
+  return runs.map((run) => {
+    const currentInput = currentCases[run.caseNum - 1]?.input;
+
+    const matchingSourceCase = sourceCases.find(
+      (tc) => hasExpectedOutput(tc) && deepEqual(tc.input, currentInput)
+    );
+
+    return {
+      ...run,
+      expectedOutput: matchingSourceCase
+        ? formatExpectedOutput(matchingSourceCase.expectedOutput, language)
+        : undefined,
+    };
+  });
+}
+
 function parseStdoutByCase(stdout: string): CaseRun[] {
   const runs: CaseRun[] = [];
   let pendingLogs: string[] = [];
 
   for (const rawLine of stdout.split("\n")) {
-    // keep line as-is (don’t trim)
     const line = rawLine;
 
     if (line.startsWith(RESULT_PREFIX)) {
@@ -180,7 +238,7 @@ export function ConsolePanel({
       }
 
       // If got no @@RESULT@@ markers, show raw stdout as a single case
-      const finalRuns =
+            const parsedRuns =
         runs.length > 0
           ? runs
           : [
@@ -192,6 +250,16 @@ export function ConsolePanel({
                 error: stderr.trim() ? stderr : undefined,
               },
             ];
+
+      const currentCases =
+        liveCases?.length > 0 ? liveCases : initialCases ?? [];
+
+      const finalRuns = attachExpectedOutputs(
+        parsedRuns,
+        currentCases,
+        initialCases,
+        language
+      );
 
       setCaseRuns(finalRuns);
       setIsError(finalRuns.some((r) => !r.ok) || Boolean(stderr.trim()));
@@ -272,7 +340,7 @@ export function ConsolePanel({
                       disabled={isLoading}
                     >
                       {isLoading ? (
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
                         "Run"
                       )}

@@ -11,7 +11,7 @@ export type CaseRun = {
   output?: string; // java/python/csharp (string)
   outputText?: string; // js (string)
   outputJson?: string; // js (json string)
-  expectedOutput?: string;
+  expectedOutput?: any;
   error?: string;
   logs?: string; // lines printed BEFORE @@RESULT@@ for this case
 };
@@ -102,6 +102,18 @@ export default function ConsoleOutput({
           )}
         </div>
       </div>
+
+      {/* Expected output only shown when the current input exists in the problem file */}
+      {cur?.expectedOutput !== undefined ? (
+        <div className="shrink-0">
+          <div className="mb-2 text-sm font-medium">Expected Output</div>
+          <div className="h-auto overflow-auto rounded-md border border-border bg-muted/20 p-3">
+            <pre className="text-sm whitespace-pre-wrap text-muted-foreground">
+              {cur.expectedOutput}
+            </pre>
+          </div>
+        </div>
+      ) : null}
 
     </div>
   );
