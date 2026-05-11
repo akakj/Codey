@@ -8,10 +8,11 @@ export type CaseRun = {
   caseNum: number;
   ok: boolean;
   passed?: boolean;
+  isDefaultCase?: boolean;
   output?: string; // java/python/csharp (string)
   outputText?: string; // js (string)
   outputJson?: string; // js (json string)
-  expectedOutput?: any;
+  expectedOutput?: string;
   error?: string;
   logs?: string; // lines printed BEFORE @@RESULT@@ for this case
 };
@@ -38,12 +39,36 @@ export default function ConsoleOutput({
   runs: CaseRun[];
   activeIndex: number;
   onActiveIndexChange: (idx: number) => void;
-  isError: boolean;
+  isError?: boolean;
 }) {
   const cur = runs[activeIndex];
 
+  // Determine overall status based on default cases with pass/fail info
+  const defaultRunsWithPassFail = runs.filter(
+    (r) => r.isDefaultCase && r.passed !== undefined,
+  );
+
+  const overallStatus =
+    defaultRunsWithPassFail.length === 0
+      ? null
+      : defaultRunsWithPassFail.every((r) => r.passed === true)
+        ? "Accepted"
+        : "Failed";
+
   return (
     <div className="h-full flex flex-col gap-3">
+      {/* Overall status */}
+      {overallStatus ? (
+        <div
+          className={`text-md font-semibold ${
+            overallStatus === "Accepted"
+              ? "text-green-700 dark:text-green-400"
+              : "text-red-700 dark:text-red-400"
+          }`}
+        >
+          {overallStatus}
+        </div>
+      ) : null}
       {/* Case tabs */}
       <Tabs
         value={`case-${activeIndex}`}
@@ -56,7 +81,13 @@ export default function ConsoleOutput({
             <TabsTrigger
               key={`${r.caseNum}-${i}`}
               value={`case-${i}`}
-              className="px-3 pr-4 hover:cursor-pointer"
+              className={`px-3 pr-4 hover:cursor-pointer ${
+                r.passed === true
+                  ? "font-semibold text-green-700 data-[state=active]:text-green-700 dark:text-green-400 dark:data-[state=active]:text-green-400"
+                  : r.passed === false
+                    ? "font-semibold text-red-700 data-[state=active]:text-red-700 dark:text-red-400 dark:data-[state=active]:text-red-400"
+                    : ""
+              }`}
             >
               {`Case ${r.caseNum}`}
             </TabsTrigger>
@@ -87,7 +118,9 @@ export default function ConsoleOutput({
           ) : (
             <pre
               className={`text-sm whitespace-pre-wrap ${
-                isError ? "text-red-800 dark:text-red-400" : ""
+                cur.error || cur.passed === false
+                  ? "text-red-800 dark:text-red-400"
+                  : ""
               }`}
             >
               {(() => {
@@ -114,7 +147,6 @@ export default function ConsoleOutput({
           </div>
         </div>
       ) : null}
-
     </div>
   );
 }

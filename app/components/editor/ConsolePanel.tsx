@@ -22,16 +22,19 @@ const EXPANDED = 40;
 type JsonCase = {
   input: any;
   expectedOutput?: any; // present for default cases
-  isUser?: boolean;     // true for user-added cases
+  isUser?: boolean; // true for user-added cases
 };
 
 const RESULT_PREFIX = "@@RESULT@@";
 
 // Type guard to check if a test case has an expected output
 function hasExpectedOutput(
-  testCase: JsonCase | undefined
+  testCase: JsonCase | undefined,
 ): testCase is JsonCase & { expectedOutput: any } {
-  return !!testCase && Object.prototype.hasOwnProperty.call(testCase, "expectedOutput");
+  return (
+    !!testCase &&
+    Object.prototype.hasOwnProperty.call(testCase, "expectedOutput")
+  );
 }
 
 // Check if two values are deeply equal (used for matching user cases to default cases to show expected output)
@@ -59,28 +62,119 @@ function formatExpectedOutput(value: any, language: Lang): string {
   }
 }
 
+function outputForComparison(run: CaseRun): string {
+  if (run.outputJson && run.outputJson.trim()) {
+    try {
+      return JSON.stringify(JSON.parse(run.outputJson), null, 2);
+    } catch {
+      return run.outputJson;
+    }
+  }
+
+  if (run.outputText !== undefined) return run.outputText;
+  if (run.output !== undefined) return run.output;
+
+  return "";
+}
+
+function normalizePythonLiterals(value: string): string {
+  const trimmed = value.trim();
+
+  if (trimmed === "True") return "true";
+  if (trimmed === "False") return "false";
+  if (trimmed === "None") return "null";
+
+  return trimmed;
+}
+
+function parseComparableOutput(
+  value: string,
+): { parsed: true; value: any } | { parsed: false; value: string } {
+  const normalized = normalizePythonLiterals(value);
+
+  try {
+    return {
+      parsed: true,
+      value: JSON.parse(normalized),
+    };
+  } catch {
+    return {
+      parsed: false,
+      value: value.replace(/\r\n/g, "\n").trim(),
+    };
+  }
+}
+
+function outputsEqual(actualOutput: string, expectedOutput: string): boolean {
+  const actual = parseComparableOutput(actualOutput);
+  const expected = parseComparableOutput(expectedOutput);
+
+  if (actual.parsed && expected.parsed) {
+    return deepEqual(actual.value, expected.value);
+  }
+
+  return String(actual.value).trim() === String(expected.value).trim();
+}
+
 // Attach expected outputs to case runs by matching user cases to default cases
 function attachExpectedOutputs(
   runs: CaseRun[],
   currentCases: JsonCase[],
   sourceCases: JsonCase[] | undefined,
-  language: Lang
+  language: Lang,
 ): CaseRun[] {
   if (!sourceCases?.length) {
-    return runs.map((run) => ({ ...run, expectedOutput: undefined }));
+    return runs.map((run) => ({
+      ...run,
+      expectedOutput: undefined,
+      passed: undefined,
+      isDefaultCase: false,
+    }));
   }
 
-  return runs.map((run) => {
-    const currentInput = currentCases[run.caseNum - 1]?.input;
+  return runs.map((run, runIndex) => {
+    // Some runners emit case numbers as 1, 2, 3.
+    // Some emit them as 0, 1, 2.
+    // This supports both.
+    const caseIndex =
+      run.caseNum > 0 && currentCases[run.caseNum - 1]
+        ? run.caseNum - 1
+        : runIndex;
+
+    const currentInput = currentCases[caseIndex]?.input;
+    const sourceCaseAtSameIndex = sourceCases[caseIndex];
+
+    const isDefaultCase =
+      !!sourceCaseAtSameIndex &&
+      hasExpectedOutput(sourceCaseAtSameIndex) &&
+      deepEqual(sourceCaseAtSameIndex.input, currentInput);
 
     const matchingSourceCase = sourceCases.find(
-      (tc) => hasExpectedOutput(tc) && deepEqual(tc.input, currentInput)
+      (tc) => hasExpectedOutput(tc) && deepEqual(tc.input, currentInput),
     );
+
+    if (!matchingSourceCase) {
+      return {
+        ...run,
+        expectedOutput: undefined,
+        passed: undefined,
+        isDefaultCase: false,
+      };
+    }
+
+    const expectedOutput = formatExpectedOutput(
+      matchingSourceCase.expectedOutput,
+      language,
+    );
+
+    const actualOutput = outputForComparison(run);
 
     return {
       ...run,
-      expectedOutput: matchingSourceCase
-        ? formatExpectedOutput(matchingSourceCase.expectedOutput, language)
+      expectedOutput,
+      isDefaultCase,
+      passed: isDefaultCase
+        ? run.ok && outputsEqual(actualOutput, expectedOutput)
         : undefined,
     };
   });
@@ -162,7 +256,7 @@ export function ConsolePanel({
   const [isError, setIsError] = React.useState<boolean>(false);
 
   const [liveCases, setLiveCases] = React.useState<JsonCase[]>(
-    initialCases ?? []
+    initialCases ?? [],
   );
 
   // Results state
@@ -175,7 +269,7 @@ export function ConsolePanel({
     setCaseRuns([]);
     setActiveOutputCase(0);
     setIsError(false);
-  }, [problemSlug, initialCases]);
+  }, [problemSlug]);
 
   const toggle = () => {
     const cur = panelRef.current?.getSize() ?? size;
@@ -198,14 +292,16 @@ export function ConsolePanel({
         sourceCode,
         liveCases ?? [],
         entryPointByLang?.[language],
-        starterCodeByLang?.[language]
+        starterCodeByLang?.[language],
       );
 
-      const stdout: string = typeof data?.output === "string" ? data.output : "";
+      const stdout: string =
+        typeof data?.output === "string" ? data.output : "";
       const stderr: string =
         typeof data?.error === "string" && data.error.trim()
           ? data.error
-          : typeof data?.compilationStatus === "string" && data.compilationStatus.trim()
+          : typeof data?.compilationStatus === "string" &&
+              data.compilationStatus.trim()
             ? data.compilationStatus
             : "";
 
@@ -216,14 +312,18 @@ export function ConsolePanel({
       if (stderr.trim()) {
         if (runs.length) {
           for (const r of runs) {
-            r.logs = ((r.logs ?? "").trimEnd() + "\n--- stderr ---\n" + stderr).trim();
+            r.logs = (
+              (r.logs ?? "").trimEnd() +
+              "\n--- stderr ---\n" +
+              stderr
+            ).trim();
             r.ok = false;
             if (!r.error) r.error = "Runtime/Compile error";
           }
         } else {
           const n = Math.min(
             4,
-            (liveCases?.length ?? 0) || (initialCases?.length ?? 0) || 1
+            (liveCases?.length ?? 0) || (initialCases?.length ?? 0) || 1,
           );
 
           const errRuns = Array.from({ length: n }, (_, i) => ({
@@ -238,7 +338,7 @@ export function ConsolePanel({
       }
 
       // If got no @@RESULT@@ markers, show raw stdout as a single case
-            const parsedRuns =
+      const parsedRuns =
         runs.length > 0
           ? runs
           : [
@@ -252,17 +352,31 @@ export function ConsolePanel({
             ];
 
       const currentCases =
-        liveCases?.length > 0 ? liveCases : initialCases ?? [];
+        liveCases?.length > 0 ? liveCases : (initialCases ?? []);
 
       const finalRuns = attachExpectedOutputs(
         parsedRuns,
         currentCases,
         initialCases,
-        language
+        language,
+      );
+
+      console.table(
+        finalRuns.map((r) => ({
+          caseNum: r.caseNum,
+          ok: r.ok,
+          output: outputForComparison(r),
+          expectedOutput: r.expectedOutput,
+          isDefaultCase: r.isDefaultCase,
+          passed: r.passed,
+        })),
       );
 
       setCaseRuns(finalRuns);
-      setIsError(finalRuns.some((r) => !r.ok) || Boolean(stderr.trim()));
+      setIsError(
+        finalRuns.some((r) => !r.ok || r.passed === false) ||
+          Boolean(stderr.trim()),
+      );
     } catch (error) {
       console.error("Error executing code:", error);
       setIsError(true);
