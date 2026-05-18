@@ -31,6 +31,7 @@ export default function CodeEditor({
   initialConsoleOpen = true,
   initialCases,
   entryPointByLang,
+  testCases,
 }: {
   isLoggedIn: boolean;
   problemSlug: string;
@@ -39,6 +40,7 @@ export default function CodeEditor({
   initialConsoleOpen?: boolean;
   initialCases?: { input: any; output?: any }[];
   entryPointByLang?: EntryPointByLang;
+  testCases?: { input: any; output?: any }[];
 }) {
   const starters = starterCodeByLang;
 
@@ -180,6 +182,7 @@ export default function CodeEditor({
           initialCases={initialCases}
           entryPointByLang={entryPointByLang}
           starterCodeByLang={starterCodeByLang}
+          testCases={testCases}
         />
       </ResizablePanelGroup>
     </div>

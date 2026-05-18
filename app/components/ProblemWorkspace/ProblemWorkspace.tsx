@@ -51,6 +51,7 @@ export default async function ProblemWorkspace({
                   starterCodeByLang={problem.starterCode}
                   initialCases={problem.testCases.slice(0, 2)}
                   entryPointByLang={problem.entryPoint}
+                  testCases={problem.testCases}
                 />
               </div>
             </ResizablePanel>

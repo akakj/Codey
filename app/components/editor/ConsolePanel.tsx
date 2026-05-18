@@ -11,10 +11,10 @@ import { Loader2 } from "lucide-react";
 
 import ConsoleCases from "./ConsoleCases";
 import ConsoleOutput, { type CaseRun } from "./ConsoleOutput";
-import { executeCode } from "./api";
 
 import type { Lang, StarterMap } from "@/lib/languages";
 import type { EntryPointByLang } from "@/lib/problem";
+import { runCode, submitCode, type SubmitCodeResult } from "./codeRunner";
 
 const MIN = 6;
 const EXPANDED = 40;
@@ -25,208 +25,6 @@ type JsonCase = {
   isUser?: boolean; // true for user-added cases
 };
 
-const RESULT_PREFIX = "@@RESULT@@";
-
-// Type guard to check if a test case has an expected output
-function hasExpectedOutput(
-  testCase: JsonCase | undefined,
-): testCase is JsonCase & { expectedOutput: any } {
-  return (
-    !!testCase &&
-    Object.prototype.hasOwnProperty.call(testCase, "expectedOutput")
-  );
-}
-
-// Check if two values are deeply equal (used for matching user cases to default cases to show expected output)
-function deepEqual(a: any, b: any) {
-  try {
-    return JSON.stringify(a) === JSON.stringify(b);
-  } catch {
-    return false;
-  }
-}
-
-// Format expected output for display, with special handling for Python booleans
-function formatExpectedOutput(value: any, language: Lang): string {
-  const isPython = String(language).toLowerCase().includes("python");
-
-  if (isPython && typeof value === "boolean") {
-    return value ? "True" : "False";
-  }
-
-  try {
-    const json = JSON.stringify(value, null, 2);
-    return json === undefined ? String(value) : json;
-  } catch {
-    return String(value);
-  }
-}
-
-function outputForComparison(run: CaseRun): string {
-  if (run.outputJson && run.outputJson.trim()) {
-    try {
-      return JSON.stringify(JSON.parse(run.outputJson), null, 2);
-    } catch {
-      return run.outputJson;
-    }
-  }
-
-  if (run.outputText !== undefined) return run.outputText;
-  if (run.output !== undefined) return run.output;
-
-  return "";
-}
-
-function normalizePythonLiterals(value: string): string {
-  const trimmed = value.trim();
-
-  if (trimmed === "True") return "true";
-  if (trimmed === "False") return "false";
-  if (trimmed === "None") return "null";
-
-  return trimmed;
-}
-
-function parseComparableOutput(
-  value: string,
-): { parsed: true; value: any } | { parsed: false; value: string } {
-  const normalized = normalizePythonLiterals(value);
-
-  try {
-    return {
-      parsed: true,
-      value: JSON.parse(normalized),
-    };
-  } catch {
-    return {
-      parsed: false,
-      value: value.replace(/\r\n/g, "\n").trim(),
-    };
-  }
-}
-
-function outputsEqual(actualOutput: string, expectedOutput: string): boolean {
-  const actual = parseComparableOutput(actualOutput);
-  const expected = parseComparableOutput(expectedOutput);
-
-  if (actual.parsed && expected.parsed) {
-    return deepEqual(actual.value, expected.value);
-  }
-
-  return String(actual.value).trim() === String(expected.value).trim();
-}
-
-// Attach expected outputs to case runs by matching user cases to default cases
-function attachExpectedOutputs(
-  runs: CaseRun[],
-  currentCases: JsonCase[],
-  sourceCases: JsonCase[] | undefined,
-  language: Lang,
-): CaseRun[] {
-  if (!sourceCases?.length) {
-    return runs.map((run) => ({
-      ...run,
-      expectedOutput: undefined,
-      passed: undefined,
-      isDefaultCase: false,
-    }));
-  }
-
-  return runs.map((run, runIndex) => {
-    // Some runners emit case numbers as 1, 2, 3.
-    // Some emit them as 0, 1, 2.
-    // This supports both.
-    const caseIndex =
-      run.caseNum > 0 && currentCases[run.caseNum - 1]
-        ? run.caseNum - 1
-        : runIndex;
-
-    const currentInput = currentCases[caseIndex]?.input;
-    const sourceCaseAtSameIndex = sourceCases[caseIndex];
-
-    const isDefaultCase =
-      !!sourceCaseAtSameIndex &&
-      hasExpectedOutput(sourceCaseAtSameIndex) &&
-      deepEqual(sourceCaseAtSameIndex.input, currentInput);
-
-    const matchingSourceCase = sourceCases.find(
-      (tc) => hasExpectedOutput(tc) && deepEqual(tc.input, currentInput),
-    );
-
-    if (!matchingSourceCase) {
-      return {
-        ...run,
-        expectedOutput: undefined,
-        passed: undefined,
-        isDefaultCase: false,
-      };
-    }
-
-    const expectedOutput = formatExpectedOutput(
-      matchingSourceCase.expectedOutput,
-      language,
-    );
-
-    const actualOutput = outputForComparison(run);
-
-    return {
-      ...run,
-      expectedOutput,
-      isDefaultCase,
-      passed: isDefaultCase
-        ? run.ok && outputsEqual(actualOutput, expectedOutput)
-        : undefined,
-    };
-  });
-}
-
-function parseStdoutByCase(stdout: string): CaseRun[] {
-  const runs: CaseRun[] = [];
-  let pendingLogs: string[] = [];
-
-  for (const rawLine of stdout.split("\n")) {
-    const line = rawLine;
-
-    if (line.startsWith(RESULT_PREFIX)) {
-      const jsonPart = line.slice(RESULT_PREFIX.length);
-      try {
-        const obj = JSON.parse(jsonPart);
-
-        runs.push({
-          caseNum: typeof obj.case === "number" ? obj.case : runs.length + 1,
-          ok: !!obj.ok,
-          output: typeof obj.output === "string" ? obj.output : undefined,
-          outputText:
-            typeof obj.outputText === "string" ? obj.outputText : undefined,
-          outputJson:
-            typeof obj.outputJson === "string" ? obj.outputJson : undefined,
-          error: typeof obj.error === "string" ? obj.error : undefined,
-          logs: pendingLogs.join("\n").trimEnd(),
-        });
-      } catch {
-        // if it looks like a result but isn't valid json, treat as log
-        pendingLogs.push(line);
-      }
-      pendingLogs = [];
-    } else {
-      if (line.length) pendingLogs.push(line);
-    }
-  }
-
-  // if leftover logs exist after the last result, append to last case
-  if (pendingLogs.length && runs.length) {
-    const last = runs[runs.length - 1];
-    last.logs = (
-      (last.logs ?? "").trimEnd() +
-      "\n" +
-      pendingLogs.join("\n")
-    ).trim();
-  }
-
-  runs.sort((a, b) => a.caseNum - b.caseNum);
-  return runs;
-}
-
 export function ConsolePanel({
   isLoggedIn,
   initialOpen = true,
@@ -236,6 +34,7 @@ export function ConsolePanel({
   initialCases,
   entryPointByLang,
   starterCodeByLang,
+  testCases,
 }: {
   isLoggedIn: boolean;
   initialOpen?: boolean;
@@ -245,6 +44,7 @@ export function ConsolePanel({
   initialCases?: JsonCase[];
   entryPointByLang?: EntryPointByLang;
   starterCodeByLang?: StarterMap;
+  testCases?: JsonCase[];
 }) {
   const panelRef = React.useRef<ImperativePanelHandle>(null);
   const [size, setSize] = React.useState<number>(initialOpen ? EXPANDED : 10);
@@ -252,7 +52,12 @@ export function ConsolePanel({
 
   const [activeTab, setActiveTab] = React.useState<"cases" | "output">("cases");
 
-  const [isLoading, setIsLoading] = React.useState<boolean>(false);
+  const [loadingAction, setLoadingAction] = React.useState<
+    "run" | "submit" | null
+  >(null);
+
+  const isLoading = loadingAction !== null;
+
   const [isError, setIsError] = React.useState<boolean>(false);
 
   const [liveCases, setLiveCases] = React.useState<JsonCase[]>(
@@ -262,6 +67,9 @@ export function ConsolePanel({
   // Results state
   const [caseRuns, setCaseRuns] = React.useState<CaseRun[]>([]);
   const [activeOutputCase, setActiveOutputCase] = React.useState<number>(0);
+
+  const [submitResult, setSubmitResult] =
+    React.useState<SubmitCodeResult | null>(null);
 
   React.useEffect(() => {
     setLiveCases(initialCases ?? []);
@@ -276,121 +84,55 @@ export function ConsolePanel({
     panelRef.current?.resize(cur <= MIN + 2 ? EXPANDED : MIN);
   };
 
-  const runCode = async () => {
+  const handleRunCode = async () => {
     const sourceCode = value;
     if (!sourceCode) return;
 
-    setActiveTab("output"); // switch to Test Result
-    setIsLoading(true);
+    setActiveTab("output");
+    setLoadingAction("run");
     setIsError(false);
+    setSubmitResult(null);
     setCaseRuns([]);
     setActiveOutputCase(0);
 
-    try {
-      const data = await executeCode(
-        language,
-        sourceCode,
-        liveCases ?? [],
-        entryPointByLang?.[language],
-        starterCodeByLang?.[language],
-      );
+    const result = await runCode({
+      sourceCode,
+      language,
+      liveCases,
+      initialCases,
+      entryPointByLang,
+      starterCodeByLang,
+    });
 
-      const stdout: string =
-        typeof data?.output === "string" ? data.output : "";
-      const stderr: string =
-        typeof data?.error === "string" && data.error.trim()
-          ? data.error
-          : typeof data?.compilationStatus === "string" &&
-              data.compilationStatus.trim()
-            ? data.compilationStatus
-            : "";
+    setCaseRuns(result.caseRuns);
+    setIsError(result.isError);
+    setLoadingAction(null);
+  };
 
-      // parse @@RESULT@@ lines out of stdout
-      const runs = parseStdoutByCase(stdout);
+  const handleSubmitCode = async () => {
+    const sourceCode = value;
+    if (!sourceCode) return;
 
-      // If JDoodle returned an error string, attach it like you did with piston stderr
-      if (stderr.trim()) {
-        if (runs.length) {
-          for (const r of runs) {
-            r.logs = (
-              (r.logs ?? "").trimEnd() +
-              "\n--- stderr ---\n" +
-              stderr
-            ).trim();
-            r.ok = false;
-            if (!r.error) r.error = "Runtime/Compile error";
-          }
-        } else {
-          const n = Math.min(
-            4,
-            (liveCases?.length ?? 0) || (initialCases?.length ?? 0) || 1,
-          );
+    setActiveTab("output");
+    setLoadingAction("submit");
+    setIsError(false);
+    setSubmitResult(null);
+    setCaseRuns([]);
+    setActiveOutputCase(0);
 
-          const errRuns = Array.from({ length: n }, (_, i) => ({
-            caseNum: i + 1,
-            ok: false,
-            error: "Runtime/Compile error",
-            logs: `--- stderr ---\n${stderr}`.trim(),
-          }));
+    const result = await submitCode({
+      sourceCode,
+      language,
+      testCases,
+      entryPointByLang,
+      starterCodeByLang,
+    });
 
-          runs.splice(0, runs.length, ...errRuns);
-        }
-      }
+    console.log(result);
 
-      // If got no @@RESULT@@ markers, show raw stdout as a single case
-      const parsedRuns =
-        runs.length > 0
-          ? runs
-          : [
-              {
-                caseNum: 1,
-                ok: !stderr.trim(),
-                output: stdout.trim(),
-                logs: "",
-                error: stderr.trim() ? stderr : undefined,
-              },
-            ];
-
-      const currentCases =
-        liveCases?.length > 0 ? liveCases : (initialCases ?? []);
-
-      const finalRuns = attachExpectedOutputs(
-        parsedRuns,
-        currentCases,
-        initialCases,
-        language,
-      );
-
-      console.table(
-        finalRuns.map((r) => ({
-          caseNum: r.caseNum,
-          ok: r.ok,
-          output: outputForComparison(r),
-          expectedOutput: r.expectedOutput,
-          isDefaultCase: r.isDefaultCase,
-          passed: r.passed,
-        })),
-      );
-
-      setCaseRuns(finalRuns);
-      setIsError(
-        finalRuns.some((r) => !r.ok || r.passed === false) ||
-          Boolean(stderr.trim()),
-      );
-    } catch (error) {
-      console.error("Error executing code:", error);
-      setIsError(true);
-      setCaseRuns([
-        {
-          caseNum: 1,
-          ok: false,
-          error: "An error occurred while running your code.",
-          logs: "",
-        },
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
+    setSubmitResult(result);
+    setIsError(result.isError);
+    setLoadingAction(null);
   };
 
   return (
@@ -450,10 +192,10 @@ export function ConsolePanel({
                     <Button
                       variant="secondary"
                       className="hover:cursor-pointer bg-[#d1d5dcc9] dark:bg-gray-700 hover:bg-[#99a1af93] dark:hover:bg-gray-600"
-                      onClick={runCode}
+                      onClick={handleRunCode}
                       disabled={isLoading}
                     >
-                      {isLoading ? (
+                      {loadingAction === "run" ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
                         "Run"
@@ -463,8 +205,14 @@ export function ConsolePanel({
                     <Button
                       className="text-[#008932] dark:text-green-500 hover:cursor-pointer ring-1 hover:bg-[#00d54eb3] dark:hover:bg-green-500 dark:hover:text-black"
                       variant="outline"
+                      onClick={handleSubmitCode}
+                      disabled={isLoading}
                     >
-                      <CloudUpload />
+                      {loadingAction === "submit" ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <CloudUpload />
+                      )}
                       Submit
                     </Button>
                   </>
@@ -485,16 +233,42 @@ export function ConsolePanel({
 
             {/* body */}
             <div className="flex-1 overflow-auto p-3">
-              <TabsContent value="cases" className="m-0 h-full">
-                <ConsoleCases
-                  problemSlug={problemSlug}
-                  initialCases={initialCases}
-                  onCasesChange={setLiveCases}
-                />
-              </TabsContent>
-
               <TabsContent value="output" className="m-0 h-full">
-                {caseRuns.length === 0 ? (
+                {submitResult ? (
+                  <div className="space-y-4">
+                    <p
+                      className={`text-xl font-semibold ${
+                        submitResult.accepted
+                          ? "text-green-500"
+                          : "text-red-500"
+                      }`}
+                    >
+                      {submitResult.accepted ? "Accepted" : "Failed"}
+                    </p>
+                    <div className="text-sm">
+                      <p>
+                        Passed {submitResult.passedCases} /{" "}
+                        {submitResult.totalCases} cases
+                      </p>
+
+                      <div className="mt-3 grid grid-cols-2 gap-3 sm:max-w-md">
+                        <div>
+                          <p className="text-muted-foreground">CPU Time</p>
+                          <p className="font-medium">
+                            {submitResult.cpuTime ?? "N/A"}
+                          </p>
+                        </div>
+
+                        <div>
+                          <p className="text-muted-foreground">Memory</p>
+                          <p className="font-medium">
+                            {submitResult.memory ?? "N/A"}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ) : caseRuns.length === 0 ? (
                   <pre
                     className={`text-sm whitespace-pre-wrap ${
                       isError ? "text-red-400" : ""
