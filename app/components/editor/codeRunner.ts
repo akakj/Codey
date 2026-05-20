@@ -37,6 +37,16 @@ export type SubmitCodeResult = RunCodeResult & {
   status: "accepted" | "failed";
   passedCases: number;
   totalCases: number;
+  failedCase?: SubmitFailedCase;
+};
+
+export type SubmitFailedCase = {
+  caseNum: number;
+  input: any;
+  output?: string;
+  expectedOutput?: string;
+  error?: string;
+  logs?: string;
 };
 
 function hasExpectedOutput(
@@ -439,6 +449,27 @@ export async function submitCode({
     totalCases > 0 &&
     result.caseRuns.every((run) => run.ok && run.passed === true);
 
+    const firstFailedRun = result.caseRuns.find(
+  (run) => !run.ok || run.passed === false,
+);
+
+const firstFailedIndex = firstFailedRun
+  ? firstFailedRun.caseNum > 0
+    ? firstFailedRun.caseNum - 1
+    : result.caseRuns.indexOf(firstFailedRun)
+  : -1;
+
+const failedCase = firstFailedRun
+  ? {
+      caseNum: firstFailedRun.caseNum,
+      input: testCases[firstFailedIndex]?.input,
+      output: outputForComparison(firstFailedRun),
+      expectedOutput: firstFailedRun.expectedOutput,
+      error: firstFailedRun.error,
+      logs: firstFailedRun.logs,
+    }
+  : undefined;
+
   return {
     ...result,
     isError: !accepted,
@@ -446,5 +477,6 @@ export async function submitCode({
     status: accepted ? "accepted" : "failed",
     passedCases,
     totalCases,
+    failedCase,
   };
 }

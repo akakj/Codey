@@ -229,6 +229,19 @@ function hasCSharpMain(code: string) {
   return /\bstatic\s+void\s+Main\s*\(/.test(code);
 }
 
+function ensurePublicJavaClass(code: string, className: string): string {
+  const escapedClassName = className.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+  if (new RegExp(`\\bpublic\\s+class\\s+${escapedClassName}\\b`).test(code)) {
+    return code;
+  }
+
+  return code.replace(
+    new RegExp(`\\bclass\\s+${escapedClassName}\\b`),
+    `public class ${className}`,
+  );
+}
+
 /** ---------- NEW: build a single JDoodle script ---------- */
 function buildJDoodleScript(opts: {
   language: Lang;
@@ -391,8 +404,8 @@ ${invoke}
     ${callLines}
   }
 `;
-
-    return injectIntoClass(userCode, entryPoint.className, mainInsert) ?? userCode;
+    const publicUserCode = ensurePublicJavaClass(userCode, entryPoint.className);
+    return injectIntoClass(publicUserCode, entryPoint.className, mainInsert) ?? publicUserCode;
   }
 
   // C#: same idea: ensure Main exists; inject if needed
@@ -415,7 +428,7 @@ ${invoke}
         return `
     try {
       var res = sol.${entryPoint.name}(${exprs});
-      var outStr = res == null ? "" : res.ToString();
+      var outStr = resultOut(res);
       System.Console.WriteLine("${RESULT_PREFIX}" + "{\\"case\\":${caseNum},\\"ok\\":true,\\"output\\":\\"" + _esc(outStr) + "\\"}");
     } catch (System.Exception e) {
       System.Console.WriteLine("${RESULT_PREFIX}" + "{\\"case\\":${caseNum},\\"ok\\":false,\\"error\\":\\"" + _esc(e.ToString()) + "\\"}");
@@ -433,6 +446,16 @@ ${invoke}
       .Replace("\\n", "\\\\n")
       .Replace("\\r", "\\\\r")
       .Replace("\\t", "\\\\t");
+  }
+
+  static string resultOut(object res) {
+    if (res == null) return "";
+
+    if (res is bool) {
+      return ((bool)res) ? "true" : "false";
+    }
+
+    return res.ToString();
   }
 
   public static void Main() {
@@ -464,6 +487,10 @@ export async function executeCode(
     entryPoint,
     starterForLang,
   });
+
+  if (language === "java") {
+  console.log(script);
+}
 
   const res = await fetch("/api/execute", {
     method: "POST",

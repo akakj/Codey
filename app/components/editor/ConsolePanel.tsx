@@ -77,6 +77,7 @@ export function ConsolePanel({
     setCaseRuns([]);
     setActiveOutputCase(0);
     setIsError(false);
+    setSubmitResult(null);
   }, [problemSlug]);
 
   const toggle = () => {
@@ -128,13 +129,33 @@ export function ConsolePanel({
       starterCodeByLang,
     });
 
-    console.log(result);
-
     setSubmitResult(result);
     setIsError(result.isError);
     setLoadingAction(null);
   };
 
+  const formatSubmitValue = (value: any) => {
+    if (value === undefined) return "";
+
+    const formatInline = (v: any): string => {
+      if (v === undefined) return "undefined";
+
+      try {
+        const json = JSON.stringify(v);
+        return json === undefined ? String(v) : json;
+      } catch {
+        return String(v);
+      }
+    };
+
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      return Object.entries(value)
+        .map(([key, val]) => `${key} = ${formatInline(val)}`)
+        .join("\n");
+    }
+
+    return formatInline(value);
+  };
   return (
     <>
       <ResizablePanel
@@ -209,11 +230,16 @@ export function ConsolePanel({
                       disabled={isLoading}
                     >
                       {loadingAction === "submit" ? (
-                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <>
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                          Submitting...
+                        </>
                       ) : (
-                        <CloudUpload />
+                        <>
+                          <CloudUpload />
+                          Submit
+                        </>
                       )}
-                      Submit
                     </Button>
                   </>
                 ) : (
@@ -233,6 +259,14 @@ export function ConsolePanel({
 
             {/* body */}
             <div className="flex-1 overflow-auto p-3">
+              <TabsContent value="cases" className="m-0 h-full">
+                <ConsoleCases
+                  problemSlug={problemSlug}
+                  initialCases={initialCases}
+                  onCasesChange={setLiveCases}
+                />
+              </TabsContent>
+
               <TabsContent value="output" className="m-0 h-full">
                 {submitResult ? (
                   <div className="space-y-4">
@@ -243,8 +277,9 @@ export function ConsolePanel({
                           : "text-red-500"
                       }`}
                     >
-                      {submitResult.accepted ? "Accepted" : "Failed"}
+                      {submitResult.accepted ? "Accepted" : "Wrong Answer"}
                     </p>
+
                     <div className="text-sm">
                       <p>
                         Passed {submitResult.passedCases} /{" "}
@@ -267,6 +302,53 @@ export function ConsolePanel({
                         </div>
                       </div>
                     </div>
+
+                    {!submitResult.accepted && submitResult.failedCase ? (
+                      <div className="space-y-4">
+                        <p className="font-semibold">Failed Case</p>
+
+                        <div>
+                          <p className="mb-2 font-semibold">Input</p>
+                          <pre className="rounded-lg border bg-muted/30 p-4 text-sm whitespace-pre-wrap">
+                            {formatSubmitValue(submitResult.failedCase.input)}
+                          </pre>
+                        </div>
+
+                        <div>
+                          <p className="mb-2 font-semibold">Output</p>
+                          <pre className="rounded-lg border bg-muted/30 p-4 text-sm whitespace-pre-wrap">
+                            {submitResult.failedCase.output ?? ""}
+                          </pre>
+                        </div>
+
+                        <div>
+                          <p className="mb-2 font-semibold">Expected Output</p>
+                          <pre className="rounded-lg border bg-muted/30 p-4 text-sm whitespace-pre-wrap">
+                            {submitResult.failedCase.expectedOutput ?? ""}
+                          </pre>
+                        </div>
+
+                        {submitResult.failedCase.error ? (
+                          <div>
+                            <p className="mb-2 font-semibold text-red-500">
+                              Error
+                            </p>
+                            <pre className="rounded-lg border bg-muted/30 p-4 text-sm whitespace-pre-wrap text-red-400">
+                              {submitResult.failedCase.error}
+                            </pre>
+                          </div>
+                        ) : null}
+
+                        {submitResult.failedCase.logs ? (
+                          <div>
+                            <p className="mb-2 font-semibold">Logs</p>
+                            <pre className="rounded-lg border bg-muted/30 p-4 text-sm whitespace-pre-wrap">
+                              {submitResult.failedCase.logs}
+                            </pre>
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
                   </div>
                 ) : caseRuns.length === 0 ? (
                   <pre
