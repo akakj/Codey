@@ -13,9 +13,11 @@ import { MobileOnlyAlert } from "./MobileOnlyAlert";
 export default async function ProblemWorkspace({
   problem,
   initialTab = "description",
+  selectedSubmissionId,
 }: {
   problem: Problem;
   initialTab?: string;
+  selectedSubmissionId?: string;
 }) {
   const supabase = await createClient();
   const {
@@ -29,7 +31,7 @@ export default async function ProblemWorkspace({
         <div className="h-full sm:hidden">
           <MobileOnlyAlert />
           <div className="h-full overflow-auto">
-            <ProblemData problem={problem} initialTab={initialTab} mobileOnly={true} />
+            <ProblemData problem={problem} initialTab={initialTab} mobileOnly={true} selectedSubmissionId={selectedSubmissionId}/>
           </div>
         </div>
 
@@ -38,7 +40,7 @@ export default async function ProblemWorkspace({
           <ResizablePanelGroup direction="horizontal" className="h-full">
             <ResizablePanel defaultSize={40} minSize={0}>
               <div className="h-full overflow-auto">
-                <ProblemData problem={problem} initialTab={initialTab} />
+                <ProblemData problem={problem} initialTab={initialTab} selectedSubmissionId={selectedSubmissionId} />
               </div>
             </ResizablePanel>
             <ResizableHandle />
@@ -51,7 +53,6 @@ export default async function ProblemWorkspace({
                   starterCodeByLang={problem.starterCode}
                   initialCases={problem.testCases.slice(0, 2)}
                   entryPointByLang={problem.entryPoint}
-                  testCases={problem.testCases}
                 />
               </div>
             </ResizablePanel>

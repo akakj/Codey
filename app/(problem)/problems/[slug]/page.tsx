@@ -24,12 +24,19 @@ export default async function ProblemPage({
   searchParams,
 }: {
   params: Promise<{ slug: string }>;
-  searchParams:  Promise<{ tab?: string | string[] }>;
+  searchParams: Promise<{
+    tab?: string | string[];
+    submissionId?: string | string[];
+  }>;
 }) {
   const [{ slug }, sp] = await Promise.all([params, searchParams]);
 
   const tabParam = Array.isArray(sp.tab) ? sp.tab[0] : sp.tab;
   const initialTab = tabParam ?? "description";
+
+   const submissionIdParam = Array.isArray(sp.submissionId)
+    ? sp.submissionId[0]
+    : sp.submissionId;
 
   const data = rawData as ProblemsFile;
   const problem = data.problems.find((p) => p.slug === slug);
@@ -38,6 +45,7 @@ export default async function ProblemPage({
   return (
     <ProblemWorkspace
       initialTab={initialTab}
+      selectedSubmissionId={submissionIdParam}
       problem={{
         problemID: problem.problemID,
         slug: problem.slug,

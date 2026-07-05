@@ -34,7 +34,6 @@ export function ConsolePanel({
   initialCases,
   entryPointByLang,
   starterCodeByLang,
-  testCases,
 }: {
   isLoggedIn: boolean;
   initialOpen?: boolean;
@@ -44,7 +43,6 @@ export function ConsolePanel({
   initialCases?: JsonCase[];
   entryPointByLang?: EntryPointByLang;
   starterCodeByLang?: StarterMap;
-  testCases?: JsonCase[];
 }) {
   const panelRef = React.useRef<ImperativePanelHandle>(null);
   const [size, setSize] = React.useState<number>(initialOpen ? EXPANDED : 10);
@@ -124,9 +122,7 @@ export function ConsolePanel({
     const result = await submitCode({
       sourceCode,
       language,
-      testCases,
-      entryPointByLang,
-      starterCodeByLang,
+      problemSlug,
     });
 
     setSubmitResult(result);

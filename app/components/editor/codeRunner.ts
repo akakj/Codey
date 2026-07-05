@@ -1,4 +1,3 @@
-// codeRunner.ts
 "use client";
 
 import { executeCode } from "./api";
@@ -390,15 +389,11 @@ export async function runCode({
 export async function submitCode({
   sourceCode,
   language,
-  testCases,
-  entryPointByLang,
-  starterCodeByLang,
+  problemSlug,
 }: {
   sourceCode: string;
   language: Lang;
-  testCases?: JsonCase[];
-  entryPointByLang?: EntryPointByLang;
-  starterCodeByLang?: StarterMap;
+  problemSlug: string;
 }): Promise<SubmitCodeResult> {
   if (!sourceCode) {
     return {
@@ -407,76 +402,58 @@ export async function submitCode({
       accepted: false,
       status: "failed",
       passedCases: 0,
-      totalCases: testCases?.length ?? 0,
+      totalCases: 0,
     };
   }
 
-  if (!testCases?.length) {
+  try {
+    const res = await fetch(`/api/submit/${encodeURIComponent(problemSlug)}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        sourceCode,
+        language,
+      }),
+    });
+
+    const data = await res.json().catch(() => null);
+
+    if (!res.ok) {
+      return {
+        caseRuns: [
+          {
+            caseNum: 1,
+            ok: false,
+            error: data?.error ?? `Submit failed with status ${res.status}`,
+            logs: "",
+          },
+        ],
+        isError: true,
+        accepted: false,
+        status: "failed",
+        passedCases: 0,
+        totalCases: 0,
+      };
+    }
+
+    return data as SubmitCodeResult;
+  } catch (error) {
     return {
+      caseRuns: [
+        {
+          caseNum: 1,
+          ok: false,
+          error: "An error occurred while submitting your code.",
+          logs: error instanceof Error ? error.message : String(error),
+        },
+      ],
       isError: true,
       accepted: false,
       status: "failed",
       passedCases: 0,
       totalCases: 0,
-      caseRuns: [
-        {
-          caseNum: 1,
-          ok: false,
-          error: "No submit test cases were provided.",
-          logs: "",
-        },
-      ],
     };
   }
-
-  const result = await runCode({
-    sourceCode,
-    language,
-    liveCases: testCases,
-    initialCases: testCases,
-    entryPointByLang,
-    starterCodeByLang,
-  });
-
-  const totalCases = testCases.length;
-
-  const passedCases = result.caseRuns.filter(
-    (run) => run.ok && run.passed === true,
-  ).length;
-
-  const accepted =
-    result.caseRuns.length === totalCases &&
-    totalCases > 0 &&
-    result.caseRuns.every((run) => run.ok && run.passed === true);
-
-    const firstFailedRun = result.caseRuns.find(
-  (run) => !run.ok || run.passed === false,
-);
-
-const firstFailedIndex = firstFailedRun
-  ? firstFailedRun.caseNum > 0
-    ? firstFailedRun.caseNum - 1
-    : result.caseRuns.indexOf(firstFailedRun)
-  : -1;
-
-const failedCase = firstFailedRun
-  ? {
-      caseNum: firstFailedRun.caseNum,
-      input: testCases[firstFailedIndex]?.input,
-      output: outputForComparison(firstFailedRun),
-      expectedOutput: firstFailedRun.expectedOutput,
-      error: firstFailedRun.error,
-      logs: firstFailedRun.logs,
-    }
-  : undefined;
-
-  return {
-    ...result,
-    isError: !accepted,
-    accepted,
-    status: accepted ? "accepted" : "failed",
-    passedCases,
-    totalCases,
-    failedCase,
-  };
 }

@@ -7,9 +7,9 @@ import type { EntryPoint } from "@/lib/problem";
   headers: { "Content-Type": "application/json" },
 });*/
 
-const RESULT_PREFIX = "@@RESULT@@";
+export const RESULT_PREFIX = "@@RESULT@@";
 
-function toJDoodleLanguage(lang: Lang): string {
+export function toJDoodleLanguage(lang: Lang): string {
   return lang === "javascript" ? "nodejs" : lang;
 }
 
@@ -243,7 +243,7 @@ function ensurePublicJavaClass(code: string, className: string): string {
 }
 
 /** ---------- NEW: build a single JDoodle script ---------- */
-function buildJDoodleScript(opts: {
+export function buildJDoodleScript(opts: {
   language: Lang;
   userCode: string;
   cases: { input: any }[];
