@@ -1,11 +1,9 @@
 import type { Problem } from "@/lib/problem";
 import { getSolutionBySlug } from "@/lib/solutions";
-import { DISPLAY_NAME, DEFAULT_ORDER, type Lang } from "@/lib/languages";
+import { DEFAULT_ORDER, type Lang } from "@/lib/languages";
 
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { MonacoCodeBlock } from "./MonacoCodeBlock";
 import { SolutionCodeTabs } from "./SolutionCodeTabs";
 
 function CodeBlock({ code }: { code: string }) {
@@ -16,10 +14,15 @@ function CodeBlock({ code }: { code: string }) {
   );
 }
 
-export default async function Solution({ problem, mobileOnly }: { problem: Problem; mobileOnly?: boolean }) {
+export default async function Solution({
+  problem,
+  mobileOnly,
+}: {
+  problem: Problem;
+  mobileOnly?: boolean;
+}) {
   const sol = getSolutionBySlug(problem.slug);
   const solutionFontSize = mobileOnly ? 10 : 14;
-  const solutionHeight = mobileOnly ? 360 : 460;
   if (!sol) {
     return (
       <div className="space-y-3 m-2">
@@ -34,8 +37,9 @@ export default async function Solution({ problem, mobileOnly }: { problem: Probl
   const codeByLang = sol.codeByLang ?? {};
   const availableLangs = DEFAULT_ORDER.filter((l) => !!codeByLang[l]) as Lang[];
 
-  const initialLang: Lang =
-    (availableLangs[0] ?? sol.runner?.lang ?? "javascript") as Lang;
+  const initialLang: Lang = (availableLangs[0] ??
+    sol.runner?.lang ??
+    "javascript") as Lang;
 
   const time = sol.complexity?.time;
   const space = sol.complexity?.space;
@@ -45,13 +49,17 @@ export default async function Solution({ problem, mobileOnly }: { problem: Probl
       <div className="flex items-baseline justify-between gap-3">
         <div className="text-xl font-bold">Solution</div>
         {sol.updatedAt && (
-          <div className="text-xs text-muted-foreground">Updated: {sol.updatedAt}</div>
+          <div className="text-xs text-muted-foreground">
+            Updated: {sol.updatedAt}
+          </div>
         )}
       </div>
 
       {sol.approachMd && (
         <div className="-mt-4 p-3 prose prose-sm dark:prose-invert max-w-none">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>{sol.approachMd}</ReactMarkdown>
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {sol.approachMd}
+          </ReactMarkdown>
         </div>
       )}
 
@@ -60,16 +68,17 @@ export default async function Solution({ problem, mobileOnly }: { problem: Probl
 
         {availableLangs.length > 0 ? (
           <SolutionCodeTabs
-    codeByLang={codeByLang}
-    availableLangs={availableLangs}
-    initialLang={initialLang}
-    fontSize={solutionFontSize}
-    height={solutionHeight}
-      />
+            codeByLang={codeByLang}
+            availableLangs={availableLangs}
+            initialLang={initialLang}
+            fontSize={solutionFontSize}
+          />
         ) : sol.runner?.code ? (
           <CodeBlock code={sol.runner.code} />
         ) : (
-          <div className="text-sm text-muted-foreground">No code found in this solution entry.</div>
+          <div className="text-sm text-muted-foreground">
+            No code found in this solution entry.
+          </div>
         )}
       </div>
 

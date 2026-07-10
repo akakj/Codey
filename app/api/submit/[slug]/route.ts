@@ -363,18 +363,21 @@ export async function POST(
   const runtime = toNullableInt(jdoodleResult?.cpuTime);
   const now = new Date().toISOString();
 
-  const { error: insertError } = await supabase.from("submissions").insert({
-  userId: user.id,
-  problemId: problem.problemID,
-  code: sourceCode,
-  language,
-  passed: accepted,
-  memory,
-  runtime,
-  passedCases,
-  totalCases,
-  createdAt: now,
-});
+  const { data: insertedSubmission, error: insertError } = await supabase.from("submissions").insert({
+    userId: user.id,
+    problemId: problem.problemID,
+    code: sourceCode,
+    language,
+    passed: accepted,
+    memory,
+    runtime,
+    passedCases,
+    totalCases,
+    failedCase: accepted ? null : (failedCase ?? null),
+    createdAt: now,
+  })
+  .select("id")
+  .single();
 
   if (insertError) {
     return NextResponse.json({ error: insertError.message }, { status: 500 });
@@ -415,6 +418,7 @@ export async function POST(
   }
 
   return NextResponse.json({
+    submissionId: insertedSubmission.id,
     accepted,
     status: accepted ? "accepted" : "failed",
     passedCases,

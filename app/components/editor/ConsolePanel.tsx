@@ -1,13 +1,15 @@
 "use client";
 
 import React from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { ChevronDown, Terminal, SquareCheck, CloudUpload } from "lucide-react";
 import type { ImperativePanelHandle } from "react-resizable-panels";
+
 import { Loader2 } from "lucide-react";
+import { ChevronDown, Terminal, SquareCheck, CloudUpload } from "lucide-react";
 
 import ConsoleCases from "./ConsoleCases";
 import ConsoleOutput, { type CaseRun } from "./ConsoleOutput";
@@ -44,6 +46,10 @@ export function ConsolePanel({
   entryPointByLang?: EntryPointByLang;
   starterCodeByLang?: StarterMap;
 }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
   const panelRef = React.useRef<ImperativePanelHandle>(null);
   const [size, setSize] = React.useState<number>(initialOpen ? EXPANDED : 10);
   const isExpanded = size > MIN + 2;
@@ -128,6 +134,19 @@ export function ConsolePanel({
     setSubmitResult(result);
     setIsError(result.isError);
     setLoadingAction(null);
+
+    if (result.submissionId) {
+  const params = new URLSearchParams(searchParams.toString());
+
+  params.set("tab", "submissions");
+  params.set("submissionId", String(result.submissionId));
+
+  router.replace(`${pathname}?${params.toString()}`, {
+    scroll: false,
+  });
+
+  router.refresh();
+}
   };
 
   const formatSubmitValue = (value: any) => {
@@ -270,7 +289,7 @@ export function ConsolePanel({
                       className={`text-xl font-semibold ${
                         submitResult.accepted
                           ? "text-green-500"
-                          : "text-red-500"
+                          : "text-red-800 dark:text-red-400"
                       }`}
                     >
                       {submitResult.accepted ? "Accepted" : "Wrong Answer"}

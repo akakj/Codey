@@ -2,16 +2,26 @@
 
 import Editor from "@monaco-editor/react";
 import type { Lang } from "@/lib/languages";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTheme } from "next-themes";
 
 const monacoId = (L: Lang) => (L === "python3" ? "python" : L);
 
+function getEditorHeight(code: string, fontSize: number) {
+  const lineCount = Math.max(code.split(/\r\n|\r|\n/).length, 1);
+
+  const lineHeight = Math.max(fontSize + 8, 22);
+  const verticalPadding = 24;
+  const minHeight = 120;
+
+  return Math.max(minHeight, lineCount * lineHeight + verticalPadding);
+}
+
 export function MonacoCodeBlock({
   code,
   lang,
-  height = 460,
-  fontSize = 14
+  height,
+  fontSize = 14,
 }: {
   code: string;
   lang: Lang;
@@ -25,31 +35,41 @@ export function MonacoCodeBlock({
 
   const editorTheme = mounted && resolvedTheme === "dark" ? "vs-dark" : "vs";
 
+  const editorHeight = useMemo(
+    () => height ?? getEditorHeight(code, fontSize),
+    [code, fontSize, height],
+  );
+
   return (
-    <div className="rounded-md border overflow-hidden" style={{ height }}>
+    <div
+      className="rounded-md border overflow-hidden"
+      style={{ height: editorHeight }}
+    >
       <Editor
         key={lang}
-        height="100%"
+        height={editorHeight}
         language={monacoId(lang)}
         value={code}
         theme={editorTheme}
         options={{
           readOnly: true,
+          domReadOnly: true,
           automaticLayout: true,
           scrollBeyondLastLine: false,
           minimap: { enabled: false },
           wordWrap: "off",
           tabSize: 2,
-          fontSize:fontSize,
+          fontSize,
+          lineHeight: Math.max(fontSize + 8, 22),
           smoothScrolling: true,
-          cursorBlinking: "phase",
           renderWhitespace: "selection",
-          mouseWheelZoom: true,
-
+          contextmenu: true,
+          overviewRulerLanes: 0,
+          hideCursorInOverviewRuler: true,
           scrollbar: {
-            vertical: "auto",
+            vertical: "hidden",
             horizontal: "auto",
-            alwaysConsumeMouseWheel: true
+            alwaysConsumeMouseWheel: false,
           },
         }}
       />

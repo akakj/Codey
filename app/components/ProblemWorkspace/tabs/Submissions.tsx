@@ -1,49 +1,34 @@
 import Link from "next/link";
 import type { Problem } from "@/lib/problem";
 import { createClient } from "@/utils/supabase/server";
-import SubmissionsCodeViewer from "./SubmissionCodeViewer";
 
-import { MoveLeft } from "lucide-react";
+import SubmissionDetail from "./submissions/SubmissionDetails";
+import SubmissionsList from "./submissions/SubmissionsList";
+import type {
+  SubmissionDetailRow,
+  SubmissionListRow,
+} from "./submissions/submissionUtils";
 
-type SubmissionListRow = {
-  id: number;
-  language: string;
-  passed: boolean;
-  memory: number | null;
-  runtime: number | null;
-  createdAt: string;
-  passedCases: number | null;
-  totalCases: number | null;
-};
-
-type SubmissionDetailRow = SubmissionListRow & {
-  code: string;
-};
-
-function formatDate(value: string) {
-  return new Date(value).toLocaleString();
+function StateCard({
+  message,
+  error = false,
+}: {
+  message: string;
+  error?: boolean;
+}) {
+  return (
+    <div className="rounded-md border p-6">
+      <p className={error ? "text-sm text-red-500" : "text-sm"}>{message}</p>
+    </div>
+  );
 }
 
-function formatDateShort(value: string) {
-  return new Date(value).toLocaleDateString();
-}
-
-function formatRuntime(value: number | null) {
-  return value == null ? "N/A" : `${value}ms`;
-}
-
-function formatMemory(value: number | null) {
-  return value == null ? "N/A" : `${value} KB`;
-}
-
-function statusText(passed: boolean) {
-  return passed ? "Accepted" : "Wrong Answer";
-}
-
-function statusClass(passed: boolean) {
-  return passed
-    ? "text-green-800 dark:text-green-400"
-    : "text-red-800 dark:text-red-400";
+function BackToSubmissions({ href }: { href: string }) {
+  return (
+    <Link href={href} className="text-sm text-muted-foreground">
+      ← All submissions
+    </Link>
+  );
 }
 
 export default async function Submissions({
@@ -63,9 +48,7 @@ export default async function Submissions({
     return (
       <div className="space-y-3 m-2">
         <div className="text-lg font-bold">Submissions</div>
-        <div className="rounded-md border p-6">
-          <p className="text-sm">Log in to view your submissions</p>
-        </div>
+        <StateCard message="Log in to view your submissions" />
       </div>
     );
   }
@@ -78,12 +61,8 @@ export default async function Submissions({
     if (!Number.isInteger(numericSubmissionId)) {
       return (
         <div className="space-y-3 m-2">
-          <Link href={backHref} className="text-sm text-muted-foreground">
-            <MoveLeft className="h-4 w-4 mr-2" /> All submissions
-          </Link>
-          <div className="rounded-md border p-6">
-            <p className="text-sm text-red-500">Invalid submission.</p>
-          </div>
+          <BackToSubmissions href={backHref} />
+          <StateCard message="Invalid submission." error />
         </div>
       );
     }
@@ -91,8 +70,8 @@ export default async function Submissions({
     const { data: submission, error } = await supabase
       .from("submissions")
       .select(
-        "id, language, passed, memory, runtime, createdAt, code, passedCases, totalCases",
-      )
+  "id, language, passed, memory, runtime, createdAt, code, passedCases, totalCases, failedCase",
+)
       .eq("id", numericSubmissionId)
       .eq("userId", user.id)
       .eq("problemId", problem.problemID)
@@ -101,12 +80,8 @@ export default async function Submissions({
     if (error) {
       return (
         <div className="space-y-3 m-2">
-          <Link href={backHref} className="text-sm text-muted-foreground">
-            <MoveLeft className="h-4 w-4 mr-2" /> All submissions
-          </Link>
-          <div className="rounded-md border p-6">
-            <p className="text-sm text-red-500">{error.message}</p>
-          </div>
+          <BackToSubmissions href={backHref} />
+          <StateCard message={error.message} error />
         </div>
       );
     }
@@ -114,81 +89,17 @@ export default async function Submissions({
     if (!submission) {
       return (
         <div className="space-y-3 m-2">
-          <Link href={backHref} className="text-sm text-muted-foreground">
-            <MoveLeft className="h-4 w-4 mr-2" /> All submissions
-          </Link>
-          <div className="rounded-md border p-6">
-            <p className="text-sm">Submission not found</p>
-          </div>
+          <BackToSubmissions href={backHref} />
+          <StateCard message="Submission not found" />
         </div>
       );
     }
 
-    const item = submission as SubmissionDetailRow;
-
     return (
-      <div className="m-2">
-        <div>
-          <Link
-            href={backHref}
-            className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground"
-          >
-            <MoveLeft className="h-4 w-4 mr-2" /> All submissions
-          </Link>
-        </div>
-
-        <div className="pb-4">
-          <div className="flex flex-wrap items-end gap-3">
-            <h2 className={`text-md font-semibold ${statusClass(item.passed)}`}>
-              {statusText(item.passed)}
-            </h2>
-
-            {item.passedCases != null && item.totalCases != null ? (
-              <p className="text-lg text-muted-foreground">
-                {item.passedCases} / {item.totalCases} test cases
-              </p>
-            ) : null}
-          </div>
-
-          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-2 text-sm text-muted-foreground">
-            <span>Submitted at: {formatDate(item.createdAt)}</span>
-          </div>
-        </div>
-
-        <div className="">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="rounded-lg border bg-muted/30 p-2">
-              <p className="text-sm font-semibold text-muted-foreground">
-                Runtime
-              </p>
-              <p className="mt-4 font-semibold">
-                {formatRuntime(item.runtime)}
-              </p>
-            </div>
-
-            <div className="rounded-lg border bg-muted/30 p-2">
-              <p className="text-sm font-semibold text-muted-foreground">
-                Memory
-              </p>
-              <p className="mt-4 font-semibold">
-                {formatMemory(item.memory)}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <div className="mt-3 mb-2 flex items-center gap-3">
-            <h3 className="text-lg font-semibold">Code</h3>
-            <span className="text-muted-foreground">|</span>
-            <span className="text-lg text-muted-foreground">
-              {item.language}
-            </span>
-          </div>
-
-          <SubmissionsCodeViewer code={item.code} language={item.language} />
-        </div>
-      </div>
+      <SubmissionDetail
+        item={submission as SubmissionDetailRow}
+        backHref={backHref}
+      />
     );
   }
 
@@ -205,9 +116,7 @@ export default async function Submissions({
     return (
       <div className="space-y-3 m-2">
         <div className="text-lg font-bold">Submissions</div>
-        <div className="rounded-md border p-6">
-          <p className="text-sm text-red-500">{error.message}</p>
-        </div>
+        <StateCard message={error.message} error />
       </div>
     );
   }
@@ -217,68 +126,12 @@ export default async function Submissions({
       <div className="text-lg font-bold">Submissions</div>
 
       {!submissions?.length ? (
-        <div className="rounded-md border p-6">
-          <p className="text-sm">No submissions to show.</p>
-        </div>
+        <StateCard message="No submissions to show." />
       ) : (
-        <div className="rounded-xl border overflow-hidden">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50">
-              <tr>
-                <th className="p-3 text-left">Submission</th>
-                <th className="p-3 text-left">Language</th>
-                <th className="p-3 text-left">Runtime</th>
-                <th className="p-3 text-left">Memory</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {(submissions as SubmissionListRow[]).map((submission) => {
-                const href = `/problems/${problem.slug}?tab=submissions&submissionId=${submission.id}`;
-
-                return (
-                  <tr
-                    key={submission.id}
-                    className="border-t hover:bg-muted/40 transition-colors"
-                  >
-                    <td className="p-3">
-                      <Link href={href} className="block">
-                        <div
-                          className={`font-semibold ${statusClass(
-                            submission.passed,
-                          )}`}
-                        >
-                          {statusText(submission.passed)}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {formatDateShort(submission.createdAt)}
-                        </div>
-                      </Link>
-                    </td>
-
-                    <td className="p-3">
-                      <Link href={href} className="block">
-                        {submission.language}
-                      </Link>
-                    </td>
-
-                    <td className="p-3">
-                      <Link href={href} className="block">
-                        {formatRuntime(submission.runtime)}
-                      </Link>
-                    </td>
-
-                    <td className="p-3">
-                      <Link href={href} className="block">
-                        {formatMemory(submission.memory)}
-                      </Link>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <SubmissionsList
+          problemSlug={problem.slug}
+          submissions={submissions as SubmissionListRow[]}
+        />
       )}
     </div>
   );

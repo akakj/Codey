@@ -32,6 +32,7 @@ type RunCodeResult = {
 };
 
 export type SubmitCodeResult = RunCodeResult & {
+  submissionId?: number;
   accepted: boolean;
   status: "accepted" | "failed";
   passedCases: number;

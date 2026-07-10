@@ -35,7 +35,7 @@ export function SolutionCodeTabs({
           key={lang}
           code={codeByLang[lang] ?? ""}
           lang={lang}
-          height={450}
+          height={height}
           fontSize={fontSize}
         />
       </TabsContent>

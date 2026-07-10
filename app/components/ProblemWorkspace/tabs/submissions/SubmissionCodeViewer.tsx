@@ -5,18 +5,17 @@ import Editor from "@monaco-editor/react";
 import { useTheme } from "next-themes";
 
 function toMonacoLanguage(language: string) {
-  switch (language) {
-    case "python3":
-      return "python";
-    case "javascript":
-      return "javascript";
-    case "java":
-      return "java";
-    case "csharp":
-      return "csharp";
-    default:
-      return "plaintext";
-  }
+  return language === "python3" ? "python" : language;
+}
+
+function getEditorHeight(code: string) {
+  const lineHeight = 22;
+  const verticalPadding = 24;
+  const minHeight = 120;
+
+  const lineCount = Math.max(code.split("\n").length, 1);
+
+  return Math.max(minHeight, lineCount * lineHeight + verticalPadding);
 }
 
 export default function SubmissionCodeViewer({
@@ -34,11 +33,12 @@ export default function SubmissionCodeViewer({
   }, []);
 
   const editorTheme = mounted && resolvedTheme === "dark" ? "vs-dark" : "vs";
+  const editorHeight = getEditorHeight(code);
 
   return (
-    <div className="h-[420px] overflow-hidden rounded-md border">
+    <div className="overflow-hidden rounded-md border">
       <Editor
-        height="100%"
+        height={editorHeight}
         language={toMonacoLanguage(language)}
         value={code}
         theme={editorTheme}
@@ -48,13 +48,20 @@ export default function SubmissionCodeViewer({
           minimap: { enabled: false },
           scrollBeyondLastLine: false,
           automaticLayout: true,
-          wordWrap: "on",
+          wordWrap: "off",
           lineNumbers: "on",
           folding: true,
           fontSize: 14,
+          lineHeight: 22,
           tabSize: 2,
           renderWhitespace: "selection",
           contextmenu: true,
+          overviewRulerLanes: 0,
+          hideCursorInOverviewRuler: true,
+          scrollbar: {
+            vertical: "hidden",
+            horizontal: "auto",
+          },
         }}
       />
     </div>

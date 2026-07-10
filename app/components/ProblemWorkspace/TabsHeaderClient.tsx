@@ -71,6 +71,7 @@ export default function TabsHeaderClient({
               href="?tab=submissions"
               replace
               scroll={false}
+              prefetch={false}
               aria-label="Submissions"
             >
               <History className="shrink-0" />
