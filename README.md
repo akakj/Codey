@@ -24,17 +24,8 @@ The project is built using production-style practices, with an emphasis on API-d
 - **Custom user-defined test cases**
 
 ### In progress
-- **Submit flow** (persisted submissions and final verdicts)
-- **Solutions tab** (editorial and reference implementations)
-
-### Planned
-- User statistics and analytics:
-  - Total problems solved
-  - Problems solved by topic
-  - Average time spent per problem
-  - Attempt and success rates
-- Submission history
-- User profiles
+- **User statistics and analytics page**
+- **About section**
 
 ---
 
