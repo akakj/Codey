@@ -3,6 +3,7 @@
 
 import React from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { getCaseOutput, stringifyOutputValue } from "@/lib/outputFormatting";
 
 export type CaseRun = {
   caseNum: number;
@@ -17,18 +18,6 @@ export type CaseRun = {
   logs?: string; // lines printed BEFORE @@RESULT@@ for this case
 };
 
-function prettyOutput(run: CaseRun): string {
-  if (run.outputJson && run.outputJson.trim()) {
-    try {
-      return JSON.stringify(JSON.parse(run.outputJson), null, 2);
-    } catch {
-      return run.outputJson;
-    }
-  }
-  if (run.outputText !== undefined) return run.outputText;
-  if (run.output !== undefined) return run.output;
-  return "";
-}
 
 export default function ConsoleOutput({
   runs,
@@ -124,7 +113,7 @@ export default function ConsoleOutput({
               }`}
             >
               {(() => {
-                const out = prettyOutput(cur);
+                const out = getCaseOutput(cur);
                 return out && out.length ? (
                   out
                 ) : (
@@ -142,7 +131,7 @@ export default function ConsoleOutput({
           <div className="mb-2 text-sm font-medium">Expected Output</div>
           <div className="h-auto overflow-auto rounded-md border border-border bg-muted/20 p-3">
             <pre className="text-sm whitespace-pre-wrap text-muted-foreground">
-              {cur.expectedOutput}
+              {stringifyOutputValue(cur.expectedOutput)}
             </pre>
           </div>
         </div>

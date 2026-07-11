@@ -54,39 +54,8 @@ export type SubmissionInputField = {
   value: string;
 };
 
-export function stringifyCaseValue(value: unknown) {
-  if (value === undefined) return "undefined";
-
-  try {
-    const json = JSON.stringify(value);
-    return json === undefined ? String(value) : json;
-  } catch {
-    return String(value);
-  }
-}
-
-export function inputToFields(input: unknown): SubmissionInputField[] {
-  if (input && typeof input === "object" && !Array.isArray(input)) {
-    return Object.entries(input as Record<string, unknown>).map(
-      ([name, value]) => ({
-        name,
-        value: stringifyCaseValue(value),
-      }),
-    );
-  }
-
-  return [
-    {
-      name: "input",
-      value: stringifyCaseValue(input),
-    },
-  ];
-}
-
-export function formatSubmissionValue(value: unknown) {
-  if (value === undefined || value === null) return "";
-
-  if (typeof value === "string") return value;
-
-  return stringifyCaseValue(value);
-}
+export {
+  formatInputFields as inputToFields,
+  formatInputValue as stringifyCaseValue,
+  stringifyOutputValue as formatSubmissionValue,
+} from "@/lib/outputFormatting";

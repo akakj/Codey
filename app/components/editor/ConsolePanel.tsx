@@ -17,6 +17,7 @@ import ConsoleOutput, { type CaseRun } from "./ConsoleOutput";
 import type { Lang, StarterMap } from "@/lib/languages";
 import type { EntryPointByLang } from "@/lib/problem";
 import { runCode, submitCode, type SubmitCodeResult } from "./codeRunner";
+import { formatInputFields, stringifyOutputValue} from "@/lib/outputFormatting";
 
 const MIN = 6;
 const EXPANDED = 40;
@@ -136,41 +137,19 @@ export function ConsolePanel({
     setLoadingAction(null);
 
     if (result.submissionId) {
-  const params = new URLSearchParams(searchParams.toString());
+      const params = new URLSearchParams(searchParams.toString());
 
-  params.set("tab", "submissions");
-  params.set("submissionId", String(result.submissionId));
+      params.set("tab", "submissions");
+      params.set("submissionId", String(result.submissionId));
 
-  router.replace(`${pathname}?${params.toString()}`, {
-    scroll: false,
-  });
+      router.replace(`${pathname}?${params.toString()}`, {
+      scroll: false,
+    });
 
   router.refresh();
 }
   };
 
-  const formatSubmitValue = (value: any) => {
-    if (value === undefined) return "";
-
-    const formatInline = (v: any): string => {
-      if (v === undefined) return "undefined";
-
-      try {
-        const json = JSON.stringify(v);
-        return json === undefined ? String(v) : json;
-      } catch {
-        return String(v);
-      }
-    };
-
-    if (value && typeof value === "object" && !Array.isArray(value)) {
-      return Object.entries(value)
-        .map(([key, val]) => `${key} = ${formatInline(val)}`)
-        .join("\n");
-    }
-
-    return formatInline(value);
-  };
   return (
     <>
       <ResizablePanel
@@ -319,51 +298,61 @@ export function ConsolePanel({
                     </div>
 
                     {!submitResult.accepted && submitResult.failedCase ? (
-                      <div className="space-y-4">
-                        <p className="font-semibold">Failed Case</p>
+  <div className="space-y-4">
+    <p className="font-semibold">Failed Case</p>
 
-                        <div>
-                          <p className="mb-2 font-semibold">Input</p>
-                          <pre className="rounded-lg border bg-muted/30 p-4 text-sm whitespace-pre-wrap">
-                            {formatSubmitValue(submitResult.failedCase.input)}
-                          </pre>
-                        </div>
+    <div>
+      <p className="mb-2 font-semibold">Input</p>
 
-                        <div>
-                          <p className="mb-2 font-semibold">Output</p>
-                          <pre className="rounded-lg border bg-muted/30 p-4 text-sm whitespace-pre-wrap">
-                            {submitResult.failedCase.output ?? ""}
-                          </pre>
-                        </div>
+      <div className="space-y-2">
+        {formatInputFields(submitResult.failedCase.input).map((field) => (
+          <pre
+            key={field.name}
+            className="overflow-auto rounded-lg border bg-muted/30 p-4 text-sm whitespace-pre-wrap"
+          >
+            {field.name} = {field.value}
+          </pre>
+        ))}
+      </div>
+    </div>
 
-                        <div>
-                          <p className="mb-2 font-semibold">Expected Output</p>
-                          <pre className="rounded-lg border bg-muted/30 p-4 text-sm whitespace-pre-wrap">
-                            {submitResult.failedCase.expectedOutput ?? ""}
-                          </pre>
-                        </div>
+    <div>
+      <p className="mb-2 font-semibold">Your Output</p>
 
-                        {submitResult.failedCase.error ? (
-                          <div>
-                            <p className="mb-2 font-semibold text-red-500">
-                              Error
-                            </p>
-                            <pre className="rounded-lg border bg-muted/30 p-4 text-sm whitespace-pre-wrap text-red-400">
-                              {submitResult.failedCase.error}
-                            </pre>
-                          </div>
-                        ) : null}
+      <pre className="overflow-auto rounded-lg border bg-muted/30 p-4 text-sm whitespace-pre-wrap text-red-800 dark:text-red-400">
+        {stringifyOutputValue(submitResult.failedCase.output)}
+      </pre>
+    </div>
 
-                        {submitResult.failedCase.logs ? (
-                          <div>
-                            <p className="mb-2 font-semibold">Logs</p>
-                            <pre className="rounded-lg border bg-muted/30 p-4 text-sm whitespace-pre-wrap">
-                              {submitResult.failedCase.logs}
-                            </pre>
-                          </div>
-                        ) : null}
-                      </div>
-                    ) : null}
+    <div>
+      <p className="mb-2 font-semibold">Expected Output</p>
+
+      <pre className="overflow-auto rounded-lg border bg-muted/30 p-4 text-sm whitespace-pre-wrap">
+        {stringifyOutputValue(submitResult.failedCase.expectedOutput)}
+      </pre>
+    </div>
+
+    {submitResult.failedCase.error ? (
+      <div>
+        <p className="mb-2 font-semibold text-red-500">Error</p>
+
+        <pre className="overflow-auto rounded-lg border bg-muted/30 p-4 text-sm whitespace-pre-wrap text-red-400">
+          {submitResult.failedCase.error}
+        </pre>
+      </div>
+    ) : null}
+
+    {submitResult.failedCase.logs ? (
+      <div>
+        <p className="mb-2 font-semibold">Logs</p>
+
+        <pre className="overflow-auto rounded-lg border bg-muted/30 p-4 text-sm whitespace-pre-wrap">
+          {submitResult.failedCase.logs}
+        </pre>
+      </div>
+    ) : null}
+  </div>
+) : null}
                   </div>
                 ) : caseRuns.length === 0 ? (
                   <pre

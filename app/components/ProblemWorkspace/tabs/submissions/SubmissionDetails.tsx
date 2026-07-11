@@ -78,7 +78,7 @@ function FailedCaseBlock({
 
         <div>
           <p className="mb-2 text-sm font-semibold">Your Output</p>
-          <pre className="overflow-auto rounded-md border bg-background p-3 text-sm whitespace-pre-wrap">
+          <pre className="overflow-auto rounded-md border bg-background p-3 text-sm whitespace-pre-wrap text-red-800 dark:text-red-400">
             {formatSubmissionValue(failedCase.output)}
           </pre>
         </div>

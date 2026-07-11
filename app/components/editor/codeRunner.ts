@@ -4,6 +4,7 @@ import { executeCode } from "./api";
 import type { CaseRun } from "./ConsoleOutput";
 import type { Lang, StarterMap } from "@/lib/languages";
 import type { EntryPointByLang } from "@/lib/problem";
+import { getCaseOutput, stringifyOutputValue } from "@/lib/outputFormatting";
 
 export type JsonCase = {
   input: any;
@@ -66,34 +67,18 @@ function deepEqual(a: any, b: any) {
   }
 }
 
-function formatExpectedOutput(value: any, language: Lang): string {
-  const isPython = String(language).toLowerCase().includes("python");
+function formatExpectedOutput(value: unknown, language: Lang): string {
+  const isPython = language === "python3";
 
   if (isPython && typeof value === "boolean") {
     return value ? "True" : "False";
   }
 
-  try {
-    const json = JSON.stringify(value, null, 2);
-    return json === undefined ? String(value) : json;
-  } catch {
-    return String(value);
-  }
+  return stringifyOutputValue(value);
 }
 
 function outputForComparison(run: CaseRun): string {
-  if (run.outputJson && run.outputJson.trim()) {
-    try {
-      return JSON.stringify(JSON.parse(run.outputJson), null, 2);
-    } catch {
-      return run.outputJson;
-    }
-  }
-
-  if (run.outputText !== undefined) return run.outputText;
-  if (run.output !== undefined) return run.output;
-
-  return "";
+  return getCaseOutput(run);
 }
 
 function normalizePythonLiterals(value: string): string {
