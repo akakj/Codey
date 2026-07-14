@@ -1,13 +1,58 @@
-import axios from "axios";
-import { LANGS_VERSIONS, type Lang } from "@/lib/languages";
-import type { EntryPoint } from "@/lib/problem";
-
-/*const API = axios.create({
-  baseURL: "https://api.jdoodle.com/v1",
-  headers: { "Content-Type": "application/json" },
-});*/
+import type { Lang } from "@/lib/languages";
+import type {
+  EditableTestCase,
+  EntryPoint,
+  JsonValue,
+} from "@/lib/problem";
 
 export const RESULT_PREFIX = "@@RESULT@@";
+
+export type JDoodleResponse = {
+  output?: string;
+  error?: string;
+  memory?: string | number;
+  cpuTime?: string | number;
+  statusCode?: number;
+  compilationStatus?: string | number;
+};
+
+type InputTestCase = Pick<EditableTestCase, "input">;
+type JsonObject = Record<string, JsonValue>;
+
+function isJsonObject(value: JsonValue): value is JsonObject {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function parseJDoodleResponse(value: unknown): JDoodleResponse {
+  if (!isRecord(value)) {
+    throw new Error("JDoodle returned an invalid response.");
+  }
+
+  return {
+    output: typeof value.output === "string" ? value.output : undefined,
+    error: typeof value.error === "string" ? value.error : undefined,
+    memory:
+      typeof value.memory === "string" || typeof value.memory === "number"
+        ? value.memory
+        : undefined,
+    cpuTime:
+      typeof value.cpuTime === "string" || typeof value.cpuTime === "number"
+        ? value.cpuTime
+        : undefined,
+    statusCode:
+      typeof value.statusCode === "number" ? value.statusCode : undefined,
+    compilationStatus:
+      typeof value.compilationStatus === "string" ||
+      typeof value.compilationStatus === "number"
+        ? value.compilationStatus
+        : undefined,
+  };
+}
+
 
 export function toJDoodleLanguage(lang: Lang): string {
   return lang === "javascript" ? "nodejs" : lang;
@@ -69,16 +114,23 @@ function parseCSharpParamsFromStarter(starter: string, methodName: string): Para
 }
 
 // build args from testcase input
-function buildArgsFromInput(input: any, params?: ParamSpec[]): any[] {
-  if (input && typeof input === "object" && !Array.isArray(input)) {
-    if (params && params.length) return params.map((p) => input[p.name]);
-    return Object.keys(input).map((k) => input[k]);
+function buildArgsFromInput(
+  input: JsonValue,
+  params?: ParamSpec[],
+): JsonValue[] {
+  if (isJsonObject(input)) {
+    if (params?.length) {
+      return params.map((param) => input[param.name] ?? null);
+    }
+
+    return Object.values(input);
   }
+
   return [input];
 }
 
 // Java typed literal generation (extend over time)
-function javaExpr(v: any, type: string): string {
+function javaExpr(v: JsonValue, type: string): string {
   const t = type.replace(/\s+/g, "");
   if (v === null || v === undefined) return "null";
 
@@ -102,23 +154,23 @@ function javaExpr(v: any, type: string): string {
   // --- 2D arrays ---
   if (t === "int[][]") {
     const outer = Array.isArray(v) ? v : [];
-    const rows = outer.map((row: any) => {
+    const rows = outer.map((row) => {
       const r = Array.isArray(row) ? row : [];
-      return `new int[]{${r.map((x: any) => String(Number(x))).join(",")}}`;
+      return `new int[]{${r.map((x) => String(Number(x))).join(",")}}`;
     });
     return `new int[][]{${rows.join(",")}}`;
   }
   if (t === "String[][]") {
     const outer = Array.isArray(v) ? v : [];
-    const rows = outer.map((row: any) => {
+    const rows = outer.map((row) => {
       const r = Array.isArray(row) ? row : [];
-      return `new String[]{${r.map((x: any) => JSON.stringify(String(x))).join(",")}}`;
+      return `new String[]{${r.map((x) => JSON.stringify(String(x))).join(",")}}`;
     });
     return `new String[][]{${rows.join(",")}}`;
   }
 
-  const integerLiteral = (x: any) =>
-    x === null || x === undefined ? "null" : String(Number(x));
+  const integerLiteral = (x: JsonValue): string =>
+    x === null ? "null" : String(Number(x));
 
   // Linked List (ListNode)
   if (t === "ListNode") {
@@ -132,11 +184,11 @@ function javaExpr(v: any, type: string): string {
     return `TreeNode.fromLevelOrder(new Integer[]{${arr.map(integerLiteral).join(",")}})`;
   }
 
-  return JSON.stringify(v);
+  return JSON.stringify(v) ?? "null";
 }
 
 // C# typed literal generation (extend over time)
-function csExpr(v: any, type: string): string {
+function csExpr(v: JsonValue, type: string): string {
   const t = type.replace(/\s+/g, "");
   if (v === null || v === undefined) return "null";
 
@@ -160,23 +212,23 @@ function csExpr(v: any, type: string): string {
   // 2D arrays
   if (t === "int[][]") {
     const outer = Array.isArray(v) ? v : [];
-    const rows = outer.map((row: any) => {
+    const rows = outer.map((row) => {
       const r = Array.isArray(row) ? row : [];
-      return `new int[]{${r.map((x: any) => String(Number(x))).join(",")}}`;
+      return `new int[]{${r.map((x) => String(Number(x))).join(",")}}`;
     });
     return `new int[][]{${rows.join(",")}}`;
   }
   if (t === "string[][]") {
     const outer = Array.isArray(v) ? v : [];
-    const rows = outer.map((row: any) => {
+    const rows = outer.map((row) => {
       const r = Array.isArray(row) ? row : [];
-      return `new string[]{${r.map((x: any) => JSON.stringify(String(x))).join(",")}}`;
+      return `new string[]{${r.map((x) => JSON.stringify(String(x))).join(",")}}`;
     });
     return `new string[][]{${rows.join(",")}}`;
   }
 
-  const intNullableLiteral = (x: any) =>
-    x === null || x === undefined ? "null" : String(Number(x));
+  const intNullableLiteral = (x: JsonValue): string =>
+    x === null ? "null" : String(Number(x));
 
   if (t === "ListNode") {
     const arr = Array.isArray(v) ? v : [];
@@ -190,7 +242,7 @@ function csExpr(v: any, type: string): string {
 
   const listMatch = t.match(/^(?:List|IList)<(.*)>$/);
   if (listMatch) {
-    const inner = listMatch[1];
+    const inner = listMatch[1] ?? "object";
     const arr = Array.isArray(v) ? v : [];
     const elems = arr.map((x) => csExpr(x, inner)).join(",");
     return `new System.Collections.Generic.List<${inner}>(){${elems}}`;
@@ -246,12 +298,14 @@ function ensurePublicJavaClass(code: string, className: string): string {
 export function buildJDoodleScript(opts: {
   language: Lang;
   userCode: string;
-  cases: { input: any }[];
+  cases: InputTestCase[];
   entryPoint?: EntryPoint;
   starterForLang?: string;
 }): string {
   const { language, userCode, cases, entryPoint, starterForLang } = opts;
-  const safeCases = cases.length ? cases : [{ input: "" }];
+  const safeCases: InputTestCase[] = cases.length
+    ? cases
+    : [{ input: "" }];
 
   // PYTHON: put user code first, then runner that calls symbols directly (no imports)
   if (language === "python3") {
@@ -474,10 +528,10 @@ ${invoke}
 export async function executeCode(
   language: Lang,
   sourceCode: string,
-  cases: { input: any; output?: any }[] = [],
+  cases: InputTestCase[] = [],
   entryPoint?: EntryPoint,
-  starterForLang?: string
-) {
+  starterForLang?: string,
+): Promise<JDoodleResponse> {
   const jdoodleLanguage = toJDoodleLanguage(language);
 
   const script = buildJDoodleScript({
@@ -487,10 +541,6 @@ export async function executeCode(
     entryPoint,
     starterForLang,
   });
-
-  if (language === "java") {
-  console.log(script);
-}
 
   const res = await fetch("/api/execute", {
     method: "POST",
@@ -505,16 +555,19 @@ export async function executeCode(
 
   const text = await res.text();
 
-  let data: any = null;
+  let parsed: unknown = null;
+
   try {
-  data = text ? JSON.parse(text) : null;
-  } catch (e) {
-    throw new Error(`Non-JSON response (${res.status}): ${text.slice(0, 300)}`);
+    parsed = text ? JSON.parse(text) : null;
+  } catch {
+    throw new Error(
+      `Non-JSON response (${res.status}): ${text.slice(0, 300)}`,
+    );
   }
 
   if (!res.ok) {
-    throw new Error(`HTTP ${res.status}: ${JSON.stringify(data)}`);
+    throw new Error(`HTTP ${res.status}: ${JSON.stringify(parsed)}`);
   }
 
-  return data;
+  return parseJDoodleResponse(parsed);
 }

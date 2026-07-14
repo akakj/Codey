@@ -3,24 +3,28 @@
 import { executeCode } from "./api";
 import type { CaseRun } from "./ConsoleOutput";
 import type { Lang, StarterMap } from "@/lib/languages";
-import type { EntryPointByLang } from "@/lib/problem";
+import type {
+  EditableTestCase,
+  EntryPointByLang,
+  JsonValue,
+} from "@/lib/problem";
 import { getCaseOutput, stringifyOutputValue } from "@/lib/outputFormatting";
-
-export type JsonCase = {
-  input: any;
-  expectedOutput?: any;
-  isUser?: boolean;
-};
 
 const RESULT_PREFIX = "@@RESULT@@";
 
 type RunCodeArgs = {
   sourceCode: string;
   language: Lang;
-  liveCases: JsonCase[];
-  initialCases?: JsonCase[];
+  liveCases: EditableTestCase[];
+  initialCases?: EditableTestCase[];
   entryPointByLang?: EntryPointByLang;
   starterCodeByLang?: StarterMap;
+};
+
+type SubmitCodeArgs = {
+  sourceCode: string;
+  language: Lang;
+  problemSlug: string;
 };
 
 type RunCodeResult = {
@@ -43,34 +47,178 @@ export type SubmitCodeResult = RunCodeResult & {
 
 export type SubmitFailedCase = {
   caseNum: number;
-  input: any;
+  input: JsonValue;
   output?: string;
   expectedOutput?: string;
   error?: string;
   logs?: string;
 };
 
-function hasExpectedOutput(
-  testCase: JsonCase | undefined,
-): testCase is JsonCase & { expectedOutput: any } {
+type ComparableOutput =
+  | {
+      parsed: true;
+      value: JsonValue;
+    }
+  | {
+      parsed: false;
+      value: string;
+    };
+
+type RunnerMessage = {
+  case?: number;
+  ok?: boolean;
+  output?: string;
+  outputText?: string;
+  outputJson?: string;
+  error?: string;
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function isJsonValue(value: unknown): value is JsonValue {
+  if (
+    value === null ||
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
+    return true;
+  }
+
+  if (Array.isArray(value)) {
+    return value.every(isJsonValue);
+  }
+
+  if (isRecord(value)) {
+    return Object.values(value).every(isJsonValue);
+  }
+
+  return false;
+}
+
+function isOptionalString(value: unknown): boolean {
+  return value === undefined || typeof value === "string";
+}
+
+function isOptionalNumber(value: unknown): boolean {
+  return value === undefined || typeof value === "number";
+}
+
+function isOptionalBoolean(value: unknown): boolean {
+  return value === undefined || typeof value === "boolean";
+}
+
+function isRunnerMessage(value: unknown): value is RunnerMessage {
+  if (!isRecord(value)) {
+    return false;
+  }
+
   return (
-    !!testCase &&
-    Object.prototype.hasOwnProperty.call(testCase, "expectedOutput")
+    isOptionalNumber(value.case) &&
+    isOptionalBoolean(value.ok) &&
+    isOptionalString(value.output) &&
+    isOptionalString(value.outputText) &&
+    isOptionalString(value.outputJson) &&
+    isOptionalString(value.error)
   );
 }
 
-function deepEqual(a: any, b: any) {
+function isCaseRun(value: unknown): value is CaseRun {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return (
+    typeof value.caseNum === "number" &&
+    typeof value.ok === "boolean" &&
+    isOptionalString(value.output) &&
+    isOptionalString(value.outputText) &&
+    isOptionalString(value.outputJson) &&
+    isOptionalString(value.error) &&
+    isOptionalString(value.logs) &&
+    isOptionalString(value.expectedOutput) &&
+    isOptionalBoolean(value.passed) &&
+    isOptionalBoolean(value.isDefaultCase)
+  );
+}
+
+function isSubmitFailedCase(value: unknown): value is SubmitFailedCase {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return (
+    typeof value.caseNum === "number" &&
+    isJsonValue(value.input) &&
+    isOptionalString(value.output) &&
+    isOptionalString(value.expectedOutput) &&
+    isOptionalString(value.error) &&
+    isOptionalString(value.logs)
+  );
+}
+
+function isSubmitCodeResult(value: unknown): value is SubmitCodeResult {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  const hasValidStatus =
+    value.status === "accepted" || value.status === "failed";
+
+  const hasValidFailedCase =
+    value.failedCase === undefined || isSubmitFailedCase(value.failedCase);
+
+  const hasValidCompilationStatus =
+    value.compilationStatus === undefined ||
+    typeof value.compilationStatus === "string" ||
+    typeof value.compilationStatus === "number";
+
+  return (
+    Array.isArray(value.caseRuns) &&
+    value.caseRuns.every(isCaseRun) &&
+    typeof value.isError === "boolean" &&
+    typeof value.accepted === "boolean" &&
+    hasValidStatus &&
+    typeof value.passedCases === "number" &&
+    typeof value.totalCases === "number" &&
+    isOptionalNumber(value.submissionId) &&
+    isOptionalString(value.memory) &&
+    isOptionalString(value.cpuTime) &&
+    isOptionalNumber(value.statusCode) &&
+    hasValidCompilationStatus &&
+    hasValidFailedCase
+  );
+}
+
+function getResponseError(value: unknown): string | undefined {
+  if (!isRecord(value)) {
+    return undefined;
+  }
+
+  return typeof value.error === "string" ? value.error : undefined;
+}
+
+function hasExpectedOutput(
+  testCase: EditableTestCase | undefined,
+): testCase is EditableTestCase & { expectedOutput: JsonValue } {
+  return testCase !== undefined && testCase.expectedOutput !== undefined;
+}
+
+function deepEqual(
+  first: JsonValue | undefined,
+  second: JsonValue | undefined,
+): boolean {
   try {
-    return JSON.stringify(a) === JSON.stringify(b);
+    return JSON.stringify(first) === JSON.stringify(second);
   } catch {
     return false;
   }
 }
 
-function formatExpectedOutput(value: unknown, language: Lang): string {
-  const isPython = language === "python3";
-
-  if (isPython && typeof value === "boolean") {
+function formatExpectedOutput(value: JsonValue, language: Lang): string {
+  if (language === "python3" && typeof value === "boolean") {
     return value ? "True" : "False";
   }
 
@@ -91,22 +239,26 @@ function normalizePythonLiterals(value: string): string {
   return trimmed;
 }
 
-function parseComparableOutput(
-  value: string,
-): { parsed: true; value: any } | { parsed: false; value: string } {
+function parseComparableOutput(value: string): ComparableOutput {
   const normalized = normalizePythonLiterals(value);
 
   try {
-    return {
-      parsed: true,
-      value: JSON.parse(normalized),
-    };
+    const parsed: unknown = JSON.parse(normalized);
+
+    if (isJsonValue(parsed)) {
+      return {
+        parsed: true,
+        value: parsed,
+      };
+    }
   } catch {
-    return {
-      parsed: false,
-      value: value.replace(/\r\n/g, "\n").trim(),
-    };
+    // Fall through and compare the original output as plain text.
   }
+
+  return {
+    parsed: false,
+    value: value.replace(/\r\n/g, "\n").trim(),
+  };
 }
 
 function outputsEqual(actualOutput: string, expectedOutput: string): boolean {
@@ -122,8 +274,8 @@ function outputsEqual(actualOutput: string, expectedOutput: string): boolean {
 
 function attachExpectedOutputs(
   runs: CaseRun[],
-  currentCases: JsonCase[],
-  sourceCases: JsonCase[] | undefined,
+  currentCases: EditableTestCase[],
+  sourceCases: EditableTestCase[] | undefined,
   language: Lang,
 ): CaseRun[] {
   if (!sourceCases?.length) {
@@ -145,12 +297,16 @@ function attachExpectedOutputs(
     const sourceCaseAtSameIndex = sourceCases[caseIndex];
 
     const isDefaultCase =
-      !!sourceCaseAtSameIndex &&
+      sourceCaseAtSameIndex !== undefined &&
       hasExpectedOutput(sourceCaseAtSameIndex) &&
       deepEqual(sourceCaseAtSameIndex.input, currentInput);
 
     const matchingSourceCase = sourceCases.find(
-      (tc) => hasExpectedOutput(tc) && deepEqual(tc.input, currentInput),
+      (
+        testCase,
+      ): testCase is EditableTestCase & { expectedOutput: JsonValue } =>
+        hasExpectedOutput(testCase) &&
+        deepEqual(testCase.input, currentInput),
     );
 
     if (!matchingSourceCase) {
@@ -184,32 +340,40 @@ function parseStdoutByCase(stdout: string): CaseRun[] {
   const runs: CaseRun[] = [];
   let pendingLogs: string[] = [];
 
-  for (const rawLine of stdout.split("\n")) {
-    const line = rawLine;
-
-    if (line.startsWith(RESULT_PREFIX)) {
-      const jsonPart = line.slice(RESULT_PREFIX.length);
-
-      try {
-        const obj = JSON.parse(jsonPart);
-
-        runs.push({
-          caseNum: typeof obj.case === "number" ? obj.case : runs.length + 1,
-          ok: !!obj.ok,
-          output: typeof obj.output === "string" ? obj.output : undefined,
-          outputText:
-            typeof obj.outputText === "string" ? obj.outputText : undefined,
-          outputJson:
-            typeof obj.outputJson === "string" ? obj.outputJson : undefined,
-          error: typeof obj.error === "string" ? obj.error : undefined,
-          logs: pendingLogs.join("\n").trimEnd(),
-        });
-      } catch {
+  for (const line of stdout.split("\n")) {
+    if (!line.startsWith(RESULT_PREFIX)) {
+      if (line.length) {
         pendingLogs.push(line);
       }
 
+      continue;
+    }
+
+    const jsonPart = line.slice(RESULT_PREFIX.length);
+
+    try {
+      const parsed: unknown = JSON.parse(jsonPart);
+
+      if (!isRunnerMessage(parsed)) {
+        pendingLogs.push(line);
+        continue;
+      }
+
+      runs.push({
+        caseNum:
+          typeof parsed.case === "number"
+            ? parsed.case
+            : runs.length + 1,
+        ok: parsed.ok === true,
+        output: parsed.output,
+        outputText: parsed.outputText,
+        outputJson: parsed.outputJson,
+        error: parsed.error,
+        logs: pendingLogs.join("\n").trimEnd(),
+      });
+
       pendingLogs = [];
-    } else if (line.length) {
+    } catch {
       pendingLogs.push(line);
     }
   }
@@ -218,13 +382,11 @@ function parseStdoutByCase(stdout: string): CaseRun[] {
     const last = runs[runs.length - 1];
 
     last.logs = (
-      (last.logs ?? "").trimEnd() +
-      "\n" +
-      pendingLogs.join("\n")
+      `${(last.logs ?? "").trimEnd()}\n${pendingLogs.join("\n")}`
     ).trim();
   }
 
-  runs.sort((a, b) => a.caseNum - b.caseNum);
+  runs.sort((first, second) => first.caseNum - second.caseNum);
 
   return runs;
 }
@@ -248,17 +410,17 @@ export async function runCode({
     const data = await executeCode(
       language,
       sourceCode,
-      liveCases ?? [],
+      liveCases,
       entryPointByLang?.[language],
       starterCodeByLang?.[language],
     );
 
-    const stdout: string = typeof data?.output === "string" ? data.output : "";
+    const stdout = typeof data.output === "string" ? data.output : "";
 
-    const stderr: string =
-      typeof data?.error === "string" && data.error.trim()
+    const stderr =
+      typeof data.error === "string" && data.error.trim()
         ? data.error
-        : typeof data?.compilationStatus === "string" &&
+        : typeof data.compilationStatus === "string" &&
             data.compilationStatus.trim()
           ? data.compilationStatus
           : "";
@@ -269,24 +431,19 @@ export async function runCode({
       if (runs.length) {
         for (const run of runs) {
           run.logs = (
-            (run.logs ?? "").trimEnd() +
-            "\n--- stderr ---\n" +
-            stderr
+            `${(run.logs ?? "").trimEnd()}\n--- stderr ---\n${stderr}`
           ).trim();
 
           run.ok = false;
-
-          if (!run.error) {
-            run.error = "Runtime/Compile error";
-          }
+          run.error ??= "Runtime/Compile error";
         }
       } else {
         const fallbackCaseCount = Math.min(
           4,
-          (liveCases?.length ?? 0) || (initialCases?.length ?? 0) || 1,
+          liveCases.length || initialCases?.length || 1,
         );
 
-        const errRuns: CaseRun[] = Array.from(
+        const errorRuns: CaseRun[] = Array.from(
           { length: fallbackCaseCount },
           (_, index) => ({
             caseNum: index + 1,
@@ -296,7 +453,7 @@ export async function runCode({
           }),
         );
 
-        runs.splice(0, runs.length, ...errRuns);
+        runs.splice(0, runs.length, ...errorRuns);
       }
     }
 
@@ -314,7 +471,7 @@ export async function runCode({
           ];
 
     const currentCases =
-      liveCases?.length > 0 ? liveCases : (initialCases ?? []);
+      liveCases.length > 0 ? liveCases : (initialCases ?? []);
 
     const finalRuns = attachExpectedOutputs(
       parsedRuns,
@@ -340,22 +497,13 @@ export async function runCode({
         finalRuns.some((run) => !run.ok || run.passed === false) ||
         Boolean(stderr.trim()),
       memory:
-        data?.memory !== undefined && data?.memory !== null
-          ? String(data.memory)
-          : undefined,
+        data.memory !== undefined ? String(data.memory) : undefined,
       cpuTime:
-        data?.cpuTime !== undefined && data?.cpuTime !== null
-          ? String(data.cpuTime)
-          : undefined,
-      statusCode:
-        typeof data?.statusCode === "number" ? data.statusCode : undefined,
-      compilationStatus:
-        data?.compilationStatus !== undefined &&
-        data?.compilationStatus !== null
-          ? data.compilationStatus
-          : undefined,
+        data.cpuTime !== undefined ? String(data.cpuTime) : undefined,
+      statusCode: data.statusCode,
+      compilationStatus: data.compilationStatus,
     };
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Error executing code:", error);
 
     return {
@@ -365,7 +513,7 @@ export async function runCode({
           caseNum: 1,
           ok: false,
           error: "An error occurred while running your code.",
-          logs: "",
+          logs: error instanceof Error ? error.message : String(error),
         },
       ],
     };
@@ -376,11 +524,7 @@ export async function submitCode({
   sourceCode,
   language,
   problemSlug,
-}: {
-  sourceCode: string;
-  language: Lang;
-  problemSlug: string;
-}): Promise<SubmitCodeResult> {
+}: SubmitCodeArgs): Promise<SubmitCodeResult> {
   if (!sourceCode) {
     return {
       caseRuns: [],
@@ -393,26 +537,31 @@ export async function submitCode({
   }
 
   try {
-    const res = await fetch(`/api/submit/${encodeURIComponent(problemSlug)}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    const response = await fetch(
+      `/api/submit/${encodeURIComponent(problemSlug)}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          sourceCode,
+          language,
+        }),
       },
-      body: JSON.stringify({
-        sourceCode,
-        language,
-      }),
-    });
+    );
 
-    const data = await res.json().catch(() => null);
+    const data: unknown = await response.json().catch(() => null);
 
-    if (!res.ok) {
+    if (!response.ok) {
       return {
         caseRuns: [
           {
             caseNum: 1,
             ok: false,
-            error: data?.error ?? `Submit failed with status ${res.status}`,
+            error:
+              getResponseError(data) ??
+              `Submit failed with status ${response.status}`,
             logs: "",
           },
         ],
@@ -424,8 +573,12 @@ export async function submitCode({
       };
     }
 
-    return data as SubmitCodeResult;
-  } catch (error) {
+    if (!isSubmitCodeResult(data)) {
+      throw new Error("The submit endpoint returned an invalid response.");
+    }
+
+    return data;
+  } catch (error: unknown) {
     return {
       caseRuns: [
         {

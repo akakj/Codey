@@ -18,15 +18,11 @@ import type { Lang, StarterMap } from "@/lib/languages";
 import type { EntryPointByLang } from "@/lib/problem";
 import { runCode, submitCode, type SubmitCodeResult } from "./codeRunner";
 import { formatInputFields, stringifyOutputValue} from "@/lib/outputFormatting";
+import type { EditableTestCase } from "@/lib/problem";
 
 const MIN = 6;
 const EXPANDED = 40;
 
-type JsonCase = {
-  input: any;
-  expectedOutput?: any; // present for default cases
-  isUser?: boolean; // true for user-added cases
-};
 
 export function ConsolePanel({
   isLoggedIn,
@@ -43,7 +39,7 @@ export function ConsolePanel({
   value: string;
   language: Lang;
   problemSlug: string;
-  initialCases?: JsonCase[];
+  initialCases?: EditableTestCase[];
   entryPointByLang?: EntryPointByLang;
   starterCodeByLang?: StarterMap;
 }) {
@@ -65,7 +61,7 @@ export function ConsolePanel({
 
   const [isError, setIsError] = React.useState<boolean>(false);
 
-  const [liveCases, setLiveCases] = React.useState<JsonCase[]>(
+  const [liveCases, setLiveCases] = React.useState<EditableTestCase[]>(
     initialCases ?? [],
   );
 
@@ -83,7 +79,7 @@ export function ConsolePanel({
     setActiveOutputCase(0);
     setIsError(false);
     setSubmitResult(null);
-  }, [problemSlug]);
+  }, [problemSlug, initialCases]);
 
   const toggle = () => {
     const cur = panelRef.current?.getSize() ?? size;
@@ -367,7 +363,6 @@ export function ConsolePanel({
                     runs={caseRuns}
                     activeIndex={activeOutputCase}
                     onActiveIndexChange={setActiveOutputCase}
-                    isError={isError}
                   />
                 )}
               </TabsContent>

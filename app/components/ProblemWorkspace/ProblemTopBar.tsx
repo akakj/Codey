@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import rawData from "@/app/data/neetcode_150_problems_with_entry.json";
 import type { ProblemsFile, ProblemLite } from "@/lib/problem";
 import { ThemeToggle } from "../ThemeToggle";
@@ -18,15 +19,29 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
-import { ChevronLeft, ChevronRight, List, Search, Funnel } from "lucide-react";
+import {
+  ChevronLeft,
+  ChevronRight,
+  List,
+  Search,
+  Shuffle,
+  Loader2,
+} from "lucide-react";
 import { SortableHeader } from "@/app/components/SortableHeader";
+import { getRandomUnsolvedProblem } from "@/app/components/ProblemWorkspace/tabs/getRandomUnsolvedProblem";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { User } from "@supabase/supabase-js";
 
 export default function ProblemTopBar({
   currentSlug,
   user,
 }: {
   currentSlug: string;
-  user: any | null;
+  user: User | null;
 }) {
   const data = rawData as ProblemsFile;
 
@@ -38,23 +53,18 @@ export default function ProblemTopBar({
         title: p.title,
         difficulty: p.difficulty,
       })),
-    [data]
+    [data],
   );
 
   const index = useMemo(
     () => problems.findIndex((p) => p.slug === currentSlug),
-    [problems, currentSlug]
+    [problems, currentSlug],
   );
 
-  const prev =  problems.length
-  ? problems[(index - 1 + problems.length) % problems.length]
-  : null;
-  const next = problems.length
-  ? problems[(index + 1) % problems.length]
-  : null;
-
-  const difficulties = ["Easy", "Medium", "Hard"] as const;
-  type Difficulty = (typeof difficulties)[number];
+  const prev = problems.length
+    ? problems[(index - 1 + problems.length) % problems.length]
+    : null;
+  const next = problems.length ? problems[(index + 1) % problems.length] : null;
 
   const [open, setOpen] = useState(false);
 
@@ -65,7 +75,7 @@ export default function ProblemTopBar({
   const currentRowRef = useRef<HTMLTableRowElement | null>(null);
 
   useEffect(() => {
-    if(!open) return; // only scroll when opening the sheet
+    if (!open) return; // only scroll when opening the sheet
 
     // wait for sheet content to render
     const id = requestAnimationFrame(() => {
@@ -80,7 +90,6 @@ export default function ProblemTopBar({
   });
 
   const [q, setQ] = useState("");
-  const [filters, setFilters] = useState<Difficulty[]>([]);
   const [sort, setSort] = useState("");
 
   const handleSortClick = (type: "alpha" | "difficulty") => {
@@ -95,11 +104,9 @@ export default function ProblemTopBar({
     if (s)
       list = list.filter(
         (p) =>
-          p.title.toLowerCase().includes(s) || p.slug.toLowerCase().includes(s)
+          p.title.toLowerCase().includes(s) || p.slug.toLowerCase().includes(s),
       );
 
-    if (filters.length)
-      list = list.filter((p) => filters.includes(p.difficulty as Difficulty));
     if (sort) {
       const order: Record<string, number> = { Easy: 1, Medium: 2, Hard: 3 };
       if (sort === "alpha-asc")
@@ -108,15 +115,43 @@ export default function ProblemTopBar({
         list = [...list].sort((a, b) => b.title.localeCompare(a.title));
       if (sort === "difficulty-asc")
         list = [...list].sort(
-          (a, b) => order[a.difficulty] - order[b.difficulty]
+          (a, b) => order[a.difficulty] - order[b.difficulty],
         );
       if (sort === "difficulty-desc")
         list = [...list].sort(
-          (a, b) => order[b.difficulty] - order[a.difficulty]
+          (a, b) => order[b.difficulty] - order[a.difficulty],
         );
     }
     return list;
-  }, [problems, q, filters, sort]);
+  }, [problems, q, sort]);
+
+  const router = useRouter();
+
+  const [isRandomProblemPending, startRandomProblemTransition] =
+    useTransition();
+
+  const handleRandomProblem = () => {
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
+    startRandomProblemTransition(async () => {
+      try {
+        const result = await getRandomUnsolvedProblem(currentSlug);
+
+        if (!result.ok) {
+          window.alert(result.message);
+          return;
+        }
+
+        router.push(`/problems/${result.slug}`);
+      } catch (error) {
+        console.error("Could not select a random problem:", error);
+        window.alert("Could not load a random problem.");
+      }
+    });
+  };
 
   return (
     <nav className="fixed top-0 inset-x-0 bg-white dark:bg-[#111111] shadow-sm h-16 z-50 flex items-center justify-between px-4 rounded-b-sm">
@@ -135,7 +170,9 @@ export default function ProblemTopBar({
           <SheetTrigger asChild>
             <button className="text-gray-600 hover:text-gray-900 dark:text-[#c9c6c5] dark:hover:text-white transition-colors inline-flex items-center gap-2 hover:cursor-pointer">
               <List className="h-4 w-4" />
-              <span className="text-gray-700 dark:text-gray-300">Problem List</span>
+              <span className="text-gray-700 dark:text-gray-300">
+                Problem List
+              </span>
             </button>
           </SheetTrigger>
           <SheetContent
@@ -168,7 +205,10 @@ export default function ProblemTopBar({
             {/* Table container */}
             <div className="px-4 py-3">
               <div className="overflow-hidden rounded-md border border-border">
-                <div className="max-h-[calc(100vh-11rem)] overflow-auto"  ref={scrollRef}>
+                <div
+                  className="max-h-[calc(100vh-11rem)] overflow-auto"
+                  ref={scrollRef}
+                >
                   <table className="w-full text-sm">
                     <thead className="sticky top-0 z-10 bg-gray-300 dark:bg-[#22272d]">
                       <tr>
@@ -197,9 +237,9 @@ export default function ProblemTopBar({
                             key={p.slug}
                             ref={isCurrent ? currentRowRef : null}
                             className={cn(
-                              "hover:bg-muted/50",
+                              "hover:bg-muted/70",
                               isCurrent &&
-                                "bg-gray-900 text-white dark:bg-white dark:text-black"
+                                "bg-gray-900 text-white dark:bg-white dark:text-black",
                             )}
                           >
                             <td className="px-4 py-2">
@@ -213,7 +253,7 @@ export default function ProblemTopBar({
                             <td
                               className={cn(
                                 "px-4 py-2 text-xs font-semibold hidden sm:table-cell",
-                                diffClass
+                                diffClass,
                               )}
                             >
                               {p.difficulty}
@@ -231,30 +271,92 @@ export default function ProblemTopBar({
 
         {/* Prev / Next */}
         <div className="hidden sm:flex items-center gap-1">
-          <Button
-            asChild
-            variant="ghost"
-            size="sm"
-            disabled={!prev}
-            className="gap-1"
-          >
-            <Link href={prev ? `/problems/${prev.slug}` : "#"} prefetch>
-              <ChevronLeft className="h-4 w-4" />
-              <span className="hidden md:inline"></span>
-            </Link>
-          </Button>
-          <Button
-            asChild
-            variant="ghost"
-            size="sm"
-            disabled={!next}
-            className="gap-1"
-          >
-            <Link href={next ? `/problems/${next.slug}` : "#"} prefetch>
-              <span className="hidden md:inline"></span>
-              <ChevronRight className="h-4 w-4" />
-            </Link>
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                disabled={!prev}
+                className="gap-1 cursor-pointer"
+              >
+                <Link
+                  href={prev ? `/problems/${prev.slug}` : "#"}
+                  prefetch
+                  aria-label="Previous problem"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Link>
+              </Button>
+            </TooltipTrigger>
+
+            <TooltipContent
+              side="bottom"
+              sideOffset={6}
+              className="rounded-xl px-3 py-2"
+            >
+              Previous problem
+            </TooltipContent>
+          </Tooltip>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                disabled={!next}
+                className="gap-1 cursor-pointer"
+              >
+                <Link
+                  href={next ? `/problems/${next.slug}` : "#"}
+                  prefetch
+                  aria-label="Next problem"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </Button>
+            </TooltipTrigger>
+
+            <TooltipContent
+              side="bottom"
+              sideOffset={6}
+              className="rounded-xl px-3 py-2"
+            >
+              Next problem
+            </TooltipContent>
+          </Tooltip>
+
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleRandomProblem}
+                disabled={isRandomProblemPending}
+                aria-label="Open a random unsolved problem"
+                className="gap-2 cursor-pointer"
+              >
+                {isRandomProblemPending ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Shuffle className="h-4 w-4" />
+                )}
+
+                <span className="hidden lg:inline">
+                  {isRandomProblemPending ? "Finding..." : ""}
+                </span>
+              </Button>
+            </TooltipTrigger>
+
+            <TooltipContent
+              side="bottom"
+              sideOffset={6}
+              className="rounded-xl px-3 py-2"
+            >
+              Open a random unsolved problem
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
 

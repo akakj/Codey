@@ -35,7 +35,7 @@ function ChangePasswordClient() {
           className="hover:cursor-pointer"
           id="show-passwords"
           checked={showPassword}
-          onCheckedChange={(v) => setShowPassword(!showPassword)}
+          onCheckedChange={(checked) => setShowPassword(checked === true)}
         />
           <p className ="cursor-pointer hover:text-blue-900 dark:hover:text-blue-100" onClick = { () => setShowPassword(!showPassword) }>Show passwords</p>
         </div>

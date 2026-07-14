@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import rawData from "@/app/data/neetcode_150_problems_with_entry.json";
-import type { ProblemsFile } from "@/lib/problem";
+import type { JsonValue, ProblemsFile, TestCase } from "@/lib/problem";
 import type { Lang } from "@/lib/languages";
 import { isLang } from "@/lib/languages";
 import { createClient } from "@/utils/supabase/server";
@@ -8,6 +8,7 @@ import {
   RESULT_PREFIX,
   buildJDoodleScript,
   toJDoodleLanguage,
+  type JDoodleResponse,
 } from "@/app/components/editor/api";
 
 export const runtime = "nodejs";
@@ -24,64 +25,197 @@ type CaseRun = {
   passed?: boolean;
 };
 
-type JsonCase = {
-  input: any;
-  expectedOutput: any;
+type ComparableOutput =
+  | {
+      parsed: true;
+      value: JsonValue;
+    }
+  | {
+      parsed: false;
+      value: string;
+    };
+
+type RunnerMessage = {
+  case?: number;
+  ok?: boolean;
+  output?: string;
+  outputText?: string;
+  outputJson?: string;
+  error?: string;
 };
+
+type SubmitRequest = {
+  sourceCode: string;
+  language: Lang;
+};
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function isJsonValue(value: unknown): value is JsonValue {
+  if (
+    value === null ||
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
+    return true;
+  }
+
+  if (Array.isArray(value)) {
+    return value.every(isJsonValue);
+  }
+
+  if (isRecord(value)) {
+    return Object.values(value).every(isJsonValue);
+  }
+
+  return false;
+}
+
+function isOptionalString(value: unknown): boolean {
+  return value === undefined || typeof value === "string";
+}
+
+function isOptionalNumber(value: unknown): boolean {
+  return value === undefined || typeof value === "number";
+}
+
+function isOptionalBoolean(value: unknown): boolean {
+  return value === undefined || typeof value === "boolean";
+}
+
+function isRunnerMessage(value: unknown): value is RunnerMessage {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return (
+    isOptionalNumber(value.case) &&
+    isOptionalBoolean(value.ok) &&
+    isOptionalString(value.output) &&
+    isOptionalString(value.outputText) &&
+    isOptionalString(value.outputJson) &&
+    isOptionalString(value.error)
+  );
+}
+
+function isSubmitRequest(value: unknown): value is SubmitRequest {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return (
+    typeof value.sourceCode === "string" &&
+    value.sourceCode.length > 0 &&
+    typeof value.language === "string" &&
+    isLang(value.language)
+  );
+}
+
+function parseJDoodleResponse(value: unknown): JDoodleResponse {
+  if (!isRecord(value)) {
+    throw new Error("JDoodle returned an invalid response.");
+  }
+
+  return {
+    output: typeof value.output === "string" ? value.output : undefined,
+    error: typeof value.error === "string" ? value.error : undefined,
+    memory:
+      typeof value.memory === "string" || typeof value.memory === "number"
+        ? value.memory
+        : undefined,
+    cpuTime:
+      typeof value.cpuTime === "string" || typeof value.cpuTime === "number"
+        ? value.cpuTime
+        : undefined,
+    statusCode:
+      typeof value.statusCode === "number" ? value.statusCode : undefined,
+    compilationStatus:
+      typeof value.compilationStatus === "string" ||
+      typeof value.compilationStatus === "number"
+        ? value.compilationStatus
+        : undefined,
+  };
+}
+
+function getErrorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "Code execution failed";
+}
 
 function parseStdoutByCase(stdout: string): CaseRun[] {
   const runs: CaseRun[] = [];
   let pendingLogs: string[] = [];
 
-  for (const rawLine of stdout.split("\n")) {
-    const line = rawLine;
-
-    if (line.startsWith(RESULT_PREFIX)) {
-      const jsonPart = line.slice(RESULT_PREFIX.length);
-
-      try {
-        const obj = JSON.parse(jsonPart);
-
-        runs.push({
-          caseNum: typeof obj.case === "number" ? obj.case : runs.length + 1,
-          ok: Boolean(obj.ok),
-          output: typeof obj.output === "string" ? obj.output : undefined,
-          outputText:
-            typeof obj.outputText === "string" ? obj.outputText : undefined,
-          outputJson:
-            typeof obj.outputJson === "string" ? obj.outputJson : undefined,
-          error: typeof obj.error === "string" ? obj.error : undefined,
-          logs: pendingLogs.join("\n").trimEnd(),
-        });
-      } catch {
+  for (const line of stdout.split("\n")) {
+    if (!line.startsWith(RESULT_PREFIX)) {
+      if (line.length) {
         pendingLogs.push(line);
       }
 
+      continue;
+    }
+
+    const jsonPart = line.slice(RESULT_PREFIX.length);
+
+    try {
+      const parsed: unknown = JSON.parse(jsonPart);
+
+      if (!isRunnerMessage(parsed)) {
+        pendingLogs.push(line);
+        continue;
+      }
+
+      runs.push({
+        caseNum:
+          typeof parsed.case === "number"
+            ? parsed.case
+            : runs.length + 1,
+        ok: parsed.ok === true,
+        output: parsed.output,
+        outputText: parsed.outputText,
+        outputJson: parsed.outputJson,
+        error: parsed.error,
+        logs: pendingLogs.join("\n").trimEnd(),
+      });
+
       pendingLogs = [];
-    } else if (line.length) {
+    } catch {
       pendingLogs.push(line);
     }
   }
 
   if (pendingLogs.length && runs.length) {
     const last = runs[runs.length - 1];
-    last.logs = `${last.logs ?? ""}\n${pendingLogs.join("\n")}`.trim();
+
+    last.logs = (
+      `${last.logs ?? ""}\n${pendingLogs.join("\n")}`
+    ).trim();
   }
 
-  return runs.sort((a, b) => a.caseNum - b.caseNum);
+  return runs.sort(
+    (first, second) => first.caseNum - second.caseNum,
+  );
 }
 
 function outputForComparison(run: CaseRun): string {
-  if (run.outputJson && run.outputJson.trim()) {
+  if (run.outputJson?.trim()) {
     try {
-      return JSON.stringify(JSON.parse(run.outputJson));
+      const parsed: unknown = JSON.parse(run.outputJson);
+      return JSON.stringify(parsed);
     } catch {
       return run.outputJson;
     }
   }
 
-  if (run.outputText !== undefined) return run.outputText;
-  if (run.output !== undefined) return run.output;
+  if (run.outputText !== undefined) {
+    return run.outputText;
+  }
+
+  if (run.output !== undefined) {
+    return run.output;
+  }
 
   return "";
 }
@@ -94,33 +228,37 @@ function normalizePythonLiterals(value: string): string {
     .replace(/\bNone\b/g, "null");
 }
 
-function parseComparableOutput(
-  value: string,
-): { parsed: true; value: any } | { parsed: false; value: string } {
+function parseComparableOutput(value: string): ComparableOutput {
   const normalized = normalizePythonLiterals(value);
 
   try {
-    return {
-      parsed: true,
-      value: JSON.parse(normalized),
-    };
+    const parsed: unknown = JSON.parse(normalized);
+
+    if (isJsonValue(parsed)) {
+      return {
+        parsed: true,
+        value: parsed,
+      };
+    }
   } catch {
-    return {
-      parsed: false,
-      value: value.replace(/\r\n/g, "\n").trim(),
-    };
+    // Fall through and compare the value as plain text.
   }
+
+  return {
+    parsed: false,
+    value: value.replace(/\r\n/g, "\n").trim(),
+  };
 }
 
-function deepEqual(a: any, b: any): boolean {
+function deepEqual(first: JsonValue, second: JsonValue): boolean {
   try {
-    return JSON.stringify(a) === JSON.stringify(b);
+    return JSON.stringify(first) === JSON.stringify(second);
   } catch {
     return false;
   }
 }
 
-function stringifyExpected(value: any): string {
+function stringifyExpected(value: JsonValue): string {
   try {
     const json = JSON.stringify(value);
     return json === undefined ? String(value) : json;
@@ -129,7 +267,10 @@ function stringifyExpected(value: any): string {
   }
 }
 
-function outputsEqual(actualOutput: string, expectedOutput: string): boolean {
+function outputsEqual(
+  actualOutput: string,
+  expectedOutput: string,
+): boolean {
   const actual = parseComparableOutput(actualOutput);
   const expected = parseComparableOutput(expectedOutput);
 
@@ -142,7 +283,7 @@ function outputsEqual(actualOutput: string, expectedOutput: string): boolean {
 
 function attachExpectedOutputs(
   runs: CaseRun[],
-  testCases: JsonCase[],
+  testCases: TestCase[],
 ): CaseRun[] {
   return runs.map((run, index) => {
     const caseIndex = run.caseNum > 0 ? run.caseNum - 1 : index;
@@ -155,78 +296,111 @@ function attachExpectedOutputs(
       };
     }
 
-    const expectedOutput = stringifyExpected(testCase.expectedOutput);
+    const expectedOutput = stringifyExpected(
+      testCase.expectedOutput,
+    );
     const actualOutput = outputForComparison(run);
 
     return {
       ...run,
       expectedOutput,
-      passed: run.ok && outputsEqual(actualOutput, expectedOutput),
+      passed:
+        run.ok && outputsEqual(actualOutput, expectedOutput),
     };
   });
 }
 
 function toNullableInt(value: unknown): number | null {
-  if (value === null || value === undefined) return null;
+  if (value === null || value === undefined) {
+    return null;
+  }
 
-  const numeric = Number(String(value).replace(/[^\d.-]/g, ""));
-  if (!Number.isFinite(numeric)) return null;
+  const numeric = Number(
+    String(value).replace(/[^\d.-]/g, ""),
+  );
+
+  if (!Number.isFinite(numeric)) {
+    return null;
+  }
 
   return Math.round(numeric);
 }
 
-async function executeOnJDoodle(args: { script: string; language: Lang }) {
-  const res = await fetch("https://api.jdoodle.com/v1/execute", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
+async function executeOnJDoodle(args: {
+  script: string;
+  language: Lang;
+}): Promise<JDoodleResponse> {
+  const response = await fetch(
+    "https://api.jdoodle.com/v1/execute",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        clientId: process.env.JDOODLE_CLIENT_ID,
+        clientSecret: process.env.JDOODLE_CLIENT_SECRET,
+        script: args.script,
+        stdin: "",
+        language: toJDoodleLanguage(args.language),
+        versionIndex: "0",
+      }),
     },
-    body: JSON.stringify({
-      clientId: process.env.JDOODLE_CLIENT_ID,
-      clientSecret: process.env.JDOODLE_CLIENT_SECRET,
-      script: args.script,
-      stdin: "",
-      language: toJDoodleLanguage(args.language),
-      versionIndex: "0",
-    }),
-  });
+  );
 
-  const text = await res.text();
+  const text = await response.text();
 
-  let data: any;
+  let parsed: unknown;
+
   try {
-    data = text ? JSON.parse(text) : {};
+    parsed = text ? JSON.parse(text) : {};
   } catch {
     throw new Error(
       `JDoodle returned non-JSON response: ${text.slice(0, 300)}`,
     );
   }
 
-  if (!res.ok) {
-    throw new Error(data?.error ?? `JDoodle request failed with ${res.status}`);
+  const data = parseJDoodleResponse(parsed);
+
+  if (!response.ok) {
+    throw new Error(
+      data.error ??
+        `JDoodle request failed with ${response.status}`,
+    );
   }
 
   return data;
 }
 
 export async function POST(
-  req: Request,
+  request: Request,
   { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params;
 
-  const body = await req.json().catch(() => null);
+  const body: unknown = await request
+    .json()
+    .catch(() => null);
 
-  const sourceCode = body?.sourceCode;
-  const language = body?.language;
+  if (!isSubmitRequest(body)) {
+    if (
+      !isRecord(body) ||
+      typeof body.sourceCode !== "string" ||
+      body.sourceCode.length === 0
+    ) {
+      return NextResponse.json(
+        { error: "Missing sourceCode" },
+        { status: 400 },
+      );
+    }
 
-  if (!sourceCode || typeof sourceCode !== "string") {
-    return NextResponse.json({ error: "Missing sourceCode" }, { status: 400 });
+    return NextResponse.json(
+      { error: "Invalid language" },
+      { status: 400 },
+    );
   }
 
-  if (!language || typeof language !== "string" || !isLang(language)) {
-    return NextResponse.json({ error: "Invalid language" }, { status: 400 });
-  }
+  const { sourceCode, language } = body;
 
   const supabase = await createClient();
 
@@ -236,14 +410,22 @@ export async function POST(
   } = await supabase.auth.getUser();
 
   if (userError || !user) {
-    return NextResponse.json({ error: "Unauthenticated" }, { status: 401 });
+    return NextResponse.json(
+      { error: "Unauthenticated" },
+      { status: 401 },
+    );
   }
 
   const data = rawData as ProblemsFile;
-  const problem = data.problems.find((p) => p.slug === slug);
+  const problem = data.problems.find(
+    (candidate) => candidate.slug === slug,
+  );
 
   if (!problem) {
-    return NextResponse.json({ error: "Problem not found" }, { status: 404 });
+    return NextResponse.json(
+      { error: "Problem not found" },
+      { status: 404 },
+    );
   }
 
   const testCases = problem.testCases ?? [];
@@ -263,14 +445,16 @@ export async function POST(
     starterForLang: problem.starterCode?.[language],
   });
 
-  let jdoodleResult: any;
+  let jdoodleResult: JDoodleResponse;
 
   try {
     jdoodleResult = await executeOnJDoodle({
       script,
       language,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const firstTestCase = testCases[0];
+
     return NextResponse.json(
       {
         accepted: false,
@@ -283,10 +467,12 @@ export async function POST(
         caseRuns: [],
         failedCase: {
           caseNum: 1,
-          input: testCases[0]?.input,
+          input: firstTestCase?.input ?? null,
           output: "",
-          expectedOutput: stringifyExpected(testCases[0]?.expectedOutput),
-          error: error?.message ?? "Code execution failed",
+          expectedOutput: stringifyExpected(
+            firstTestCase?.expectedOutput ?? null,
+          ),
+          error: getErrorMessage(error),
           logs: "",
         },
       },
@@ -294,13 +480,12 @@ export async function POST(
     );
   }
 
-  const stdout =
-    typeof jdoodleResult?.output === "string" ? jdoodleResult.output : "";
+  const stdout = jdoodleResult.output ?? "";
 
   const stderr =
-    typeof jdoodleResult?.error === "string" && jdoodleResult.error.trim()
+    jdoodleResult.error?.trim()
       ? jdoodleResult.error
-      : typeof jdoodleResult?.compilationStatus === "string" &&
+      : typeof jdoodleResult.compilationStatus === "string" &&
           jdoodleResult.compilationStatus.trim()
         ? jdoodleResult.compilationStatus
         : "";
@@ -324,11 +509,16 @@ export async function POST(
       ...run,
       ok: false,
       error: run.error ?? "Runtime/Compile error",
-      logs: `${run.logs ?? ""}\n--- stderr ---\n${stderr}`.trim(),
+      logs: (
+        `${run.logs ?? ""}\n--- stderr ---\n${stderr}`
+      ).trim(),
     }));
   }
 
-  const finalRuns = attachExpectedOutputs(runs, testCases);
+  const finalRuns = attachExpectedOutputs(
+    runs,
+    testCases,
+  );
 
   const totalCases = testCases.length;
   const passedCases = finalRuns.filter(
@@ -338,7 +528,9 @@ export async function POST(
   const accepted =
     finalRuns.length === totalCases &&
     totalCases > 0 &&
-    finalRuns.every((run) => run.ok && run.passed === true);
+    finalRuns.every(
+      (run) => run.ok && run.passed === true,
+    );
 
   const firstFailedRun = finalRuns.find(
     (run) => !run.ok || run.passed === false,
@@ -351,7 +543,8 @@ export async function POST(
   const failedCase = firstFailedRun
     ? {
         caseNum: firstFailedRun.caseNum,
-        input: testCases[firstFailedIndex]?.input,
+        input:
+          testCases[firstFailedIndex]?.input ?? null,
         output: outputForComparison(firstFailedRun),
         expectedOutput: firstFailedRun.expectedOutput,
         error: firstFailedRun.error,
@@ -359,31 +552,48 @@ export async function POST(
       }
     : undefined;
 
-  const memory = toNullableInt(jdoodleResult?.memory);
-  const runtime = toNullableInt(jdoodleResult?.cpuTime);
+  const memory = toNullableInt(jdoodleResult.memory);
+  const runtime = toNullableInt(jdoodleResult.cpuTime);
   const now = new Date().toISOString();
 
-  const { data: insertedSubmission, error: insertError } = await supabase.from("submissions").insert({
-    userId: user.id,
-    problemId: problem.problemID,
-    code: sourceCode,
-    language,
-    passed: accepted,
-    memory,
-    runtime,
-    passedCases,
-    totalCases,
-    failedCase: accepted ? null : (failedCase ?? null),
-    createdAt: now,
-  })
-  .select("id")
-  .single();
+  const {
+    data: insertedSubmission,
+    error: insertError,
+  } = await supabase
+    .from("submissions")
+    .insert({
+      userId: user.id,
+      problemId: problem.problemID,
+      code: sourceCode,
+      language,
+      passed: accepted,
+      memory,
+      runtime,
+      passedCases,
+      totalCases,
+      failedCase: accepted
+        ? null
+        : (failedCase ?? null),
+      createdAt: now,
+    })
+    .select("id")
+    .single();
 
-  if (insertError) {
-    return NextResponse.json({ error: insertError.message }, { status: 500 });
+  if (insertError || !insertedSubmission) {
+    return NextResponse.json(
+      {
+        error:
+          insertError?.message ??
+          "Could not save the submission",
+      },
+      { status: 500 },
+    );
   }
 
-  const { data: existingStatus, error: existingStatusError } = await supabase
+  const {
+    data: existingStatus,
+    error: existingStatusError,
+  } = await supabase
     .from("user_problem_status")
     .select("completed")
     .eq("userId", user.id)
@@ -397,7 +607,8 @@ export async function POST(
     );
   }
 
-  const completed = accepted || Boolean(existingStatus?.completed);
+  const completed =
+    accepted || Boolean(existingStatus?.completed);
 
   const { error: statusError } = await supabase
     .from("user_problem_status")
@@ -414,7 +625,10 @@ export async function POST(
     );
 
   if (statusError) {
-    return NextResponse.json({ error: statusError.message }, { status: 500 });
+    return NextResponse.json(
+      { error: statusError.message },
+      { status: 500 },
+    );
   }
 
   return NextResponse.json({
@@ -425,8 +639,10 @@ export async function POST(
     totalCases,
     failedCase,
     isError: !accepted,
-    memory: memory === null ? undefined : String(memory),
-    cpuTime: runtime === null ? undefined : String(runtime),
+    memory:
+      memory === null ? undefined : String(memory),
+    cpuTime:
+      runtime === null ? undefined : String(runtime),
     caseRuns: finalRuns,
   });
 }

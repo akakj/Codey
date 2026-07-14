@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient } from "@/utils/supabase/server";
-import { redirect } from "next/navigation";
 import { validatePassword } from "@/lib/password";
 
 export type ChangePwState = { ok: boolean; message: string } | null;

@@ -12,7 +12,7 @@ import {
   AlertDialogFooter, AlertDialogTitle, AlertDialogDescription,
   AlertDialogAction, AlertDialogCancel,
 } from "@/components/ui/alert-dialog";
-import { CircleQuestionMark, RotateCcw, ClockArrowUp } from "lucide-react";
+import { CircleQuestionMark, RotateCcw, ClockArrowUp, Loader2 } from "lucide-react";
 import { LANGS, type Lang, type StarterMap, DISPLAY_NAME } from "@/lib/languages";
 
 export function EditorToolbar({
@@ -21,12 +21,16 @@ export function EditorToolbar({
   onLangChange,
   onReset,
   canReset,
+  onRetrieveLastSubmission,
+  isRetrievingLastSubmission,
 }: {
   lang: Lang;
   starters: StarterMap;
   onLangChange: (l: Lang) => void;
   onReset: () => void;
   canReset: boolean;
+  onRetrieveLastSubmission: () => void | Promise<void>;
+  isRetrievingLastSubmission: boolean;
 }) {
   return (
     <div className="flex items-center gap-2 border-b bg-muted/30 px-2 py-1">
@@ -65,21 +69,35 @@ export function EditorToolbar({
         <AlertDialog>
         <TooltipProvider delayDuration={150}>
 
-            <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className="hover:cursor-pointer"
-                aria-label="Retrieve last submitted code"
-              >
-                <ClockArrowUp className="h-5 w-5" />
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" align="center">
-              Retrieve last submitted code
-            </TooltipContent>
-          </Tooltip>
+          <Tooltip>
+  <TooltipTrigger asChild>
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      className="hover:cursor-pointer"
+      aria-label="Retrieve last submitted code"
+      onClick={onRetrieveLastSubmission}
+      disabled={isRetrievingLastSubmission}
+    >
+      {isRetrievingLastSubmission ? (
+        <Loader2 className="h-5 w-5 animate-spin" />
+      ) : (
+        <ClockArrowUp className="h-5 w-5" />
+      )}
+    </Button>
+  </TooltipTrigger>
+
+  <TooltipContent
+    side="bottom"
+    align="center"
+    className="rounded-xl px-3 py-2"
+  >
+    {isRetrievingLastSubmission
+      ? "Retrieving submitted code..."
+      : "Retrieve last submitted code"}
+  </TooltipContent>
+</Tooltip>
 
           <Tooltip>
               <TooltipTrigger asChild>

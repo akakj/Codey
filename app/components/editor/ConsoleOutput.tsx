@@ -23,12 +23,10 @@ export default function ConsoleOutput({
   runs,
   activeIndex,
   onActiveIndexChange,
-  isError,
 }: {
   runs: CaseRun[];
   activeIndex: number;
   onActiveIndexChange: (idx: number) => void;
-  isError?: boolean;
 }) {
   const cur = runs[activeIndex];
 

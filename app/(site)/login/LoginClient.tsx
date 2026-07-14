@@ -3,7 +3,6 @@
 import React, { useState } from "react";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
-import Link from "next/link";
 import { authAction, type AuthState } from "./actions";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";

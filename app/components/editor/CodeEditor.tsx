@@ -17,7 +17,8 @@ import {
 } from "@/components/ui/resizable";
 import { EditorToolbar } from "./EditorToolbar";
 import { ConsolePanel } from "./ConsolePanel";
-import type { EntryPointByLang } from "@/lib/problem";
+import type { EditableTestCase, EntryPointByLang } from "@/lib/problem";
+import { getLastSubmittedCode } from "./getLastSubmittedCode";
 
 const LANG_STORAGE_KEY = "Codey:lastLanguage";
 const CODE_NS = "Codey:code";
@@ -31,16 +32,14 @@ export default function CodeEditor({
   initialConsoleOpen = true,
   initialCases,
   entryPointByLang,
-  testCases,
 }: {
   isLoggedIn: boolean;
   problemSlug: string;
   starterCodeByLang?: StarterMap;
   onLanguageChange?: (lang: Lang) => void;
   initialConsoleOpen?: boolean;
-  initialCases?: { input: any; output?: any }[];
+  initialCases?: EditableTestCase[];
   entryPointByLang?: EntryPointByLang;
-  testCases?: { input: any; output?: any }[];
 }) {
   const starters = starterCodeByLang;
 
@@ -48,6 +47,10 @@ export default function CodeEditor({
   const [codeByLang, setCodeByLang] = useState<Partial<Record<Lang, string>>>(
     {}
   );
+
+   const [isRetrievingLastSubmission, setIsRetrievingLastSubmission] =
+    useState(false);
+
 
   // seed code & choose initial language
   useEffect(() => {
@@ -100,6 +103,63 @@ export default function CodeEditor({
     onLanguageChange?.(next);
   };
 
+  const handleRetrieveLastSubmission = async () => {
+  if (!isLoggedIn) {
+    window.alert("Log in to retrieve your last submitted code.");
+    return;
+  }
+
+  setIsRetrievingLastSubmission(true);
+
+  try {
+    const result = await getLastSubmittedCode(problemSlug);
+
+    if (!result.ok) {
+      window.alert(result.message);
+      return;
+    }
+
+    // Prevent a pending localStorage save from overwriting the retrieved code.
+    if (saveTimer.current) {
+      window.clearTimeout(saveTimer.current);
+      saveTimer.current = null;
+    }
+
+    const retrievedLanguage = result.language;
+    const retrievedCode = result.code;
+
+    // Switch the editor to the language used for the latest submission.
+    if (retrievedLanguage !== lang) {
+      handleLangChange(retrievedLanguage);
+    }
+
+    // Put the retrieved code into the editor state.
+    setCodeByLang((previous) => ({
+      ...previous,
+      [retrievedLanguage]: retrievedCode,
+    }));
+
+    // Persist it using the editor's existing localStorage structure.
+    try {
+      const key = codeKey(problemSlug, retrievedLanguage);
+      const starter = starters[retrievedLanguage] ?? "";
+
+      if (retrievedCode === "" || retrievedCode === starter) {
+        localStorage.removeItem(key);
+      } else {
+        localStorage.setItem(key, retrievedCode);
+      }
+    } catch {
+      // The editor still updates even if localStorage is unavailable.
+    }
+  } catch (error) {
+    console.error("Could not retrieve last submitted code:", error);
+    window.alert("Could not retrieve your last submitted code.");
+  } finally {
+    setIsRetrievingLastSubmission(false);
+  }
+};
+
   // Reset current language to starter
   const currentStarter = starters[lang] ?? "";
   const currentText = codeByLang[lang] ?? currentStarter;
@@ -143,6 +203,8 @@ export default function CodeEditor({
               onLangChange={handleLangChange}
               onReset={handleReset}
               canReset={canReset}
+              onRetrieveLastSubmission={handleRetrieveLastSubmission}
+              isRetrievingLastSubmission={isRetrievingLastSubmission}
             />
 
             <div className="flex-1 overflow-hidden rounded-md border">

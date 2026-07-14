@@ -4,213 +4,417 @@ import * as React from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, X, RotateCcw } from "lucide-react";
+import { Plus, RotateCcw, X } from "lucide-react";
 import {
   Tooltip,
+  TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-  TooltipContent,
 } from "@/components/ui/tooltip";
+import type {
+  EditableTestCase,
+  JsonValue,
+} from "@/lib/problem";
 
 type CaseFields = Record<string, string>;
-type JsonCase = { input: any; output?: any };
+type JsonObject = Record<string, JsonValue>;
 
 const CASES_NS = (slug: string) => `Codey:cases:${slug}`;
 
-//stringify
-const s = (v: any) => {
-  try {
-    return JSON.stringify(v);
-  } catch {
-    return String(v);
-  }
-};
-
-// Convert a test case's input to editable fields
-function toFields(input: any): CaseFields {
-  if (input && typeof input === "object" && !Array.isArray(input)) {
-    const out: CaseFields = {};
-    for (const [k, v] of Object.entries(input)) out[k] = s(v);
-    return out;
-  }
-  return { input: s(input) };
+function isRecord(
+  value: unknown,
+): value is Record<string, unknown> {
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    !Array.isArray(value)
+  );
 }
 
-function loadFromStorage(slug: string): CaseFields[] | null {
-  if (typeof window === "undefined") return null;
-  const raw = localStorage.getItem(CASES_NS(slug));
-  if (!raw) return null;
+function isJsonValue(value: unknown): value is JsonValue {
+  if (
+    value === null ||
+    typeof value === "string" ||
+    typeof value === "number" ||
+    typeof value === "boolean"
+  ) {
+    return true;
+  }
+
+  if (Array.isArray(value)) {
+    return value.every(isJsonValue);
+  }
+
+  if (isRecord(value)) {
+    return Object.values(value).every(isJsonValue);
+  }
+
+  return false;
+}
+
+function isJsonObject(
+  value: JsonValue,
+): value is JsonObject {
+  return (
+    value !== null &&
+    typeof value === "object" &&
+    !Array.isArray(value)
+  );
+}
+
+function isCaseFields(
+  value: unknown,
+): value is CaseFields {
+  if (!isRecord(value)) {
+    return false;
+  }
+
+  return Object.values(value).every(
+    (fieldValue) => typeof fieldValue === "string",
+  );
+}
+
+function stringifyValue(value: unknown): string {
   try {
-    return JSON.parse(raw) as CaseFields[];
+    const json = JSON.stringify(value);
+
+    return json === undefined ? String(value) : json;
+  } catch {
+    return String(value);
+  }
+}
+
+// Convert a test-case input into editable text fields.
+function toFields(input: JsonValue): CaseFields {
+  if (isJsonObject(input)) {
+    const fields: CaseFields = {};
+
+    for (const [key, value] of Object.entries(input)) {
+      fields[key] = stringifyValue(value);
+    }
+
+    return fields;
+  }
+
+  return {
+    input: stringifyValue(input),
+  };
+}
+
+function loadFromStorage(
+  slug: string,
+): CaseFields[] | null {
+  if (typeof window === "undefined") {
+    return null;
+  }
+
+  const raw = localStorage.getItem(CASES_NS(slug));
+
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    const parsed: unknown = JSON.parse(raw);
+
+    if (
+      Array.isArray(parsed) &&
+      parsed.every(isCaseFields)
+    ) {
+      return parsed;
+    }
+
+    return null;
   } catch {
     return null;
   }
 }
 
-function deepEqual(a: any, b: any) {
+function deepEqual(
+  first: unknown,
+  second: unknown,
+): boolean {
   try {
-    return JSON.stringify(a) === JSON.stringify(b);
+    return JSON.stringify(first) === JSON.stringify(second);
   } catch {
     return false;
   }
 }
 
-function tryParseJson(text: string): any {
+function tryParseJson(text: string): JsonValue {
   const trimmed = text.trim();
-  if (trimmed === "") return "";
+
+  if (trimmed === "") {
+    return "";
+  }
+
   try {
-    return JSON.parse(trimmed);
+    const parsed: unknown = JSON.parse(trimmed);
+
+    return isJsonValue(parsed) ? parsed : text;
   } catch {
-    // keep raw if no t valid JSON
+    // Preserve normal text when it is not valid JSON.
     return text;
   }
 }
 
-function fieldsToJsonCase(fields: CaseFields): JsonCase {
+function fieldsToJsonCase(
+  fields: CaseFields,
+): EditableTestCase {
   const keys = Object.keys(fields);
 
-  // single input
+  // A test case with one unnamed input.
   if (keys.length === 1 && keys[0] === "input") {
-    return { input: tryParseJson(fields["input"]) ?? "" };
+    return {
+      input: tryParseJson(fields.input ?? ""),
+    };
   }
 
-  // multiple, named inputs
-  const obj: Record<string, any> = {};
-  for (const k of keys) obj[k] = tryParseJson(fields[k] ?? "");
-  return { input: obj };
+  // A test case with multiple named inputs.
+  const input: Record<string, JsonValue> = {};
+
+  for (const key of keys) {
+    input[key] = tryParseJson(fields[key] ?? "");
+  }
+
+  return { input };
 }
 
-function allFieldsToJsonCases(all: CaseFields[]): JsonCase[] {
-  return all.map(fieldsToJsonCase);
+function allFieldsToJsonCases(
+  allFields: CaseFields[],
+): EditableTestCase[] {
+  return allFields.map(fieldsToJsonCase);
 }
+
+type ConsoleCasesProps = {
+  problemSlug: string;
+  initialCases?: EditableTestCase[];
+  maxCases?: number;
+  onCasesChange?: (
+    cases: EditableTestCase[],
+  ) => void;
+};
 
 export default function ConsoleCases({
   problemSlug,
   initialCases,
   maxCases = 4,
   onCasesChange,
-}: {
-  problemSlug: string;
-  initialCases?: JsonCase[];
-  maxCases?: number;
-  onCasesChange?: (cases: JsonCase[]) => void;
-}) {
-  // Build defaults once per problem
-  const defaultCases = React.useMemo<CaseFields[]>(() => {
-    if (initialCases?.length)
-      return initialCases.map((tc) => toFields(tc.input));
-    return [{ input: "" }];
-  }, [problemSlug, initialCases]);
+}: ConsoleCasesProps) {
+  const defaultCases = React.useMemo<CaseFields[]>(
+    () => {
+      if (initialCases?.length) {
+        return initialCases.map((testCase) =>
+          toFields(testCase.input),
+        );
+      }
 
-  // Initial render: use defaults (matches server HTML)
-  const [cases, setCases] = React.useState<CaseFields[]>(defaultCases);
-  const [active, setActive] = React.useState(0);
-  const [hydrated, setHydrated] = React.useState(false);
+      return [{ input: "" }];
+    },
+    [initialCases],
+  );
 
-  // After mount / when slug changes: hydrate from storage
+  const [cases, setCases] =
+    React.useState<CaseFields[]>(defaultCases);
+
+  const [active, setActive] =
+    React.useState(0);
+
+  const [hydrated, setHydrated] =
+    React.useState(false);
+
+  // Load stored test cases whenever the problem changes.
   React.useEffect(() => {
-    setHydrated(true); // client only
-    const stored = loadFromStorage(problemSlug);
-    const nextCases = stored ?? defaultCases;
+    setHydrated(true);
+
+    const storedCases =
+      loadFromStorage(problemSlug);
+
+    const nextCases =
+      storedCases ?? defaultCases;
+
     setCases(nextCases);
     setActive(0);
 
-    onCasesChange?.(allFieldsToJsonCases(nextCases));
-  }, [problemSlug, defaultCases]);
+    onCasesChange?.(
+      allFieldsToJsonCases(nextCases),
+    );
+  }, [
+    problemSlug,
+    defaultCases,
+    onCasesChange,
+  ]);
 
-  // Persist only after hydration (prevents clobbering saved cases)
+  // Persist test cases after client hydration.
   React.useEffect(() => {
-    if (!hydrated) return;
+    if (!hydrated) {
+      return;
+    }
+
     try {
-      localStorage.setItem(CASES_NS(problemSlug), JSON.stringify(cases));
-    } catch {}
+      localStorage.setItem(
+        CASES_NS(problemSlug),
+        JSON.stringify(cases),
+      );
+    } catch {
+      // The editor can continue working without localStorage.
+    }
 
-    // notify parent
-    onCasesChange?.(allFieldsToJsonCases(cases));
-  }, [cases, problemSlug, hydrated, onCasesChange]);
+    onCasesChange?.(
+      allFieldsToJsonCases(cases),
+    );
+  }, [
+    cases,
+    problemSlug,
+    hydrated,
+    onCasesChange,
+  ]);
 
-  const reachedLimit = hydrated && cases.length >= maxCases;
+  const reachedLimit =
+    hydrated && cases.length >= maxCases;
 
   const addCase = () => {
-    if (cases.length >= maxCases) return;
+    if (cases.length >= maxCases) {
+      return;
+    }
+
     const source =
-      cases[active] ?? defaultCases[0] ?? ({ input: "" } as CaseFields);
-    const clone: CaseFields = { ...source };
-    setCases((prev) => [...prev, clone]);
+      cases[active] ??
+      defaultCases[0] ??
+      { input: "" };
+
+    const clone: CaseFields = {
+      ...source,
+    };
+
+    setCases((previousCases) => [
+      ...previousCases,
+      clone,
+    ]);
+
     setActive(cases.length);
   };
 
   const removeAt = (index: number) => {
-    setCases((prev) => {
-      if (prev.length <= 1) return prev; // never remove last
-      const next = prev.slice();
-      next.splice(index, 1);
-      return next;
+    setCases((previousCases) => {
+      if (previousCases.length <= 1) {
+        return previousCases;
+      }
+
+      const nextCases =
+        previousCases.slice();
+
+      nextCases.splice(index, 1);
+
+      return nextCases;
     });
 
-    setActive((cur) => {
-      const nextLen = cases.length - 1;
-      if (nextLen <= 0) return 0;
-      if (index < cur) return cur - 1;
-      if (cur >= nextLen) return nextLen - 1;
-      return cur;
+    setActive((currentActive) => {
+      const nextLength =
+        cases.length - 1;
+
+      if (nextLength <= 0) {
+        return 0;
+      }
+
+      if (index < currentActive) {
+        return currentActive - 1;
+      }
+
+      if (currentActive >= nextLength) {
+        return nextLength - 1;
+      }
+
+      return currentActive;
     });
   };
 
-  const updateField = (name: string, val: string) => {
-    setCases((prev) => {
-      const next = prev.slice();
-      const current = next[active] ?? ({} as CaseFields);
-      next[active] = { ...current, [name]: val };
-      return next;
+  const updateField = (
+    name: string,
+    value: string,
+  ) => {
+    setCases((previousCases) => {
+      const nextCases =
+        previousCases.slice();
+
+      const current =
+        nextCases[active] ?? {};
+
+      nextCases[active] = {
+        ...current,
+        [name]: value,
+      };
+
+      return nextCases;
     });
   };
 
-  const atDefault = deepEqual(cases, defaultCases);
-  const resetDisabled = !hydrated ? true : atDefault;
+  const atDefault = deepEqual(
+    cases,
+    defaultCases,
+  );
 
-  const doReset = () => {
+  const resetDisabled =
+    !hydrated || atDefault;
+
+  const resetCases = () => {
     setCases(defaultCases);
     setActive(0);
+
     try {
-      localStorage.removeItem(CASES_NS(problemSlug));
-    } catch {}
+      localStorage.removeItem(
+        CASES_NS(problemSlug),
+      );
+    } catch {
+      // The component can still reset without localStorage.
+    }
   };
 
-  const fieldNames = Object.keys(cases[active] ?? { input: "" }); // textarea for the current case
+  const fieldNames = Object.keys(
+    cases[active] ?? { input: "" },
+  );
 
   return (
-    <div className="h-full flex flex-col">
-      {/* Header row: tabs + (+ / delete) on the LEFT, Reset on the RIGHT */}
+    <div className="flex h-full flex-col">
       <div className="mb-2 flex items-center">
         <Tabs
           value={`case-${active}`}
-          onValueChange={(v) => setActive(parseInt(v.split("-")[1]!, 10))}
+          onValueChange={(value) => {
+            const nextActive = Number.parseInt(
+              value.split("-")[1] ?? "0",
+              10,
+            );
+
+            setActive(nextActive);
+          }}
         >
           <TabsList className="h-9">
-            {cases.map((_, i) => (
+            {cases.map((_, index) => (
               <TabsTrigger
-                key={i}
-                value={`case-${i}`}
+                key={index}
+                value={`case-${index}`}
                 className="group relative px-3 pr-4 hover:cursor-pointer"
               >
-                {`Case ${i + 1}`}
+                {`Case ${index + 1}`}
+
                 {cases.length > 1 && (
                   <span
                     role="button"
                     tabIndex={0}
-                    aria-label={`Remove Case ${i + 1}`}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      e.preventDefault();
-                      removeAt(i);
+                    aria-label={`Remove Case ${index + 1}`}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      event.preventDefault();
+                      removeAt(index);
                     }}
                     className="
-                      absolute -top-2 -right-1 h-4 w-4 rounded-full
-                      flex items-center justify-center 
-                      bg-muted/70 hover:bg-muted/90
-                      border border-border
-                      opacity-0 group-hover:opacity-100 data-[state=active]:opacity-100
+                      absolute -right-1 -top-2
+                      flex h-4 w-4 items-center justify-center
+                      rounded-full border border-border
+                      bg-muted/70 opacity-0
+                      hover:bg-muted/90
+                      group-hover:opacity-100
+                      data-[state=active]:opacity-100
                     "
                   >
                     <X className="h-3 w-3" />
@@ -221,7 +425,6 @@ export default function ConsoleCases({
           </TabsList>
         </Tabs>
 
-        {/* Left-side controls */}
         {!reachedLimit && (
           <TooltipProvider>
             <Tooltip>
@@ -235,6 +438,7 @@ export default function ConsoleCases({
                   <Plus className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
+
               <TooltipContent side="bottom">
                 Clone current test case
               </TooltipContent>
@@ -242,7 +446,6 @@ export default function ConsoleCases({
           </TooltipProvider>
         )}
 
-        {/* Right-side Reset */}
         <div className="ml-auto">
           <TooltipProvider>
             <Tooltip>
@@ -253,11 +456,12 @@ export default function ConsoleCases({
                   className="hover:cursor-pointer"
                   disabled={resetDisabled}
                   aria-label="Reset test cases to defaults"
-                  onClick={doReset}
+                  onClick={resetCases}
                 >
                   <RotateCcw className="h-4 w-4" />
                 </Button>
               </TooltipTrigger>
+
               <TooltipContent side="left">
                 Reset test cases to defaults
               </TooltipContent>
@@ -266,16 +470,28 @@ export default function ConsoleCases({
         </div>
       </div>
 
-      {/* Active case editor */}
       <div className="space-y-2">
         {fieldNames.map((name) => (
-          <div key={name} className="space-y-1">
-            <div className="text-sm text-muted-foreground">{name} =</div>
+          <div
+            key={name}
+            className="space-y-1"
+          >
+            <div className="text-sm text-muted-foreground">
+              {name} =
+            </div>
+
             <Textarea
               rows={1}
-              className="font-mono bg-muted/30 resize-none min-h-0! h-10"
-              value={cases[active]?.[name] ?? ""}
-              onChange={(e) => updateField(name, e.target.value)}
+              className="min-h-0! h-10 resize-none bg-muted/30 font-mono"
+              value={
+                cases[active]?.[name] ?? ""
+              }
+              onChange={(event) =>
+                updateField(
+                  name,
+                  event.target.value,
+                )
+              }
               spellCheck={false}
             />
           </div>

@@ -1,4 +1,4 @@
-type Difficulty = "Easy" | "Medium" | "Hard";
+export type Difficulty = "Easy" | "Medium" | "Hard";
 
 const difficultyColor: Record<Difficulty, string> = {
   Easy:   "text-green-700 dark:text-green-500",

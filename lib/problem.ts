@@ -1,10 +1,31 @@
 import type { StarterMap } from "@/lib/languages";
 import type { Lang } from "@/lib/languages";
+export type JsonPrimitive = string | number | boolean | null;
+
+export type JsonValue =
+  | JsonPrimitive
+  | JsonValue[]
+  | { [key: string]: JsonValue };
 
 export interface TestCase {
-  input: any;
-  expectedOutput: any;
+  input: JsonValue;
+  expectedOutput: JsonValue;
 }
+
+export type EditableTestCase = {
+  input: JsonValue;
+  expectedOutput?: JsonValue;
+  isUser?: boolean;
+};
+
+export type JDoodleResponse = {
+  output?: string;
+  error?: string;
+  memory?: string | number;
+  cpuTime?: string | number;
+  statusCode?: number;
+  compilationStatus?: string | number;
+};
 
 export type EntryPoint =
   | { kind: "function"; name: string }
