@@ -1,9 +1,5 @@
 import Link from "next/link";
-import {
-  Braces,
-  ChartNoAxesCombined,
-  TestTube2,
-} from "lucide-react";
+import { Braces, ChartNoAxesCombined, TestTube2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnimatedGradientText } from "@/components/ui/animated-gradient-text";
 import CodePreview from "./CodePreview";
@@ -53,8 +49,6 @@ const stats = [
   },
 ];
 
-
-
 export default function GuestHome() {
   return (
     <div className="relative min-h-[calc(100dvh-4rem)] overflow-hidden px-6 sm:px-8">
@@ -81,9 +75,19 @@ export default function GuestHome() {
       <div className="relative mx-auto max-w-6xl">
         <section className="grid items-center gap-14 py-16 sm:py-20 lg:min-h-162.5 lg:grid-cols-[0.9fr_1.1fr] lg:py-24">
           <div className="mx-auto max-w-xl text-center lg:mx-0 lg:text-left">
-            <AnimatedGradientText className="text-2xl font-bold">
-              Codey
-            </AnimatedGradientText>
+            <AnimatedGradientText
+  colorFrom="var(--gradient-from)"
+  colorTo="var(--gradient-to)"
+  className="
+    text-2xl font-bold
+    [--gradient-from:#2563eb]
+    [--gradient-to:#7e22ce]
+    dark:[--gradient-from:#ffaa40]
+    dark:[--gradient-to:#9c40ff]
+  "
+>
+  Codey
+</AnimatedGradientText>
 
             <h1 className="mt-5 text-3xl font-semibold tracking-tight sm:text-5xl sm:leading-tight">
               Improve your coding through problem solving

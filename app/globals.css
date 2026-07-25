@@ -194,3 +194,15 @@ body[data-scroll-locked] {
 }
 
 ul { list-style: disc; padding-left: 1.25rem; }
+
+:root {
+  --difficulty-easy: #15803d;
+  --difficulty-medium: #ea580c;
+  --difficulty-hard: #a80006;
+}
+
+.dark {
+  --difficulty-easy: #22c55e;
+  --difficulty-medium: #fdba74;
+  --difficulty-hard: #ef4444;
+}

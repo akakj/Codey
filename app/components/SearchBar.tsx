@@ -41,7 +41,7 @@ export default function SearchBar({
 
   return (
     <div className="flex items-center justify-between mb-4">
-      <div className="relative w-full max-w-[350px] mr-4">
+      <div className="relative w-full max-w-87.5 mr-4">
         <Search
           className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500"
           size={20}
