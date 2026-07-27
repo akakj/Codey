@@ -13,16 +13,7 @@ export default function AboutLayout({ children }: AboutLayoutProps) {
         -z-10
         min-h-screen
 
-        bg-gradient-to-br
-        from-green-200
-        via-blue-200
-        to-white
-        bg-[length:200%_200%]
-        animate-gradient
-
         text-gray-900
-
-        dark:bg-[linear-gradient(90deg,#4b6cb7_0%,#182848_100%)]
 
         dark:text-white
       `}

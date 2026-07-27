@@ -88,8 +88,8 @@ export default function BreakdownCharts({ analytics }: BreakdownChartsProps) {
   };
 
   return (
-    <section className="grid gap-6 lg:grid-cols-3">
-      <article className="rounded-xl border bg-card p-5 shadow-sm">
+    <section className="grid min-w-0 gap-6 lg:grid-cols-2">
+      <article className="min-w-0 rounded-xl border bg-card p-5 shadow-sm">
         <h2 className="text-lg font-semibold">Acceptance rate by difficulty</h2>
 
         <p className="mt-1 text-sm text-muted-foreground">
@@ -150,7 +150,7 @@ export default function BreakdownCharts({ analytics }: BreakdownChartsProps) {
         )}
       </article>
 
-      <article className="rounded-xl border bg-card p-5 shadow-sm">
+      <article className="min-w-0 rounded-xl border bg-card p-5 shadow-sm">
         <h2 className="text-lg font-semibold">Language distribution</h2>
 
         <p className="mt-1 text-sm text-muted-foreground">
@@ -207,7 +207,7 @@ export default function BreakdownCharts({ analytics }: BreakdownChartsProps) {
         )}
       </article>
 
-      <article className="rounded-xl border bg-card p-5 shadow-sm">
+      <article className="min-w-0 rounded-xl border bg-card p-5 shadow-sm">
         <h2 className="text-lg font-semibold">Acceptance rate by language</h2>
 
         <p className="mt-1 text-sm text-muted-foreground">

@@ -17,14 +17,14 @@ export default async function UserAnalytics({
 }: UserAnalyticsProps) {
   try {
     const sourceData =
-      await fetchAnalyticsData(userId);
+      await fetchAnalyticsData(userId); // retrieve raw database rows
 
     const analytics =
-      buildDashboardAnalytics(sourceData);
+      buildDashboardAnalytics(sourceData); // calculate analytics from raw data
 
     return (
       <AnalyticsCharts
-        analytics={analytics}
+        analytics={analytics} // pass calculated analytics to the charts component
       />
     );
   } catch (error: unknown) {

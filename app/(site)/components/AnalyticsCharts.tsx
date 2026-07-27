@@ -15,7 +15,7 @@ export default function AnalyticsCharts({
   analytics,
 }: AnalyticsChartsProps) {
   return (
-    <div className="mt-5 space-y-8">
+    <div className="mt-5 min-w-0 w-full max-w-full space-y-8 overflow-hidden">
 
       <PracticeProfile analytics={analytics} />
 

@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
-import "./globals.css";
 import { ThemeProvider } from "next-themes";
+
+import Footer from "@/app/components/Footer";
+import "./globals.css";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,37 +18,40 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: {
     default: "Codey",
-    template: "%s - Codey", // anything like "Two Sum - Codey"
+    template: "%s - Codey",
   },
-  description: 'A Leetcode-like platform for coding challenges',
+  description: "A Leetcode-like platform for coding challenges",
   icons: {
-    // the classic favicon.ico
-    icon: '/favicon.ico',
-
-    // Windows “shortcut icon” (same as rel="icon" in many contexts)
-    shortcut: '/favicon-32x32.png',
-
-    // iOS home-screen icon
-    apple: '/apple-touch-icon.png',
-
-    // any other custom icons—e.g. Safari “pinned tab” mask icon:
+    icon: "/favicon.ico",
+    shortcut: "/favicon-32x32.png",
+    apple: "/apple-touch-icon.png",
     other: [
-      { rel: "mask-icon", url: "/safari-pinned-tab.svg", color: "#000" }
-    ]
-    
+      {
+        rel: "mask-icon",
+        url: "/safari-pinned-tab.svg",
+        color: "#000",
+      },
+    ],
   },
 };
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body 
-      className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-    >
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
-        {children}
-      </ThemeProvider>
-    </body>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <div className="flex min-h-dvh flex-col">
+            <div className="flex-1">{children}</div>
+            <Footer />
+          </div>
+        </ThemeProvider>
+      </body>
     </html>
   );
 }

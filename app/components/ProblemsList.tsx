@@ -82,7 +82,7 @@ export default function ProblemsList({ problems }: ProblemsFile) {
         onSortChange={setSort}
       />
 
-      <div className="mt-4 overflow-hidden rounded-md border border-border">
+      <div className="mt-4 mb-10 overflow-hidden rounded-md border border-border">
         <table
           className="min-w-full divide-y divide-border
                   text-xs 

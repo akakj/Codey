@@ -116,8 +116,8 @@ export default function ProgressCharts({
   );
 
   return (
-    <section className="grid gap-6 lg:grid-cols-5">
-      <article className="rounded-xl border bg-card p-5 shadow-sm lg:col-span-2">
+    <section className="grid min-w-0 gap-6 lg:grid-cols-5">
+      <article className="min-w-0 rounded-xl border bg-card p-5 shadow-sm lg:col-span-2">
         <h2 className="text-lg font-semibold">
           Solved by difficulty
         </h2>
@@ -212,7 +212,7 @@ export default function ProgressCharts({
         )}
       </article>
 
-      <article className="rounded-xl border bg-card p-5 shadow-sm lg:col-span-3">
+      <article className="min-w-0 rounded-xl border bg-card p-5 shadow-sm lg:col-span-3">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h2 className="text-lg font-semibold">
