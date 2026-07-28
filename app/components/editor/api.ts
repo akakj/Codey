@@ -1,9 +1,5 @@
 import type { Lang } from "@/lib/languages";
-import type {
-  EditableTestCase,
-  EntryPoint,
-  JsonValue,
-} from "@/lib/problem";
+import type { EditableTestCase, EntryPoint, JsonValue } from "@/lib/problem";
 
 export const RESULT_PREFIX = "@@RESULT@@";
 
@@ -53,7 +49,6 @@ function parseJDoodleResponse(value: unknown): JDoodleResponse {
   };
 }
 
-
 export function toJDoodleLanguage(lang: Lang): string {
   return lang === "javascript" ? "nodejs" : lang;
 }
@@ -83,7 +78,10 @@ function splitTopLevelCommas(s: string): string[] {
   return out;
 }
 
-function parseJavaParamsFromStarter(starter: string, methodName: string): ParamSpec[] {
+function parseJavaParamsFromStarter(
+  starter: string,
+  methodName: string,
+): ParamSpec[] {
   const re = new RegExp(`\\b${methodName}\\s*\\(([^)]*)\\)`, "m");
   const m = starter.match(re);
   if (!m) return [];
@@ -98,7 +96,10 @@ function parseJavaParamsFromStarter(starter: string, methodName: string): ParamS
   });
 }
 
-function parseCSharpParamsFromStarter(starter: string, methodName: string): ParamSpec[] {
+function parseCSharpParamsFromStarter(
+  starter: string,
+  methodName: string,
+): ParamSpec[] {
   const re = new RegExp(`\\b${methodName}\\s*\\(([^)]*)\\)`, "m");
   const m = starter.match(re);
   if (!m) return [];
@@ -303,9 +304,7 @@ export function buildJDoodleScript(opts: {
   starterForLang?: string;
 }): string {
   const { language, userCode, cases, entryPoint, starterForLang } = opts;
-  const safeCases: InputTestCase[] = cases.length
-    ? cases
-    : [{ input: "" }];
+  const safeCases: InputTestCase[] = cases.length ? cases : [{ input: "" }];
 
   // PYTHON: put user code first, then runner that calls symbols directly (no imports)
   if (language === "python3") {
@@ -323,15 +322,37 @@ tests = json.loads(${JSON.stringify(JSON.stringify(argLists))})
 def emit(obj):
     print("${RESULT_PREFIX}" + json.dumps(obj, ensure_ascii=False))
 
+def success_message(case_num, value):
+    message = {
+        "case": case_num,
+        "ok": True,
+        "outputText": "" if value is None else str(value),
+    }
+
+    try:
+        message["outputJson"] = json.dumps(
+            value,
+            ensure_ascii=False,
+            separators=(",", ":"),
+        )
+    except (TypeError, ValueError):
+        pass
+
+    return message
+
 if __name__ == "__main__":
     sol = ${entryPoint.className}()
+
     for idx, args in enumerate(tests, start=1):
         try:
             res = getattr(sol, "${entryPoint.name}")(*args)
-            out = "" if res is None else str(res)
-            emit({"case": idx, "ok": True, "output": out})
+            emit(success_message(idx, res))
         except Exception:
-            emit({"case": idx, "ok": False, "error": traceback.format_exc()})
+            emit({
+                "case": idx,
+                "ok": False,
+                "error": traceback.format_exc(),
+            })
 `
         : `
 import json, traceback
@@ -341,14 +362,35 @@ tests = json.loads(${JSON.stringify(JSON.stringify(argLists))})
 def emit(obj):
     print("${RESULT_PREFIX}" + json.dumps(obj, ensure_ascii=False))
 
+def success_message(case_num, value):
+    message = {
+        "case": case_num,
+        "ok": True,
+        "outputText": "" if value is None else str(value),
+    }
+
+    try:
+        message["outputJson"] = json.dumps(
+            value,
+            ensure_ascii=False,
+            separators=(",", ":"),
+        )
+    except (TypeError, ValueError):
+        pass
+
+    return message
+
 if __name__ == "__main__":
     for idx, args in enumerate(tests, start=1):
         try:
             res = ${entryPoint.name}(*args)
-            out = "" if res is None else str(res)
-            emit({"case": idx, "ok": True, "output": out})
+            emit(success_message(idx, res))
         except Exception:
-            emit({"case": idx, "ok": False, "error": traceback.format_exc()})
+            emit({
+                "case": idx,
+                "ok": False,
+                "error": traceback.format_exc(),
+            })
 `;
 
     return `${userCode}\n\n${runner}\n`;
@@ -415,7 +457,9 @@ ${invoke}
     const params = starterForLang
       ? parseJavaParamsFromStarter(starterForLang, entryPoint.name)
       : [];
-    const argLists = safeCases.map((tc) => buildArgsFromInput(tc.input, params));
+    const argLists = safeCases.map((tc) =>
+      buildArgsFromInput(tc.input, params),
+    );
 
     const callLines = argLists
       .map((args, i) => {
@@ -458,8 +502,14 @@ ${invoke}
     ${callLines}
   }
 `;
-    const publicUserCode = ensurePublicJavaClass(userCode, entryPoint.className);
-    return injectIntoClass(publicUserCode, entryPoint.className, mainInsert) ?? publicUserCode;
+    const publicUserCode = ensurePublicJavaClass(
+      userCode,
+      entryPoint.className,
+    );
+    return (
+      injectIntoClass(publicUserCode, entryPoint.className, mainInsert) ??
+      publicUserCode
+    );
   }
 
   // C#: same idea: ensure Main exists; inject if needed
@@ -470,14 +520,15 @@ ${invoke}
     const params = starterForLang
       ? parseCSharpParamsFromStarter(starterForLang, entryPoint.name)
       : [];
-    const argLists = safeCases.map((tc) => buildArgsFromInput(tc.input, params));
+    const argLists = safeCases.map((tc) =>
+      buildArgsFromInput(tc.input, params),
+    );
 
     const callLines = argLists
       .map((args, i) => {
-        const exprs =
-          params.length
-            ? params.map((p, idx) => csExpr(args[idx], p.type)).join(", ")
-            : args.map((v) => csExpr(v, "string")).join(", ");
+        const exprs = params.length
+          ? params.map((p, idx) => csExpr(args[idx], p.type)).join(", ")
+          : args.map((v) => csExpr(v, "string")).join(", ");
         const caseNum = i + 1;
         return `
     try {
@@ -518,7 +569,9 @@ ${invoke}
   }
 `;
 
-    return injectIntoClass(userCode, entryPoint.className, mainInsert) ?? userCode;
+    return (
+      injectIntoClass(userCode, entryPoint.className, mainInsert) ?? userCode
+    );
   }
 
   // fallback
@@ -560,9 +613,7 @@ export async function executeCode(
   try {
     parsed = text ? JSON.parse(text) : null;
   } catch {
-    throw new Error(
-      `Non-JSON response (${res.status}): ${text.slice(0, 300)}`,
-    );
+    throw new Error(`Non-JSON response (${res.status}): ${text.slice(0, 300)}`);
   }
 
   if (!res.ok) {

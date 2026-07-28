@@ -4,6 +4,7 @@ import PracticeProfile from "./analytics/PracticeProfile";
 import ProblemInsights from "./analytics/ProblemInsights";
 import ProgressCharts from "./analytics/ProgressCharts";
 import SubmissionPerformance from "./analytics/SubmissionPerformance";
+import TimeInsights from "./analytics/TimeInsights";
 
 import type { DashboardAnalytics } from "./analytics/types";
 
@@ -26,6 +27,8 @@ export default function AnalyticsCharts({
       <ProblemInsights analytics={analytics} />
 
       <SubmissionPerformance analytics={analytics} />
+
+      <TimeInsights analytics={analytics} />
 
       <Overview analytics={analytics} />
 

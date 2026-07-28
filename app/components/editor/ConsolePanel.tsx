@@ -8,17 +8,17 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import type { ImperativePanelHandle } from "react-resizable-panels";
 
-import { Loader2 } from "lucide-react";
-import { ChevronDown, Terminal, SquareCheck, CloudUpload } from "lucide-react";
+import { ChevronDown, Terminal, SquareCheck, CloudUpload, Loader2 } from "lucide-react";
 
 import ConsoleCases from "./ConsoleCases";
 import ConsoleOutput, { type CaseRun } from "./ConsoleOutput";
 
 import type { Lang, StarterMap } from "@/lib/languages";
-import type { EntryPointByLang } from "@/lib/problem";
+import type { EntryPointByLang, EditableTestCase } from "@/lib/problem";
 import { runCode, submitCode, type SubmitCodeResult } from "./codeRunner";
 import { formatInputFields, stringifyOutputValue} from "@/lib/outputFormatting";
-import type { EditableTestCase } from "@/lib/problem";
+
+import { useProblemActiveTimer } from "./useProblemActiveTimer";
 
 const MIN = 6;
 const EXPANDED = 40;
@@ -64,6 +64,12 @@ export function ConsolePanel({
   const [liveCases, setLiveCases] = React.useState<EditableTestCase[]>(
     initialCases ?? [],
   );
+
+  const {
+  stopForSubmission,
+  resumeAfterFailedSubmission,
+  startNextAttempt,
+} = useProblemActiveTimer(problemSlug);
 
   // Results state
   const [caseRuns, setCaseRuns] = React.useState<CaseRun[]>([]);
@@ -112,39 +118,62 @@ export function ConsolePanel({
   };
 
   const handleSubmitCode = async () => {
-    const sourceCode = value;
-    if (!sourceCode) return;
+  const sourceCode = value;
 
-    setActiveTab("output");
-    setLoadingAction("submit");
-    setIsError(false);
-    setSubmitResult(null);
-    setCaseRuns([]);
-    setActiveOutputCase(0);
+  if (!sourceCode) {
+    return;
+  }
 
-    const result = await submitCode({
-      sourceCode,
-      language,
-      problemSlug,
-    });
+  const activeTimeSeconds = stopForSubmission();
 
-    setSubmitResult(result);
-    setIsError(result.isError);
-    setLoadingAction(null);
+  setActiveTab("output");
+  setLoadingAction("submit");
+  setIsError(false);
+  setSubmitResult(null);
+  setCaseRuns([]);
+  setActiveOutputCase(0);
 
-    if (result.submissionId) {
-      const params = new URLSearchParams(searchParams.toString());
+  const result = await submitCode({
+    sourceCode,
+    language,
+    problemSlug,
+    activeTimeSeconds,
+  });
 
-      params.set("tab", "submissions");
-      params.set("submissionId", String(result.submissionId));
+  setSubmitResult(result);
+  setIsError(result.isError);
+  setLoadingAction(null);
 
-      router.replace(`${pathname}?${params.toString()}`, {
+  if (!result.submissionId) {
+    // Authentication, network or database failure:
+    // continue the same timer without counting request time.
+    resumeAfterFailedSubmission();
+    return;
+  }
+
+  // The previous interval was saved.
+  // Begin measuring the next attempt.
+  startNextAttempt();
+
+  const params = new URLSearchParams(
+    searchParams.toString(),
+  );
+
+  params.set("tab", "submissions");
+  params.set(
+    "submissionId",
+    String(result.submissionId),
+  );
+
+  router.replace(
+    `${pathname}?${params.toString()}`,
+    {
       scroll: false,
-    });
+    },
+  );
 
   router.refresh();
-}
-  };
+};
 
   return (
     <>

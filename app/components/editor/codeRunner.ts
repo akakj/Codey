@@ -25,6 +25,7 @@ type SubmitCodeArgs = {
   sourceCode: string;
   language: Lang;
   problemSlug: string;
+  activeTimeSeconds: number;
 };
 
 type RunCodeResult = {
@@ -524,6 +525,7 @@ export async function submitCode({
   sourceCode,
   language,
   problemSlug,
+  activeTimeSeconds,
 }: SubmitCodeArgs): Promise<SubmitCodeResult> {
   if (!sourceCode) {
     return {
@@ -547,6 +549,7 @@ export async function submitCode({
         body: JSON.stringify({
           sourceCode,
           language,
+          activeTimeSeconds,
         }),
       },
     );

@@ -32,6 +32,7 @@ async function fetchAllUserSubmissions(
         passed,
         passedCases,
         totalCases,
+        activeTimeSeconds,
         createdAt
       `)
       .eq("userId", userId)

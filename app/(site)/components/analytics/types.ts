@@ -22,7 +22,7 @@ export interface LanguageAnalyticsPoint {
   acceptanceRate: number | null;
 }
 
-export interface DashboardAnalytics {
+export interface DashboardAnalytics extends TimeAnalytics {
   solvedProblems: number;
   problemsAttempted: number;
   acceptanceRate: number | null;
@@ -62,4 +62,14 @@ export interface DashboardAnalytics {
 
   fourWeekData: SubmissionFrequencyPoint[];
   twelveMonthData: SubmissionFrequencyPoint[];
+}
+
+export interface TimeAnalytics {
+  /**
+   * All values in this interface are measured in minutes.
+   */
+  totalActiveTime: number;
+  averageTimePerSubmission: number | null;
+  medianTimePerSubmission: number | null;
+  averageTimeToFirstAccepted: number | null;
 }

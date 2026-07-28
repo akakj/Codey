@@ -24,6 +24,10 @@ import {
   calculateSubmissionMetrics,
 } from "./submissionMetrics";
 
+import {
+  calculateTimeMetrics,
+} from "./timeMetrics";
+
 import type {
   AnalyticsSourceData,
 } from "./types";
@@ -57,10 +61,16 @@ export function buildDashboardAnalytics(
       now,
     );
 
+  const timeMetrics =
+    calculateTimeMetrics(
+      data.submissions,
+    );
+
   return {
     ...problemMetrics,
     ...submissionMetrics,
     ...activityMetrics,
     ...frequencyMetrics,
+    ...timeMetrics,
   };
 }

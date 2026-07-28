@@ -47,6 +47,7 @@ type RunnerMessage = {
 type SubmitRequest = {
   sourceCode: string;
   language: Lang;
+  activeTimeSeconds: number;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -110,7 +111,10 @@ function isSubmitRequest(value: unknown): value is SubmitRequest {
     typeof value.sourceCode === "string" &&
     value.sourceCode.length > 0 &&
     typeof value.language === "string" &&
-    isLang(value.language)
+    isLang(value.language) &&
+    typeof value.activeTimeSeconds === "number" &&
+    Number.isFinite(value.activeTimeSeconds) &&
+    value.activeTimeSeconds >= 0
   );
 }
 
@@ -400,7 +404,12 @@ export async function POST(
     );
   }
 
-  const { sourceCode, language } = body;
+  const { sourceCode, language, activeTimeSeconds } = body;
+
+  const normalizedActiveTimeSeconds = Math.min(
+  Math.floor(activeTimeSeconds),
+  12 * 60 * 60,
+);
 
   const supabase = await createClient();
 
@@ -574,6 +583,7 @@ export async function POST(
       failedCase: accepted
         ? null
         : (failedCase ?? null),
+      activeTimeSeconds: normalizedActiveTimeSeconds,
       createdAt: now,
     })
     .select("id")

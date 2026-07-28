@@ -7,6 +7,7 @@ export interface SubmissionRow {
   passed: boolean;
   passedCases: number | null;
   totalCases: number | null;
+  activeTimeSeconds: number | null;
   createdAt: string;
 }
 

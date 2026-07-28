@@ -62,3 +62,23 @@ export function formatSolvedDate(
     timeZone: "UTC",
   }).format(date);
 }
+
+export function formatMinutes(
+  value: number | null,
+): string {
+  if (
+    value === null ||
+    !Number.isFinite(value) ||
+    value < 0
+  ) {
+    return "-";
+  }
+
+  if (value > 0 && value < 1) {
+    return "<1 min";
+  }
+
+  return `${value.toLocaleString("en-GB", {
+    maximumFractionDigits: 1,
+  })} min`;
+}

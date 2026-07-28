@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { useActionState } from "react";
 import { useFormStatus } from "react-dom";
 import { authAction, type AuthState } from "./actions";
@@ -96,6 +97,26 @@ export default function LoginClient() {
               isLogin ? "Log in" : isSignup ? "Sign up" : "Send reset link"
             }
           />
+
+          {!isReset && (
+            <p className="mt-3 text-center text-xs text-muted-foreground">
+              By continuing, you agree to our{" "}
+              <Link
+                href="/terms"
+                className="underline underline-offset-2 hover:text-foreground"
+              >
+                Terms
+              </Link>{" "}
+              and{" "}
+              <Link
+                href="/privacy-policy"
+                className="underline underline-offset-2 hover:text-foreground"
+              >
+                Privacy Policy
+              </Link>
+              .
+            </p>
+          )}
         </div>
 
 
