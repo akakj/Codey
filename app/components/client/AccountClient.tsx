@@ -95,6 +95,15 @@ export function AccountClient({ email }: { email: string }) {
             Sign out
           </Button>
         </form>
+
+        <form action="" method="POST" className="mt-4">
+          <Button
+            type="submit"
+            className="w-full rounded-md px-4 py-2 text-sm font-medium border hover:cursor-pointer text-red-400 dark:text-red-600"
+          >
+            Delete Account
+          </Button>
+        </form>
       </div>
     </div>
   );

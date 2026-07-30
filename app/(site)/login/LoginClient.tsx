@@ -37,9 +37,18 @@ export default function LoginClient() {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <div className="mt-[30dvh]" suppressHydrationWarning>
+    <div className="min-h-dvh
+    px-4
+    pt-[25dvh]
+    bg-[linear-gradient(to_right,rgba(100,116,139,0.10)_1px,transparent_1px),linear-gradient(to_bottom,rgba(100,116,139,0.10)_1px,transparent_1px)]
+    dark:bg-[linear-gradient(to_right,rgba(255,255,255,0.025)_1px,transparent_1px),linear-gradient(to_bottom,rgba(255,255,255,0.025)_1px,transparent_1px)]
+    bg-size-[42px_42px]">
       {/* Use the correct server action for the current mode */}
-      <form key={mode} action={formAction} className="max-w-sm m-auto">
+      <form
+        key={mode}
+        action={formAction}
+        className="mx-auto w-full max-w-sm border rounded-2xl bg-card p-6 shadow-2xl"
+      >
         <input type="hidden" name="mode" value={mode} />
         <h1 className="font-semibold text-2xl">
           {isLogin && "Welcome Back!"}
@@ -99,7 +108,7 @@ export default function LoginClient() {
           />
 
           {!isReset && (
-            <p className="mt-3 text-center text-xs text-muted-foreground">
+            <p className="mt-3 text-center text-sm text-muted-foreground">
               By continuing, you agree to our{" "}
               <Link
                 href="/terms"
@@ -148,7 +157,7 @@ export default function LoginClient() {
           </Alert>
         )}
 
-        <div className="mt-2">
+        <div className="mt-3">
           {isLogin && (
             <div className="flex items-center gap-3">
               <button

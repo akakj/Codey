@@ -11,7 +11,7 @@ export const metadata: Metadata = {
 const ProblemsPage = () => {
   const { problems } = rawData as ProblemsFile;
   return (
-    <div className="pt-4 px-10 xs:px-6 sm:px-14 lg:px-50">
+    <div className="pt-4 px-10 xs:px-6 sm:px-14 lg:px-50 ">
       <ProblemsList problems={problems} />
     </div>
   );
