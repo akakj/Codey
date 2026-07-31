@@ -17,6 +17,7 @@ The project is built using production-style practices, with an emphasis on API-d
 ## Core features
 
 ### Implemented
+
 - Problem catalogue with metadata and categorisation
 - **150 curated coding problems** across multiple topics
 - In-browser code editor
@@ -24,6 +25,7 @@ The project is built using production-style practices, with an emphasis on API-d
 - **Custom user-defined test cases**
 
 ### In progress
+
 - **User statistics and analytics page**
 - **About section**
 
@@ -51,11 +53,13 @@ The project is built using production-style practices, with an emphasis on API-d
 ## Getting started
 
 ### Prerequisites
+
 - Node.js (LTS)
 - PostgreSQL database
 
 ### Install dependencies
-```bash
+
+````bash
 npm install
 
 
@@ -72,7 +76,7 @@ npm install
 npm install
 # or
 yarn install
-```
+````
 
 ### 2) Configure env vars
 
@@ -84,7 +88,7 @@ DATABASE_URL="postgresql://USER:PASSWORD@HOST:PORT/DBNAME?schema=public"
 
 # Supabase (if used)
 NEXT_PUBLIC_SUPABASE_URL="https://YOUR-PROJECT.ref.supabase.co"
-NEXT_PUBLIC_SUPABASE_ANON_KEY="YOUR_ANON_KEY"
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY="YOUR_ANON_KEY"
 ```
 
 ### 3) Set up the database
@@ -122,10 +126,10 @@ Codey/
 
 ## 🔧 Available Scripts
 
-* `npm run dev` — Start dev server
-* `npm run build` — Build for production
-* `npm start` — Run production build
-* `npm run lint` — Lint code (if configured)
+- `npm run dev` — Start dev server
+- `npm run build` — Build for production
+- `npm start` — Run production build
+- `npm run lint` — Lint code (if configured)
 
 ---
 
