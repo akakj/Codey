@@ -469,8 +469,8 @@ ${invoke}
         const caseNum = i + 1;
         return `
     try {
-      Object res = sol.${entryPoint.name}(${exprs});
-      String out = (res == null) ? "" : String.valueOf(res);
+     Object res = sol.${entryPoint.name}(${exprs});
+      String out = _resultOut(res);
       System.out.println("${RESULT_PREFIX}" + "{\\"case\\":${caseNum},\\"ok\\":true,\\"output\\":\\"" + _esc(out) + "\\"}");
     } catch (Exception e) {
       System.out.println("${RESULT_PREFIX}" + "{\\"case\\":${caseNum},\\"ok\\":false,\\"error\\":\\"" + _esc(_stack(e)) + "\\"}");
@@ -488,6 +488,80 @@ ${invoke}
       .replace("\\n", "\\\\n")
       .replace("\\r", "\\\\r")
       .replace("\\t", "\\\\t");
+  }
+
+    private static String _quote(String value) {
+    char quote = 34;
+
+    return quote + _esc(value == null ? "" : value) + quote;
+  }
+
+  private static String _json(Object value) {
+    if (value == null) {
+      return "null";
+    }
+
+    if (value instanceof String || value instanceof Character) {
+      return _quote(String.valueOf(value));
+    }
+
+    if (value instanceof Boolean || value instanceof Number) {
+      return String.valueOf(value);
+    }
+
+    Class<?> valueClass = value.getClass();
+
+    if (valueClass.isArray()) {
+      int length = java.lang.reflect.Array.getLength(value);
+      java.util.List<String> items =
+        new java.util.ArrayList<String>();
+
+      for (int i = 0; i < length; i++) {
+        Object item = java.lang.reflect.Array.get(value, i);
+        items.add(_json(item));
+      }
+
+      return "[" + String.join(",", items) + "]";
+    }
+
+    if (value instanceof java.lang.Iterable<?>) {
+      java.util.List<String> items =
+        new java.util.ArrayList<String>();
+
+      for (Object item : (java.lang.Iterable<?>) value) {
+        items.add(_json(item));
+      }
+
+      return "[" + String.join(",", items) + "]";
+    }
+
+    if (value instanceof java.util.Map<?, ?>) {
+      java.util.List<String> entries =
+        new java.util.ArrayList<String>();
+
+      for (
+        java.util.Map.Entry<?, ?> entry :
+        ((java.util.Map<?, ?>) value).entrySet()
+      ) {
+        entries.add(
+          _quote(String.valueOf(entry.getKey())) +
+          ":" +
+          _json(entry.getValue())
+        );
+      }
+
+      return "{" + String.join(",", entries) + "}";
+    }
+
+    return String.valueOf(value);
+  }
+
+  private static String _resultOut(Object value) {
+    if (value instanceof String || value instanceof Character) {
+      return String.valueOf(value);
+    }
+
+    return _json(value);
   }
 
   private static String _stack(Exception e) {
@@ -553,14 +627,87 @@ ${invoke}
       .Replace("\\t", "\\\\t");
   }
 
-  static string resultOut(object res) {
-    if (res == null) return "";
+    static string _quotedJsonString(string value) {
+    if (value == null) return "null";
 
-    if (res is bool) {
-      return ((bool)res) ? "true" : "false";
+    var quote = ((char)34).ToString();
+    return quote + _esc(value) + quote;
+  }
+
+  static string resultOutValue(object value, bool nested) {
+    if (value == null) {
+      return "null";
     }
 
-    return res.ToString();
+    if (value is string) {
+      var text = (string)value;
+
+      return nested
+        ? _quotedJsonString(text)
+        : text;
+    }
+
+    if (value is char) {
+      var text = value.ToString();
+
+      return nested
+        ? _quotedJsonString(text)
+        : text;
+    }
+
+    if (value is bool) {
+      return ((bool)value) ? "true" : "false";
+    }
+
+    if (value is System.Collections.IDictionary) {
+      var entries =
+        new System.Collections.Generic.List<string>();
+
+      foreach (
+        System.Collections.DictionaryEntry entry
+        in (System.Collections.IDictionary)value
+      ) {
+        var key =
+          entry.Key == null
+            ? ""
+            : entry.Key.ToString();
+
+        entries.Add(
+          _quotedJsonString(key) +
+          ":" +
+          resultOutValue(entry.Value, true)
+        );
+      }
+
+      return "{" + string.Join(",", entries) + "}";
+    }
+
+    if (value is System.Collections.IEnumerable) {
+      var items =
+        new System.Collections.Generic.List<string>();
+
+      foreach (
+        var item
+        in (System.Collections.IEnumerable)value
+      ) {
+        items.Add(resultOutValue(item, true));
+      }
+
+      return "[" + string.Join(",", items) + "]";
+    }
+
+    if (value is System.IFormattable) {
+      return ((System.IFormattable)value).ToString(
+        null,
+        System.Globalization.CultureInfo.InvariantCulture
+      );
+    }
+
+    return value.ToString();
+  }
+
+  static string resultOut(object res) {
+    return resultOutValue(res, false);
   }
 
   public static void Main() {

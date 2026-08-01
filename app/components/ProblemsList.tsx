@@ -6,7 +6,7 @@ import Link from "next/link";
 import { SortableHeader } from "./SortableHeader";
 import SearchBar from "./SearchBar";
 import { getDifficulty } from "@/lib/difficulty";
-import type { ProblemsFile } from "@/lib/problem";
+import type { ProblemLite } from "@/lib/problem";
 import { cn } from "@/lib/utils";
 
 type SortType = "alpha" | "difficulty";
@@ -23,7 +23,11 @@ const columns: SortColumn[] = [
   { type: "difficulty", label: "Difficulty" },
 ];
 
-export default function ProblemsList({ problems }: ProblemsFile) {
+type ProblemsListProps = {
+  problems: ProblemLite[];
+};
+
+export default function ProblemsList({ problems }: ProblemsListProps) {
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<string[]>([]);
   const [sort, setSort] = useState<SortValue>("");

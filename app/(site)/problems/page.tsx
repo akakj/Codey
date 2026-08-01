@@ -1,20 +1,36 @@
-import React from "react";
+import type { Metadata } from "next";
+
 import ProblemsList from "@/app/components/ProblemsList";
 import rawData from "@/app/data/neetcode_150_problems_with_entry.json";
-import { ProblemsFile } from "@/lib/problem";
-import type { Metadata } from "next";
+import type {
+  ProblemLite,
+  ProblemsFile,
+} from "@/lib/problem";
 
 export const metadata: Metadata = {
   title: "Problems",
 };
 
-const ProblemsPage = () => {
-  const { problems } = rawData as ProblemsFile;
+export default function ProblemsPage() {
+  const data = rawData as ProblemsFile;
+
+  const problems: ProblemLite[] = data.problems.map(
+    ({
+      problemID,
+      slug,
+      title,
+      difficulty,
+    }) => ({
+      problemID,
+      slug,
+      title,
+      difficulty,
+    }),
+  );
+
   return (
-    <div className="pt-4 px-10 xs:px-6 sm:px-14 lg:px-50 ">
+    <div className="px-10 pt-4 xs:px-6 sm:px-14 lg:px-50">
       <ProblemsList problems={problems} />
     </div>
   );
-};
-
-export default ProblemsPage;
+}

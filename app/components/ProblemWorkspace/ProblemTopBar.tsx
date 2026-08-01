@@ -20,12 +20,24 @@ import {
 } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+
+import {
   ChevronLeft,
   ChevronRight,
   List,
   Search,
   Shuffle,
   Loader2,
+  Settings, 
+  LogOutIcon,
+  FileClock
 } from "lucide-react";
 import { SortableHeader } from "@/app/components/SortableHeader";
 import { getRandomUnsolvedProblem } from "@/app/components/ProblemWorkspace/tabs/getRandomUnsolvedProblem";
@@ -35,6 +47,9 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { User } from "@supabase/supabase-js";
+
+import { signOut } from "@/app/(site)/account/actions";
+
 
 export default function ProblemTopBar({
   currentSlug,
@@ -363,12 +378,57 @@ export default function ProblemTopBar({
       <div className="flex items-center space-x-4">
         <ThemeToggle />
         {user ? (
-          <Link
-            href="/account"
-            className="text-gray-600 hover:text-gray-900 dark:text-[#c9c6c5] dark:hover:text-white transition-colors"
-          >
-            Account
-          </Link>
+          <DropdownMenu modal={false}>
+            <DropdownMenuTrigger asChild>
+              <button
+                type="button"
+                className="inline-flex h-10 items-center justify-center rounded-md px-1 hover:cursor-pointer text-gray-600 transition-colors hover:text-gray-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring dark:text-[#c9c6c5] dark:hover:text-white"
+              >
+                Account
+              </button>
+            </DropdownMenuTrigger>
+
+            <DropdownMenuContent
+              className="w-48"
+              align="end"
+              sideOffset={8}
+            >
+              <DropdownMenuLabel>My Account</DropdownMenuLabel>
+
+              <DropdownMenuSeparator />
+
+              <DropdownMenuItem asChild>
+                <Link href="/account" className="cursor-pointer">
+                  <Settings />
+                  Settings
+                </Link>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem asChild>
+                <Link
+                  href="/submission-history"
+                  className="cursor-pointer"
+                >
+                  <FileClock />
+                  Submission History
+                </Link>
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator />
+
+              <form action={signOut} className="w-full">
+                <DropdownMenuItem asChild variant="destructive">
+                  <button
+                    type="submit"
+                    className="w-full cursor-pointer"
+                  >
+                    <LogOutIcon />
+                    Log out
+                  </button>
+                </DropdownMenuItem>
+              </form>
+            </DropdownMenuContent>
+          </DropdownMenu>
         ) : (
           <Link
             href="/login"
