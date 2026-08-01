@@ -1,74 +1,108 @@
 "use client";
-import React, { useState, useMemo } from "react";
-import SearchBar from "./SearchBar";
-import { cn } from "@/lib/utils";
-import { ProblemsFile } from "@/lib/problem";
-import { getDifficulty } from "@/lib/difficulty";
-import { SortableHeader } from "./SortableHeader";
+
+import { useMemo, useState } from "react";
 import Link from "next/link";
+
+import { SortableHeader } from "./SortableHeader";
+import SearchBar from "./SearchBar";
+import { getDifficulty } from "@/lib/difficulty";
+import type { ProblemsFile } from "@/lib/problem";
+import { cn } from "@/lib/utils";
+
+type SortType = "alpha" | "difficulty";
+type SortDirection = "asc" | "desc";
+type SortValue = "" | `${SortType}-${SortDirection}`;
+
+type SortColumn = {
+  type: SortType;
+  label: string;
+};
+
+const columns: SortColumn[] = [
+  { type: "alpha", label: "Problem" },
+  { type: "difficulty", label: "Difficulty" },
+];
 
 export default function ProblemsList({ problems }: ProblemsFile) {
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<string[]>([]);
-  const [sort, setSort] = useState("");
+  const [sort, setSort] = useState<SortValue>("");
 
-  type SortColumn = { type: "alpha" | "difficulty"; label: string };
-  const columns: SortColumn[] = [
-    { type: "alpha", label: "Problem" },
-    { type: "difficulty", label: "Difficulty" },
-  ];
+  function handleSortClick(type: SortType) {
+    const ascendingSort = `${type}-asc` as SortValue;
+    const descendingSort = `${type}-desc` as SortValue;
 
-  const handleSortClick = (type: "alpha" | "difficulty") => {
-    const asc = `${type}-asc`;
-    const desc = `${type}-desc`;
-    if (sort === "") {
-      setSort(asc);
-    } else if (sort === asc) {
-      setSort(desc);
-    } else {
-      setSort("");
-    }
-  };
+    setSort((currentSort) => {
+      // First click, or clicking a different column:
+      // start the selected column in ascending order.
+      if (
+        currentSort !== ascendingSort &&
+        currentSort !== descendingSort
+      ) {
+        return ascendingSort;
+      }
+
+      // Second click: descending.
+      if (currentSort === ascendingSort) {
+        return descendingSort;
+      }
+
+      // Third click: reset.
+      return "";
+    });
+  }
 
   const filtered = useMemo(() => {
     let list = problems;
 
-    // search by title
     if (search) {
-      list = list.filter((p) =>
-        p.title.toLowerCase().includes(search.toLowerCase())
+      const normalizedSearch = search.toLowerCase();
+
+      list = list.filter((problem) =>
+        problem.title.toLowerCase().includes(normalizedSearch),
       );
     }
 
-    // filter by selected difficulties
     if (filters.length > 0) {
-      list = list.filter((p) => filters.includes(p.difficulty));
+      list = list.filter((problem) =>
+        filters.includes(problem.difficulty),
+      );
     }
 
-    // sort
-    if (sort) {
-      const orderMap: Record<string, number> = { Easy: 1, Medium: 2, Hard: 3 };
-      switch (sort) {
-        case "difficulty-asc":
-          list = [...list].sort(
-            (a, b) => orderMap[a.difficulty] - orderMap[b.difficulty]
-          );
-          break;
-        case "difficulty-desc":
-          list = [...list].sort(
-            (a, b) => orderMap[b.difficulty] - orderMap[a.difficulty]
-          );
-          break;
-        case "alpha-asc":
-          list = [...list].sort((a, b) => a.title.localeCompare(b.title));
-          break;
-        case "alpha-desc":
-          list = [...list].sort((a, b) => b.title.localeCompare(a.title));
-          break;
-      }
-    }
+    const difficultyOrder: Record<string, number> = {
+      Easy: 1,
+      Medium: 2,
+      Hard: 3,
+    };
 
-    return list;
+    switch (sort) {
+      case "difficulty-asc":
+        return [...list].sort(
+          (first, second) =>
+            difficultyOrder[first.difficulty] -
+            difficultyOrder[second.difficulty],
+        );
+
+      case "difficulty-desc":
+        return [...list].sort(
+          (first, second) =>
+            difficultyOrder[second.difficulty] -
+            difficultyOrder[first.difficulty],
+        );
+
+      case "alpha-asc":
+        return [...list].sort((first, second) =>
+          first.title.localeCompare(second.title),
+        );
+
+      case "alpha-desc":
+        return [...list].sort((first, second) =>
+          second.title.localeCompare(first.title),
+        );
+
+      default:
+        return list;
+    }
   }, [problems, search, filters, sort]);
 
   return (
@@ -79,56 +113,57 @@ export default function ProblemsList({ problems }: ProblemsFile) {
         sort={sort}
         onSearchChange={setSearch}
         onFiltersChange={setFilters}
-        onSortChange={setSort}
+        onSortChange={(value) => setSort(value as SortValue)}
       />
 
       <div className="mt-4 mb-10 overflow-hidden rounded-md border border-border">
         <table
-          className="min-w-full divide-y divide-border
-                  text-xs 
-                  sm:text-sm   
-                  md:text-base"
+          className="
+            min-w-full divide-y divide-border
+            text-xs
+            sm:text-sm
+            md:text-base
+          "
         >
           <thead className="bg-muted/25 dark:bg-muted/30">
             <tr>
-              {columns.map((col) => (
+              {columns.map((column) => (
                 <SortableHeader
-                  key={col.type}
-                  type={col.type}
-                  label={col.label}
+                  key={column.type}
+                  type={column.type}
+                  label={column.label}
                   sort={sort}
                   onSortClick={handleSortClick}
                 />
               ))}
             </tr>
           </thead>
+
           <tbody>
-            {filtered.map((p) => {
-              const colorClass = getDifficulty(p.difficulty);
-              return (
-                <tr
-                  key={p.problemID}
-                  className="even:bg-muted/20 dark:even:bg-muted/30 font-semibold"
-                >
-                  <td className="px-4 py-3 align-top">
-                    <Link
-                      href={`/problems/${p.slug}`}
-                      className="block text-base hover:text-blue-700 dark:hover:text-blue-300 whitespace-normal wrap-break-word"
-                    >
-                      {p.title}
-                    </Link>
-                  </td>
-                  <td
-                    className={cn(
-                      "px-4 py-3 whitespace-nowrap text-sm font-semibold",
-                      colorClass
-                    )}
+            {filtered.map((problem) => (
+              <tr
+                key={problem.problemID}
+                className="font-semibold even:bg-muted/20 dark:even:bg-muted/30"
+              >
+                <td className="px-4 py-3 align-top">
+                  <Link
+                    href={`/problems/${problem.slug}`}
+                    className="block wrap-break-word whitespace-normal text-base hover:text-blue-700 dark:hover:text-blue-300"
                   >
-                    {p.difficulty}
-                  </td>
-                </tr>
-              );
-            })}
+                    {problem.title}
+                  </Link>
+                </td>
+
+                <td
+                  className={cn(
+                    "whitespace-nowrap px-4 py-3 text-sm font-semibold",
+                    getDifficulty(problem.difficulty),
+                  )}
+                >
+                  {problem.difficulty}
+                </td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>

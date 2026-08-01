@@ -534,6 +534,18 @@ export async function POST(
     (run) => run.ok && run.passed === true,
   ).length;
 
+  console.log("JDoodle submission response", {
+  statusCode: jdoodleResult.statusCode,
+  compilationStatus: jdoodleResult.compilationStatus,
+  error: jdoodleResult.error,
+  cpuTime: jdoodleResult.cpuTime,
+  memory: jdoodleResult.memory,
+  outputLength: jdoodleResult.output?.length ?? 0,
+  parsedCases: finalRuns.length,
+  expectedCases: totalCases,
+});
+
+
   const accepted =
     finalRuns.length === totalCases &&
     totalCases > 0 &&
