@@ -31,14 +31,16 @@ import {
 import {
   ChevronLeft,
   ChevronRight,
+  FileClock,
   List,
-  Search,
-  Shuffle,
   Loader2,
-  Settings, 
   LogOutIcon,
-  FileClock
+  Search,
+  Settings,
+  Shuffle,
 } from "lucide-react";
+import { ProblemCompletionCheck } from "@/app/components/ProblemCompletionCheck";
+
 import { SortableHeader } from "@/app/components/SortableHeader";
 import { getRandomUnsolvedProblem } from "@/app/components/ProblemWorkspace/tabs/getRandomUnsolvedProblem";
 import {
@@ -46,17 +48,18 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { User } from "@supabase/supabase-js";
+import type { User } from "@supabase/supabase-js";
 
 import { signOut } from "@/app/(site)/account/actions";
-
 
 export default function ProblemTopBar({
   currentSlug,
   user,
+  completedProblemIds,
 }: {
   currentSlug: string;
   user: User | null;
+  completedProblemIds: number[];
 }) {
   const data = rawData as ProblemsFile;
 
@@ -69,6 +72,11 @@ export default function ProblemTopBar({
         difficulty: p.difficulty,
       })),
     [data],
+  );
+
+  const completedProblemIdSet = useMemo(
+    () => new Set(completedProblemIds),
+    [completedProblemIds],
   );
 
   const index = useMemo(
@@ -247,27 +255,42 @@ export default function ProblemTopBar({
                       {filteredSorted.map((p) => {
                         const diffClass = getDifficulty(p.difficulty);
                         const isCurrent = p.slug === currentSlug;
+                        const isCompleted = completedProblemIdSet.has(
+                          p.problemID,
+                        );
+
                         return (
                           <tr
                             key={p.slug}
                             ref={isCurrent ? currentRowRef : null}
                             className={cn(
-                              "hover:bg-muted/70",
-                              isCurrent &&
-                                "bg-gray-900 text-white dark:bg-white dark:text-black",
+                              "transition-colors",
+                              isCurrent
+                                ? "bg-gray-900 text-white hover:bg-gray-900 dark:bg-white dark:text-black dark:hover:bg-white"
+                                : "hover:bg-muted/60",
                             )}
                           >
                             <td className="px-4 py-2">
                               <Link
                                 href={`/problems/${p.slug}`}
-                                className="block truncate font-medium"
+                                title={isCompleted ? "Completed" : undefined}
+                                className="flex min-w-0 items-center gap-2 font-medium"
                               >
-                                {p.title}
+                                <ProblemCompletionCheck
+                                  completed={isCompleted}
+                                  className={cn(
+                                    isCurrent &&
+                                      "text-green-400 dark:text-green-700",
+                                  )}
+                                />
+
+                                <span className="truncate">{p.title}</span>
                               </Link>
                             </td>
+
                             <td
                               className={cn(
-                                "px-4 py-2 text-xs font-semibold hidden sm:table-cell",
+                                "hidden px-4 py-2 text-xs font-semibold sm:table-cell",
                                 diffClass,
                               )}
                             >
@@ -388,11 +411,7 @@ export default function ProblemTopBar({
               </button>
             </DropdownMenuTrigger>
 
-            <DropdownMenuContent
-              className="w-48"
-              align="end"
-              sideOffset={8}
-            >
+            <DropdownMenuContent className="w-48" align="end" sideOffset={8}>
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
 
               <DropdownMenuSeparator />
@@ -405,10 +424,7 @@ export default function ProblemTopBar({
               </DropdownMenuItem>
 
               <DropdownMenuItem asChild>
-                <Link
-                  href="/submission-history"
-                  className="cursor-pointer"
-                >
+                <Link href="/submission-history" className="cursor-pointer">
                   <FileClock />
                   Submission History
                 </Link>
@@ -418,10 +434,7 @@ export default function ProblemTopBar({
 
               <form action={signOut} className="w-full">
                 <DropdownMenuItem asChild variant="destructive">
-                  <button
-                    type="submit"
-                    className="w-full cursor-pointer"
-                  >
+                  <button type="submit" className="w-full cursor-pointer">
                     <LogOutIcon />
                     Log out
                   </button>

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
-  CONTACT_EMAIL,
   LegalSection,
   OPERATOR_NAME,
 } from "../../components/LegalSection";
@@ -439,13 +438,8 @@ export default function TermsPage() {
           </p>
 
           <p>
-            You may also contact{" "}
-            <a
-              href={`mailto:${CONTACT_EMAIL}`}
-              className={linkClassName}
-            >
-              {CONTACT_EMAIL}
-            </a>{" "}
+            You may also contact us using the <Link href="/contact" className={linkClassName}> Contact form
+            </Link>
             if you cannot access the account-deletion feature or need help
             with a deletion request.
           </p>
@@ -668,12 +662,9 @@ export default function TermsPage() {
 
             <p>
               <span className="font-semibold">Email:</span>{" "}
-              <a
-                href={`mailto:${CONTACT_EMAIL}`}
-                className={linkClassName}
-              >
-                {CONTACT_EMAIL}
-              </a>
+              <Link href="/contact" className={linkClassName}>
+                Contact page
+              </Link>
             </p>
           </div>
         </LegalSection>

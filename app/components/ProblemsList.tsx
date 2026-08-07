@@ -3,6 +3,8 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 
+import { ProblemCompletionCheck } from "./ProblemCompletionCheck";
+
 import { SortableHeader } from "./SortableHeader";
 import SearchBar from "./SearchBar";
 import { getDifficulty } from "@/lib/difficulty";
@@ -25,12 +27,22 @@ const columns: SortColumn[] = [
 
 type ProblemsListProps = {
   problems: ProblemLite[];
+  completedProblemIds: number[];
 };
 
-export default function ProblemsList({ problems }: ProblemsListProps) {
+export default function ProblemsList({
+  problems,
+  completedProblemIds,
+}: ProblemsListProps) {
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<string[]>([]);
+  const [completionFilters, setCompletionFilters] = useState<string[]>([]);
   const [sort, setSort] = useState<SortValue>("");
+
+  const completedProblemIdSet = useMemo(
+    () => new Set(completedProblemIds),
+    [completedProblemIds],
+  );
 
   function handleSortClick(type: SortType) {
     const ascendingSort = `${type}-asc` as SortValue;
@@ -73,6 +85,18 @@ export default function ProblemsList({ problems }: ProblemsListProps) {
       );
     }
 
+    if (completionFilters.length > 0) {
+      list = list.filter((problem) => {
+        const completionStatus = completedProblemIdSet.has(
+          problem.problemID,
+        )
+          ? "Completed"
+          : "Uncompleted";
+
+        return completionFilters.includes(completionStatus);
+      });
+    }
+
     const difficultyOrder: Record<string, number> = {
       Easy: 1,
       Medium: 2,
@@ -107,16 +131,25 @@ export default function ProblemsList({ problems }: ProblemsListProps) {
       default:
         return list;
     }
-  }, [problems, search, filters, sort]);
+  }, [
+    problems,
+    search,
+    filters,
+    completionFilters,
+    sort,
+    completedProblemIdSet,
+  ]);
 
   return (
     <div>
       <SearchBar
         search={search}
         filters={filters}
+        completionFilters={completionFilters}
         sort={sort}
         onSearchChange={setSearch}
         onFiltersChange={setFilters}
+        onCompletionFiltersChange={setCompletionFilters}
         onSortChange={(value) => setSort(value as SortValue)}
       />
 
@@ -144,30 +177,41 @@ export default function ProblemsList({ problems }: ProblemsListProps) {
           </thead>
 
           <tbody>
-            {filtered.map((problem) => (
-              <tr
-                key={problem.problemID}
-                className="font-semibold even:bg-muted/20 dark:even:bg-muted/30"
-              >
-                <td className="px-4 py-3 align-top">
-                  <Link
-                    href={`/problems/${problem.slug}`}
-                    className="block wrap-break-word whitespace-normal text-base hover:text-blue-700 dark:hover:text-blue-300"
-                  >
-                    {problem.title}
-                  </Link>
-                </td>
+            {filtered.map((problem) => {
+              const isCompleted = completedProblemIdSet.has(
+                problem.problemID,
+              );
 
-                <td
-                  className={cn(
-                    "whitespace-nowrap px-4 py-3 text-sm font-semibold",
-                    getDifficulty(problem.difficulty),
-                  )}
+              return (
+                <tr
+                  key={problem.problemID}
+                  className="font-semibold even:bg-muted/20 dark:even:bg-muted/30"
                 >
-                  {problem.difficulty}
-                </td>
-              </tr>
-            ))}
+                  <td className="px-4 py-3 align-top">
+                    <Link
+                      href={`/problems/${problem.slug}`}
+                      title={isCompleted ? "Completed" : undefined}
+                      className="flex items-center gap-2 text-base hover:text-blue-700 dark:hover:text-blue-300"
+                    >
+                      <ProblemCompletionCheck completed={isCompleted} />
+
+                      <span className="wrap-break-word whitespace-normal">
+                        {problem.title}
+                      </span>
+                    </Link>
+                  </td>
+
+                  <td
+                    className={cn(
+                      "whitespace-nowrap px-4 py-3 text-sm font-semibold",
+                      getDifficulty(problem.difficulty),
+                    )}
+                  >
+                    {problem.difficulty}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

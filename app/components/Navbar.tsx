@@ -42,12 +42,17 @@ export default async function Navbar() {
           Problems
         </Link>
 
-        <Link
-          href="/about"
-          className="text-gray-600 transition-colors hover:text-gray-900 dark:text-[#c9c6c5] dark:hover:text-white"
-        >
+        <Link href="/about" className="text-gray-600 transition-colors hover:text-gray-900 dark:text-[#c9c6c5] dark:hover:text-white">
           About
         </Link>
+
+        <Link
+          href="/contact"
+          className="text-gray-600 transition-colors hover:text-gray-900 dark:text-[#c9c6c5] dark:hover:text-white"
+        >
+          Contact
+        </Link>
+
       </div>
 
       <div className="flex items-center space-x-4">

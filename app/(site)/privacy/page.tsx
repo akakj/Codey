@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import {
-  CONTACT_EMAIL,
   DataUseCard,
   LegalSection,
   OPERATOR_NAME,
@@ -50,13 +49,10 @@ export default function PrivacyPage() {
             </p>
 
             <p>
-              For privacy questions or requests, contact{" "}
-              <a
-                href={`mailto:${CONTACT_EMAIL}`}
-                className={externalLinkClassName}
-              >
-                {CONTACT_EMAIL}
-              </a>
+              For privacy questions or requests use the contact form on the{" "}
+              <Link href="/contact" className={externalLinkClassName}>
+                Contact page
+              </Link>
               .
             </p>
           </div>
@@ -488,12 +484,9 @@ export default function PrivacyPage() {
 
           <p>
             To exercise a right, contact{" "}
-            <a
-              href={`mailto:${CONTACT_EMAIL}`}
-              className={externalLinkClassName}
-            >
-              {CONTACT_EMAIL}
-            </a>
+            <Link href="/contact" className={externalLinkClassName}>
+              us
+            </Link>
             . We may ask for information reasonably needed to verify your
             identity. Data-protection rights are not absolute and may be
             limited by applicable law.
@@ -542,13 +535,10 @@ export default function PrivacyPage() {
             </p>
 
             <p>
-              <span className="font-semibold">Email:</span>{" "}
-              <a
-                href={`mailto:${CONTACT_EMAIL}`}
-                className={externalLinkClassName}
-              >
-                {CONTACT_EMAIL}
-              </a>
+              <span className="font-semibold">Contact:</span>{" "}
+              <Link href="/contact" className={externalLinkClassName}>
+                Contact page
+              </Link>
             </p>
           </div>
 

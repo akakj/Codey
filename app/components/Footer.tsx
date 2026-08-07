@@ -10,6 +10,10 @@ const navigationLinks = [
     label: "About",
     href: "/about",
   },
+  {
+    label: "Contact",
+    href: "/contact",
+  },
 ];
 
 const legalLinks = [

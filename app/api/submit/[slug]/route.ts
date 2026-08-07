@@ -13,6 +13,9 @@ import {
 
 export const runtime = "nodejs";
 
+const MAX_CASES_PER_BATCH = 16;
+const EXPECTED_OUTPUT_BUDGET = 20_000;
+
 type CaseRun = {
   caseNum: number;
   ok: boolean;
@@ -48,6 +51,26 @@ type SubmitRequest = {
   sourceCode: string;
   language: Lang;
   activeTimeSeconds: number;
+};
+
+type FailedCase = {
+  caseNum: number;
+  input: JsonValue;
+  output?: string;
+  expectedOutput?: string;
+  error?: string;
+  logs?: string;
+};
+
+type SubmissionMetrics = {
+  runtime: number;
+  memory: number | null;
+};
+
+type JudgeState = {
+  passedCases: number;
+  failedCase?: FailedCase;
+  judgeError?: string;
 };
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -173,9 +196,7 @@ function parseStdoutByCase(stdout: string): CaseRun[] {
 
       runs.push({
         caseNum:
-          typeof parsed.case === "number"
-            ? parsed.case
-            : runs.length + 1,
+          typeof parsed.case === "number" ? parsed.case : runs.length + 1,
         ok: parsed.ok === true,
         output: parsed.output,
         outputText: parsed.outputText,
@@ -193,14 +214,10 @@ function parseStdoutByCase(stdout: string): CaseRun[] {
   if (pendingLogs.length && runs.length) {
     const last = runs[runs.length - 1];
 
-    last.logs = (
-      `${last.logs ?? ""}\n${pendingLogs.join("\n")}`
-    ).trim();
+    last.logs = `${last.logs ?? ""}\n${pendingLogs.join("\n")}`.trim();
   }
 
-  return runs.sort(
-    (first, second) => first.caseNum - second.caseNum,
-  );
+  return runs.sort((first, second) => first.caseNum - second.caseNum);
 }
 
 function outputForComparison(run: CaseRun): string {
@@ -245,7 +262,7 @@ function parseComparableOutput(value: string): ComparableOutput {
       };
     }
   } catch {
-    // Fall through and compare the value as plain text.
+    // Compare non-JSON output as plain text.
   }
 
   return {
@@ -271,10 +288,7 @@ function stringifyExpected(value: JsonValue): string {
   }
 }
 
-function outputsEqual(
-  actualOutput: string,
-  expectedOutput: string,
-): boolean {
+function outputsEqual(actualOutput: string, expectedOutput: string): boolean {
   const actual = parseComparableOutput(actualOutput);
   const expected = parseComparableOutput(expectedOutput);
 
@@ -300,16 +314,13 @@ function attachExpectedOutputs(
       };
     }
 
-    const expectedOutput = stringifyExpected(
-      testCase.expectedOutput,
-    );
+    const expectedOutput = stringifyExpected(testCase.expectedOutput);
     const actualOutput = outputForComparison(run);
 
     return {
       ...run,
       expectedOutput,
-      passed:
-        run.ok && outputsEqual(actualOutput, expectedOutput),
+      passed: run.ok && outputsEqual(actualOutput, expectedOutput),
     };
   });
 }
@@ -319,9 +330,7 @@ function toNullableInt(value: unknown): number | null {
     return null;
   }
 
-  const numeric = Number(
-    String(value).replace(/[^\d.-]/g, ""),
-  );
+  const numeric = Number(String(value).replace(/[^\d.-]/g, ""));
 
   if (!Number.isFinite(numeric)) {
     return null;
@@ -330,27 +339,80 @@ function toNullableInt(value: unknown): number | null {
   return Math.round(numeric);
 }
 
+function isOutputLimitError(value: string): boolean {
+  return /(?:output.{0,30}(?:limit|length|size|large|exceed|max)|(?:limit|max).{0,30}output)/i.test(
+    value,
+  );
+}
+
+function estimateOutputSize(testCase: TestCase): number {
+  return stringifyExpected(testCase.expectedOutput).length + 250;
+}
+
+function createSubmissionBatches(testCases: TestCase[]): TestCase[][] {
+  const batches: TestCase[][] = [];
+  let currentBatch: TestCase[] = [];
+  let currentEstimatedSize = 0;
+
+  for (const testCase of testCases) {
+    const estimatedSize = estimateOutputSize(testCase);
+    const exceedsCaseLimit = currentBatch.length >= MAX_CASES_PER_BATCH;
+    const exceedsOutputBudget =
+      currentBatch.length > 0 &&
+      currentEstimatedSize + estimatedSize > EXPECTED_OUTPUT_BUDGET;
+
+    if (exceedsCaseLimit || exceedsOutputBudget) {
+      batches.push(currentBatch);
+      currentBatch = [];
+      currentEstimatedSize = 0;
+    }
+
+    currentBatch.push(testCase);
+    currentEstimatedSize += estimatedSize;
+  }
+
+  if (currentBatch.length) {
+    batches.push(currentBatch);
+  }
+
+  return batches;
+}
+
+function updateMetrics(
+  metrics: SubmissionMetrics,
+  result: JDoodleResponse,
+): void {
+  const runtime = toNullableInt(result.cpuTime);
+  const memory = toNullableInt(result.memory);
+
+  if (runtime !== null) {
+    metrics.runtime += runtime;
+  }
+
+  if (memory !== null) {
+    metrics.memory =
+      metrics.memory === null ? memory : Math.max(metrics.memory, memory);
+  }
+}
+
 async function executeOnJDoodle(args: {
   script: string;
   language: Lang;
 }): Promise<JDoodleResponse> {
-  const response = await fetch(
-    "https://api.jdoodle.com/v1/execute",
-    {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        clientId: process.env.JDOODLE_CLIENT_ID,
-        clientSecret: process.env.JDOODLE_CLIENT_SECRET,
-        script: args.script,
-        stdin: "",
-        language: toJDoodleLanguage(args.language),
-        versionIndex: "0",
-      }),
+  const response = await fetch("https://api.jdoodle.com/v1/execute", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
     },
-  );
+    body: JSON.stringify({
+      clientId: process.env.JDOODLE_CLIENT_ID,
+      clientSecret: process.env.JDOODLE_CLIENT_SECRET,
+      script: args.script,
+      stdin: "",
+      language: toJDoodleLanguage(args.language),
+      versionIndex: "0",
+    }),
+  });
 
   const text = await response.text();
 
@@ -368,12 +430,176 @@ async function executeOnJDoodle(args: {
 
   if (!response.ok) {
     throw new Error(
-      data.error ??
-        `JDoodle request failed with ${response.status}`,
+      data.error ?? `JDoodle request failed with ${response.status}`,
     );
   }
 
   return data;
+}
+
+async function judgeBatch(args: {
+  sourceCode: string;
+  language: Lang;
+  testCases: TestCase[];
+  globalStartIndex: number;
+  entryPoint: Parameters<typeof buildJDoodleScript>[0]["entryPoint"];
+  starterForLang: string | undefined;
+  metrics: SubmissionMetrics;
+}): Promise<JudgeState> {
+  const {
+    sourceCode,
+    language,
+    testCases,
+    globalStartIndex,
+    entryPoint,
+    starterForLang,
+    metrics,
+  } = args;
+
+  if (!testCases.length) {
+    return { passedCases: 0 };
+  }
+
+  const script = buildJDoodleScript({
+    language,
+    userCode: sourceCode,
+    cases: testCases,
+    entryPoint,
+    starterForLang,
+  });
+
+  const jdoodleResult = await executeOnJDoodle({
+    script,
+    language,
+  });
+
+  updateMetrics(metrics, jdoodleResult);
+
+  const stdout = jdoodleResult.output ?? "";
+  const stderr =
+    jdoodleResult.error?.trim()
+      ? jdoodleResult.error
+      : typeof jdoodleResult.compilationStatus === "string" &&
+          jdoodleResult.compilationStatus.trim()
+        ? jdoodleResult.compilationStatus
+        : "";
+
+  const outputWasLimited = stderr ? isOutputLimitError(stderr) : false;
+  let runs = parseStdoutByCase(stdout);
+
+  const runsAreContiguous = runs.every(
+    (run, index) => run.caseNum === index + 1,
+  );
+
+  if (!runsAreContiguous) {
+    runs = [];
+  }
+
+  if (stderr && !outputWasLimited) {
+    const firstTestCase = testCases[0];
+
+    return {
+      passedCases: 0,
+      failedCase: {
+        caseNum: globalStartIndex + 1,
+        input: firstTestCase.input,
+        output: "",
+        expectedOutput: stringifyExpected(firstTestCase.expectedOutput),
+        error: stderr,
+        logs: stdout.trim(),
+      },
+    };
+  }
+
+  if (runs.length) {
+    const completeRuns = runs.slice(0, testCases.length);
+    const finalRuns = attachExpectedOutputs(
+      completeRuns,
+      testCases.slice(0, completeRuns.length),
+    );
+
+    const firstFailedLocalIndex = finalRuns.findIndex(
+      (run) => !run.ok || run.passed === false,
+    );
+
+    if (firstFailedLocalIndex !== -1) {
+      const failedRun = finalRuns[firstFailedLocalIndex];
+      const failedTestCase = testCases[firstFailedLocalIndex];
+
+      return {
+        passedCases: firstFailedLocalIndex,
+        failedCase: {
+          caseNum: globalStartIndex + firstFailedLocalIndex + 1,
+          input: failedTestCase.input,
+          output: outputForComparison(failedRun),
+          expectedOutput: failedRun.expectedOutput,
+          error: failedRun.error,
+          logs: failedRun.logs,
+        },
+      };
+    }
+
+    if (completeRuns.length === testCases.length) {
+      return {
+        passedCases: testCases.length,
+      };
+    }
+
+    const remainingCases = testCases.slice(completeRuns.length);
+    const remainingResult = await judgeBatch({
+      ...args,
+      testCases: remainingCases,
+      globalStartIndex: globalStartIndex + completeRuns.length,
+    });
+
+    return {
+      passedCases: completeRuns.length + remainingResult.passedCases,
+      failedCase: remainingResult.failedCase,
+      judgeError: remainingResult.judgeError,
+    };
+  }
+
+  if (testCases.length > 1) {
+    const midpoint = Math.ceil(testCases.length / 2);
+    const firstHalf = testCases.slice(0, midpoint);
+    const secondHalf = testCases.slice(midpoint);
+
+    const firstResult = await judgeBatch({
+      ...args,
+      testCases: firstHalf,
+    });
+
+    if (firstResult.failedCase || firstResult.judgeError) {
+      return firstResult;
+    }
+
+    const secondResult = await judgeBatch({
+      ...args,
+      testCases: secondHalf,
+      globalStartIndex: globalStartIndex + midpoint,
+    });
+
+    return {
+      passedCases: firstResult.passedCases + secondResult.passedCases,
+      failedCase: secondResult.failedCase,
+      judgeError: secondResult.judgeError,
+    };
+  }
+
+  if (outputWasLimited) {
+    return {
+      passedCases: 0,
+      judgeError:
+        `Test case ${globalStartIndex + 1} produced more output than JDoodle can return. ` +
+        "The submission was not marked wrong because the complete output could not be compared.",
+    };
+  }
+
+  return {
+    passedCases: 0,
+    judgeError:
+      `JDoodle did not return a parseable result for test case ${globalStartIndex + 1}.`,
+  };
 }
 
 export async function POST(
@@ -381,10 +607,7 @@ export async function POST(
   { params }: { params: Promise<{ slug: string }> },
 ) {
   const { slug } = await params;
-
-  const body: unknown = await request
-    .json()
-    .catch(() => null);
+  const body: unknown = await request.json().catch(() => null);
 
   if (!isSubmitRequest(body)) {
     if (
@@ -399,20 +622,18 @@ export async function POST(
     }
 
     return NextResponse.json(
-      { error: "Invalid language" },
+      { error: "Invalid submission request" },
       { status: 400 },
     );
   }
 
   const { sourceCode, language, activeTimeSeconds } = body;
-
   const normalizedActiveTimeSeconds = Math.min(
-  Math.floor(activeTimeSeconds),
-  12 * 60 * 60,
-);
+    Math.floor(activeTimeSeconds),
+    12 * 60 * 60,
+  );
 
   const supabase = await createClient();
-
   const {
     data: { user },
     error: userError,
@@ -446,135 +667,65 @@ export async function POST(
     );
   }
 
-  const script = buildJDoodleScript({
-    language,
-    userCode: sourceCode,
-    cases: testCases,
-    entryPoint: problem.entryPoint?.[language],
-    starterForLang: problem.starterCode?.[language],
-  });
+  const entryPoint = problem.entryPoint?.[language];
 
-  let jdoodleResult: JDoodleResponse;
+  if (!entryPoint) {
+    return NextResponse.json(
+      { error: `No entry point configured for ${language}` },
+      { status: 500 },
+    );
+  }
+
+  const batches = createSubmissionBatches(testCases);
+  const metrics: SubmissionMetrics = {
+    runtime: 0,
+    memory: null,
+  };
+
+  let passedCases = 0;
+  let failedCase: FailedCase | undefined;
 
   try {
-    jdoodleResult = await executeOnJDoodle({
-      script,
-      language,
-    });
-  } catch (error: unknown) {
-    const firstTestCase = testCases[0];
+    let globalStartIndex = 0;
 
+    for (const batch of batches) {
+      const result = await judgeBatch({
+        sourceCode,
+        language,
+        testCases: batch,
+        globalStartIndex,
+        entryPoint,
+        starterForLang: problem.starterCode?.[language],
+        metrics,
+      });
+
+      passedCases += result.passedCases;
+
+      if (result.judgeError) {
+        return NextResponse.json(
+          { error: result.judgeError },
+          { status: 502 },
+        );
+      }
+
+      if (result.failedCase) {
+        failedCase = result.failedCase;
+        break;
+      }
+
+      globalStartIndex += batch.length;
+    }
+  } catch (error: unknown) {
     return NextResponse.json(
-      {
-        accepted: false,
-        status: "failed",
-        passedCases: 0,
-        totalCases: testCases.length,
-        isError: true,
-        memory: null,
-        cpuTime: null,
-        caseRuns: [],
-        failedCase: {
-          caseNum: 1,
-          input: firstTestCase?.input ?? null,
-          output: "",
-          expectedOutput: stringifyExpected(
-            firstTestCase?.expectedOutput ?? null,
-          ),
-          error: getErrorMessage(error),
-          logs: "",
-        },
-      },
-      { status: 200 },
+      { error: getErrorMessage(error) },
+      { status: 502 },
     );
   }
-
-  const stdout = jdoodleResult.output ?? "";
-
-  const stderr =
-    jdoodleResult.error?.trim()
-      ? jdoodleResult.error
-      : typeof jdoodleResult.compilationStatus === "string" &&
-          jdoodleResult.compilationStatus.trim()
-        ? jdoodleResult.compilationStatus
-        : "";
-
-  let runs = parseStdoutByCase(stdout);
-
-  if (!runs.length) {
-    runs = [
-      {
-        caseNum: 1,
-        ok: !stderr.trim(),
-        output: stdout.trim(),
-        error: stderr.trim() ? stderr : undefined,
-        logs: "",
-      },
-    ];
-  }
-
-  if (stderr.trim()) {
-    runs = runs.map((run) => ({
-      ...run,
-      ok: false,
-      error: run.error ?? "Runtime/Compile error",
-      logs: (
-        `${run.logs ?? ""}\n--- stderr ---\n${stderr}`
-      ).trim(),
-    }));
-  }
-
-  const finalRuns = attachExpectedOutputs(
-    runs,
-    testCases,
-  );
 
   const totalCases = testCases.length;
-  const passedCases = finalRuns.filter(
-    (run) => run.ok && run.passed === true,
-  ).length;
-
-  console.log("JDoodle submission response", {
-  statusCode: jdoodleResult.statusCode,
-  compilationStatus: jdoodleResult.compilationStatus,
-  error: jdoodleResult.error,
-  cpuTime: jdoodleResult.cpuTime,
-  memory: jdoodleResult.memory,
-  outputLength: jdoodleResult.output?.length ?? 0,
-  parsedCases: finalRuns.length,
-  expectedCases: totalCases,
-});
-
-
-  const accepted =
-    finalRuns.length === totalCases &&
-    totalCases > 0 &&
-    finalRuns.every(
-      (run) => run.ok && run.passed === true,
-    );
-
-  const firstFailedRun = finalRuns.find(
-    (run) => !run.ok || run.passed === false,
-  );
-
-  const firstFailedIndex = firstFailedRun
-    ? Math.max(firstFailedRun.caseNum - 1, 0)
-    : -1;
-
-  const failedCase = firstFailedRun
-    ? {
-        caseNum: firstFailedRun.caseNum,
-        input:
-          testCases[firstFailedIndex]?.input ?? null,
-        output: outputForComparison(firstFailedRun),
-        expectedOutput: firstFailedRun.expectedOutput,
-        error: firstFailedRun.error,
-        logs: firstFailedRun.logs,
-      }
-    : undefined;
-
-  const memory = toNullableInt(jdoodleResult.memory);
-  const runtime = toNullableInt(jdoodleResult.cpuTime);
+  const accepted = !failedCase && passedCases === totalCases;
+  const memory = metrics.memory;
+  const runtime = metrics.runtime > 0 ? metrics.runtime : null;
   const now = new Date().toISOString();
 
   const {
@@ -592,9 +743,7 @@ export async function POST(
       runtime,
       passedCases,
       totalCases,
-      failedCase: accepted
-        ? null
-        : (failedCase ?? null),
+      failedCase: accepted ? null : (failedCase ?? null),
       activeTimeSeconds: normalizedActiveTimeSeconds,
       createdAt: now,
     })
@@ -605,8 +754,7 @@ export async function POST(
     return NextResponse.json(
       {
         error:
-          insertError?.message ??
-          "Could not save the submission",
+          insertError?.message ?? "Could not save the submission",
       },
       { status: 500 },
     );
@@ -629,9 +777,7 @@ export async function POST(
     );
   }
 
-  const completed =
-    accepted || Boolean(existingStatus?.completed);
-
+  const completed = accepted || Boolean(existingStatus?.completed);
   const { error: statusError } = await supabase
     .from("user_problem_status")
     .upsert(
@@ -661,10 +807,8 @@ export async function POST(
     totalCases,
     failedCase,
     isError: !accepted,
-    memory:
-      memory === null ? undefined : String(memory),
-    cpuTime:
-      runtime === null ? undefined : String(runtime),
-    caseRuns: finalRuns,
+    memory: memory === null ? undefined : String(memory),
+    cpuTime: runtime === null ? undefined : String(runtime),
+    caseRuns: [],
   });
 }
