@@ -22,7 +22,7 @@ export default function TermsPage() {
       <article className="space-y-10">
         <header className="space-y-4 border-b pb-8">
           <p className="text-sm font-medium text-muted-foreground">
-            Last updated: 30 July 2026
+            Last updated: 8 August 2026
           </p>
 
           <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
@@ -438,11 +438,14 @@ export default function TermsPage() {
           </p>
 
           <p>
-            You may also contact us using the <Link href="/contact" className={linkClassName}> Contact form
-            </Link>
-            if you cannot access the account-deletion feature or need help
-            with a deletion request.
-          </p>
+  If you cannot access the account-deletion feature or need
+  assistance with deleting your account, you can contact us through
+  the{" "}
+  <Link href="/contact" className={linkClassName}>
+    Contact page
+  </Link>
+  .
+</p>
 
           <p>
             We may suspend or terminate an account where reasonably
@@ -654,20 +657,19 @@ export default function TermsPage() {
         </LegalSection>
 
         <LegalSection title="18. Contact">
-          <div className="rounded-lg border bg-muted/30 p-5 text-foreground">
-            <p>
-              <span className="font-semibold">Operator:</span>{" "}
-              {OPERATOR_NAME}
-            </p>
+  <p>
+    If you have questions about these Terms, need help with your
+    account or want to report an issue with Codey, please use the{" "}
+    <Link href="/contact" className={linkClassName}>
+      Contact page
+    </Link>
+    .
+  </p>
 
-            <p>
-              <span className="font-semibold">Email:</span>{" "}
-              <Link href="/contact" className={linkClassName}>
-                Contact page
-              </Link>
-            </p>
-          </div>
-        </LegalSection>
+  <p>
+    Codey is operated by {OPERATOR_NAME}.
+  </p>
+</LegalSection>
       </article>
     </main>
   );

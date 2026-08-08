@@ -12,8 +12,7 @@ export const metadata: Metadata = {
     "How Codey collects, uses, stores and shares personal information.",
 };
 
-const listClassName =
-  "list-disc space-y-2 pl-6 marker:text-muted-foreground";
+const listClassName = "list-disc space-y-2 pl-6 marker:text-muted-foreground";
 
 const externalLinkClassName =
   "font-medium text-foreground underline underline-offset-4 hover:text-foreground/80";
@@ -24,7 +23,7 @@ export default function PrivacyPage() {
       <article className="space-y-10">
         <header className="space-y-4 border-b pb-8">
           <p className="text-sm font-medium text-muted-foreground">
-            Last updated: 30 July 2026
+            Last updated: 8 August 2026
           </p>
 
           <h1 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
@@ -33,23 +32,23 @@ export default function PrivacyPage() {
 
           <div className="space-y-4 leading-7 text-muted-foreground">
             <p>
-              This Privacy Policy explains how Codey collects, uses, stores
-              and shares personal information when you use its programming
-              problems, code editor, code-execution features, account
-              features, submission history, progress tracking and personal
-              analytics.
+              This Privacy Policy explains how Codey collects, uses, stores and
+              shares personal information when you use its programming problems,
+              code editor, code-execution features, account features, submission
+              history, progress tracking and personal analytics.
             </p>
 
             <p>
-              Codey is a personal, non-commercial educational project
-              operated by {OPERATOR_NAME}. In this policy, “Codey”, “we”,
-              “us” and “our” refer to {OPERATOR_NAME}. For the purposes of UK
-              data protection law, {OPERATOR_NAME} is the controller of the
-              personal information described in this policy.
+              Codey is a personal, non-commercial educational project operated
+              by {OPERATOR_NAME}. In this policy, “Codey”, “we”, “us” and “our”
+              refer to {OPERATOR_NAME}. For the purposes of UK data protection
+              law, {OPERATOR_NAME} is the controller of the personal information
+              described in this policy.
             </p>
 
             <p>
-              For privacy questions or requests use the contact form on the{" "}
+              If you have questions about this Privacy Policy or want to make a
+              privacy-related request, you can contact us through the{" "}
               <Link href="/contact" className={externalLinkClassName}>
                 Contact page
               </Link>
@@ -74,9 +73,9 @@ export default function PrivacyPage() {
               <span className="font-medium text-foreground">
                 Submission information:
               </span>{" "}
-              source code, selected programming language, test inputs,
-              execution output, pass or fail status, failed-case details,
-              runtime, memory use and submission timestamps.
+              source code, selected programming language, test inputs, execution
+              output, pass or fail status, failed-case details, runtime, memory
+              use and submission timestamps.
             </li>
 
             <li>
@@ -92,8 +91,8 @@ export default function PrivacyPage() {
                 Activity analytics:
               </span>{" "}
               submission frequency, acceptance rates, active days, language
-              usage, active time spent on problems and other statistics
-              derived from your activity.
+              usage, active time spent on problems and other statistics derived
+              from your activity.
             </li>
 
             <li>
@@ -110,25 +109,23 @@ export default function PrivacyPage() {
               </span>{" "}
               IP address, browser or device information, request timestamps,
               security events and diagnostic logs that may be processed by
-              Codey&apos;s hosting, authentication and infrastructure
-              providers.
+              Codey&apos;s hosting, authentication and infrastructure providers.
             </li>
 
             <li>
               <span className="font-medium text-foreground">
                 Communications:
               </span>{" "}
-              your email address and any information you include when
-              contacting the operator about support, privacy or account
-              deletion.
+              your email address and any information you include when contacting
+              the operator about support, privacy or account deletion.
             </li>
           </ul>
 
           <p>
-            Codey does not ask you to provide special-category information
-            such as health, biometric, religious or political information.
-            Do not place personal, confidential or sensitive information in
-            source code or test inputs.
+            Codey does not ask you to provide special-category information such
+            as health, biometric, religious or political information. Do not
+            place personal, confidential or sensitive information in source code
+            or test inputs.
           </p>
         </LegalSection>
 
@@ -136,9 +133,7 @@ export default function PrivacyPage() {
           <p>We collect information:</p>
 
           <ul className={listClassName}>
-            <li>
-              directly from you when you create an account or contact us;
-            </li>
+            <li>directly from you when you create an account or contact us;</li>
 
             <li>
               when you run or submit code, solve problems or use account
@@ -146,8 +141,8 @@ export default function PrivacyPage() {
             </li>
 
             <li>
-              automatically when Codey records submissions, problem
-              progress, activity timestamps and active time;
+              automatically when Codey records submissions, problem progress,
+              activity timestamps and active time;
             </li>
 
             <li>
@@ -156,8 +151,7 @@ export default function PrivacyPage() {
             </li>
 
             <li>
-              from service providers that operate parts of Codey on our
-              behalf.
+              from service providers that operate parts of Codey on our behalf.
             </li>
           </ul>
         </LegalSection>
@@ -216,40 +210,36 @@ export default function PrivacyPage() {
 
         <LegalSection title="4. Information needed to provide Codey">
           <p>
-            An email address is required to create an account and use
-            features that save submissions, problem progress and personal
-            analytics. If you do not provide an email address, you cannot
-            create a Codey account.
+            An email address is required to create an account and use features
+            that save submissions, problem progress and personal analytics. If
+            you do not provide an email address, you cannot create a Codey
+            account.
           </p>
 
           <p>
-            Source code and relevant execution inputs are required when you
-            ask Codey to run or assess a solution. If you do not provide
-            them, Codey cannot complete that execution or submission request.
+            Source code and relevant execution inputs are required when you ask
+            Codey to run or assess a solution. If you do not provide them, Codey
+            cannot complete that execution or submission request.
           </p>
         </LegalSection>
 
         <LegalSection title="5. Code execution and sensitive information">
           <p>
-            When you use Codey&apos;s run or submit features, your source
-            code, selected programming language, execution instructions and
-            relevant test inputs may be sent to JDoodle for remote execution.
+            When you use Codey&apos;s run or submit features, your source code,
+            selected programming language, execution instructions and relevant
+            test inputs may be sent to JDoodle for remote execution.
           </p>
 
           <p>Do not include:</p>
 
           <ul className={listClassName}>
-            <li>
-              passwords, authentication tokens, API keys or private keys;
-            </li>
+            <li>passwords, authentication tokens, API keys or private keys;</li>
 
             <li>personal or financial information;</li>
 
             <li>confidential business information;</li>
 
-            <li>
-              proprietary code that you are not permitted to disclose; or
-            </li>
+            <li>proprietary code that you are not permitted to disclose; or</li>
 
             <li>any other secret or sensitive material.</li>
           </ul>
@@ -267,26 +257,25 @@ export default function PrivacyPage() {
           </p>
 
           <p>
-            Codey also uses browser storage on your device to remember
-            settings such as your theme, selected programming language and
-            locally saved editor code. You can clear this information through
-            your browser, although doing so may sign you out or remove locally
-            saved preferences and code.
+            Codey also uses browser storage on your device to remember settings
+            such as your theme, selected programming language and locally saved
+            editor code. You can clear this information through your browser,
+            although doing so may sign you out or remove locally saved
+            preferences and code.
           </p>
 
           <p>
-            Codey does not currently use cookies or browser storage for
-            targeted advertising or cross-site tracking. If non-essential
-            analytics or advertising technologies are introduced in the
-            future, this policy will be updated and consent will be requested
-            where required.
+            Codey does not currently use cookies or browser storage for targeted
+            advertising or cross-site tracking. If non-essential analytics or
+            advertising technologies are introduced in the future, this policy
+            will be updated and consent will be requested where required.
           </p>
         </LegalSection>
 
         <LegalSection title="7. Who receives your information">
           <p>
-            We may share or make personal information available to the
-            following service providers:
+            We may share or make personal information available to the following
+            service providers:
           </p>
 
           <ul className={listClassName}>
@@ -300,8 +289,8 @@ export default function PrivacyPage() {
                 Supabase
               </a>{" "}
               provides authentication, database storage and related
-              infrastructure. It may process account, submission, progress
-              and analytics information.
+              infrastructure. It may process account, submission, progress and
+              analytics information.
             </li>
 
             <li>
@@ -314,8 +303,8 @@ export default function PrivacyPage() {
                 Vercel
               </a>{" "}
               hosts and delivers the website. It may process IP addresses,
-              request information, browser or device information and
-              technical logs.
+              request information, browser or device information and technical
+              logs.
             </li>
 
             <li>
@@ -338,14 +327,14 @@ export default function PrivacyPage() {
           <ul className={listClassName}>
             <li>
               to professional advisers or technical support providers where
-              reasonably necessary and subject to appropriate
-              confidentiality obligations; or
+              reasonably necessary and subject to appropriate confidentiality
+              obligations; or
             </li>
 
             <li>
-              to courts, regulators, law-enforcement bodies or other
-              authorities where disclosure is required by law or necessary
-              to protect legal rights.
+              to courts, regulators, law-enforcement bodies or other authorities
+              where disclosure is required by law or necessary to protect legal
+              rights.
             </li>
           </ul>
 
@@ -363,15 +352,15 @@ export default function PrivacyPage() {
           </p>
 
           <p>
-            Where UK data protection law restricts an international
-            transfer, we rely on an applicable transfer mechanism made
-            available by the relevant provider, such as UK adequacy
-            regulations or contractual safeguards.
+            Where UK data protection law restricts an international transfer, we
+            rely on an applicable transfer mechanism made available by the
+            relevant provider, such as UK adequacy regulations or contractual
+            safeguards.
           </p>
 
           <p>
-            You may contact us for further information about safeguards
-            relevant to your information.
+            You may contact us for further information about safeguards relevant
+            to your information.
           </p>
         </LegalSection>
 
@@ -395,14 +384,13 @@ export default function PrivacyPage() {
             </li>
 
             <li>
-              browser-stored preferences and locally saved code remain on
-              your device until you clear them through your browser;
+              browser-stored preferences and locally saved code remain on your
+              device until you clear them through your browser;
             </li>
 
             <li>
-              support and privacy communications are kept only while needed
-              to respond to the request and maintain an appropriate record;
-              and
+              support and privacy communications are kept only while needed to
+              respond to the request and maintain an appropriate record; and
             </li>
 
             <li>
@@ -420,10 +408,10 @@ export default function PrivacyPage() {
 
         <LegalSection title="10. Security">
           <p>
-            We use reasonable technical and organisational measures intended
-            to protect personal information, including authentication
-            controls, restricted database access and encrypted transmission
-            provided by the relevant infrastructure services.
+            We use reasonable technical and organisational measures intended to
+            protect personal information, including authentication controls,
+            restricted database access and encrypted transmission provided by
+            the relevant infrastructure services.
           </p>
 
           <p>
@@ -442,30 +430,24 @@ export default function PrivacyPage() {
           <ul className={listClassName}>
             <li>request access to your personal information;</li>
 
-            <li>
-              request correction of inaccurate or incomplete information;
-            </li>
+            <li>request correction of inaccurate or incomplete information;</li>
 
             <li>
               request deletion of your information in certain circumstances;
             </li>
 
-            <li>
-              request restriction of processing in certain circumstances;
-            </li>
+            <li>request restriction of processing in certain circumstances;</li>
 
             <li>
               receive certain information that you provided in a portable
               format;
             </li>
 
-            <li>
-              object to processing based on legitimate interests; and
-            </li>
+            <li>object to processing based on legitimate interests; and</li>
 
             <li>
-              complain to the Information Commissioner&apos;s Office about
-              how your personal information is used.
+              complain to the Information Commissioner&apos;s Office about how
+              your personal information is used.
             </li>
           </ul>
 
@@ -476,40 +458,39 @@ export default function PrivacyPage() {
 
             <p className="mt-2 text-muted-foreground">
               You may object to processing based on legitimate interests. We
-              will stop that processing unless there are compelling
-              legitimate grounds to continue or it is needed to establish,
-              exercise or defend legal claims.
+              will stop that processing unless there are compelling legitimate
+              grounds to continue or it is needed to establish, exercise or
+              defend legal claims.
             </p>
           </div>
 
           <p>
-            To exercise a right, contact{" "}
+            To exercise any of these rights, submit a request through the{" "}
             <Link href="/contact" className={externalLinkClassName}>
-              us
+              Contact page
             </Link>
             . We may ask for information reasonably needed to verify your
-            identity. Data-protection rights are not absolute and may be
-            limited by applicable law.
+            identity. Data-protection rights are not absolute and may be limited
+            by applicable law.
           </p>
         </LegalSection>
 
         <LegalSection title="12. Automated processing">
           <p>
-            Codey automatically compares program output with configured
-            expected results and calculates personal learning statistics.
-            These processes provide programming-practice feedback only and
-            do not make decisions that produce legal or similarly significant
-            effects about you.
+            Codey automatically compares program output with configured expected
+            results and calculates personal learning statistics. These processes
+            provide programming-practice feedback only and do not make decisions
+            that produce legal or similarly significant effects about you.
           </p>
         </LegalSection>
 
         <LegalSection title="13. Children">
           <p>
-            Codey is not intended for children under 13, and we do not
-            knowingly collect personal information from children under 13.
-            If you believe that a child under 13 has provided personal
-            information, contact us so that we can investigate and, where
-            appropriate, delete the information.
+            Codey is not intended for children under 13, and we do not knowingly
+            collect personal information from children under 13. If you believe
+            that a child under 13 has provided personal information, contact us
+            so that we can investigate and, where appropriate, delete the
+            information.
           </p>
 
           <p>
@@ -521,32 +502,29 @@ export default function PrivacyPage() {
         <LegalSection title="14. Changes to this policy">
           <p>
             We may update this Privacy Policy when Codey&apos;s features,
-            service providers or legal obligations change. The date at the
-            top shows when it was last updated. Material changes may also be
+            service providers or legal obligations change. The date at the top
+            shows when it was last updated. Material changes may also be
             communicated through the service where reasonably practical.
           </p>
         </LegalSection>
 
         <LegalSection title="15. Contact and complaints">
-          <div className="rounded-lg border bg-muted/30 p-5 text-foreground">
-            <p>
-              <span className="font-semibold">Controller:</span>{" "}
-              {OPERATOR_NAME}
-            </p>
-
-            <p>
-              <span className="font-semibold">Contact:</span>{" "}
-              <Link href="/contact" className={externalLinkClassName}>
-                Contact page
-              </Link>
-            </p>
-          </div>
+          <p>
+            If you have a question about this Privacy Policy, how your
+            information is handled, or would like to make a privacy-related
+            request, please use the{" "}
+            <Link href="/contact" className={externalLinkClassName}>
+              Contact page
+            </Link>
+            .
+          </p>
 
           <p>
-            Please contact us first if you have a privacy question or
-            complaint. You also have the right to complain to the UK
-            Information Commissioner&apos;s Office. Information about making
-            a complaint is available on the{" "}
+            If you have a concern about how your personal information has been
+            handled, please contact us first so that we have an opportunity to
+            address it. You also have the right to complain to the UK
+            Information Commissioner&apos;s Office. Information about making a
+            complaint is available on the{" "}
             <a
               href="https://ico.org.uk/make-a-complaint/data-protection-complaints/"
               target="_blank"
