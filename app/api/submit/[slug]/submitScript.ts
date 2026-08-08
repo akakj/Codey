@@ -3,7 +3,7 @@ import type { EntryPoint, JsonValue, TestCase } from "@/lib/problem";
 
 export const SUBMIT_RESULT_PREFIX = "@@SUBMIT_RESULT@@";
 
-const PREVIEW_LIMIT = 8_000;
+const PREVIEW_LIMIT = 2_000;
 
 type ParamSpec = { name: string; type: string };
 type JsonObject = Record<string, JsonValue>;
