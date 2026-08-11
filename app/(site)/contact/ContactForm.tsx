@@ -2,12 +2,9 @@
 
 import type { SubmitEvent } from "react";
 import { useRef, useState } from "react";
-import {
-  AlertCircle,
-  CheckCircle2,
-  Loader2,
-  Send,
-} from "lucide-react";
+import HCaptcha from "@hcaptcha/react-hcaptcha";
+import { useTheme } from "next-themes";
+import { AlertCircle, CheckCircle2, Loader2, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -25,69 +22,73 @@ import {
   isContactSubject,
 } from "@/lib/contact";
 
-type SubmitStatus =
-  | "idle"
-  | "sending"
-  | "success"
-  | "error";
+type SubmitStatus = "idle" | "sending" | "success" | "error";
 
 type Web3FormsResponse = {
   success?: boolean;
   message?: string;
 };
 
-const DEFAULT_ERROR =
-  "Your message could not be sent. Please try again.";
+const DEFAULT_ERROR = "Your message could not be sent. Please try again.";
+
+const HCAPTCHA_SITE_KEY = "50b2fe65-b00b-4b9e-ad62-3ba471098be2";
 
 export default function ContactForm() {
   const [message, setMessage] = useState("");
-  const [status, setStatus] =
-    useState<SubmitStatus>("idle");
-  const [errorMessage, setErrorMessage] =
-    useState("");
-  const [formVersion, setFormVersion] =
-    useState(0);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [status, setStatus] = useState<SubmitStatus>("idle");
+  const [errorMessage, setErrorMessage] = useState("");
+  const [formVersion, setFormVersion] = useState(0);
 
   /*
    * Prevent multiple submissions from starting before
    * React has re-rendered the disabled submit button.
    */
   const submittingRef = useRef(false);
+  const captchaRef = useRef<HCaptcha>(null);
 
   const isSending = status === "sending";
 
+  const { resolvedTheme } = useTheme();
+
   function clearStatus() {
-    if (
-      status === "success" ||
-      status === "error"
-    ) {
+    if (status === "success" || status === "error") {
       setStatus("idle");
       setErrorMessage("");
     }
   }
 
-  async function handleSubmit(
-    event: SubmitEvent<HTMLFormElement>,
-  ) {
+  function handleCaptchaVerify(token: string) {
+    setCaptchaToken(token);
+
+    if (status === "error") {
+      setStatus("idle");
+      setErrorMessage("");
+    }
+  }
+
+  function handleCaptchaExpire() {
+    setCaptchaToken(null);
+  }
+
+  function handleCaptchaError() {
+    setCaptchaToken(null);
+    setStatus("error");
+    setErrorMessage("Captcha verification failed. Please try again.");
+  }
+
+  async function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
     event.preventDefault();
 
     if (submittingRef.current) {
       return;
     }
 
-    const accessKey =
-      process.env
-        .NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY;
+    const accessKey = process.env.NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY;
 
     if (!accessKey) {
-      console.error(
-        "NEXT_PUBLIC_WEB3FORMS_ACCESS_KEY is missing.",
-      );
-
       setStatus("error");
-      setErrorMessage(
-        "The contact service is temporarily unavailable.",
-      );
+      setErrorMessage("The contact service is temporarily unavailable.");
 
       return;
     }
@@ -95,64 +96,48 @@ export default function ContactForm() {
     const form = event.currentTarget;
     const formData = new FormData(form);
 
-    const name = String(
-      formData.get("name") ?? "",
-    ).trim();
+    const name = String(formData.get("name") ?? "").trim();
 
-    const email = String(
-      formData.get("email") ?? "",
-    ).trim();
+    const email = String(formData.get("email") ?? "").trim();
 
-    const subject = String(
-      formData.get("subject") ?? "",
-    ).trim();
+    const subject = String(formData.get("subject") ?? "").trim();
 
-    const submittedMessage = String(
-      formData.get("message") ?? "",
-    ).trim();
+    const submittedMessage = String(formData.get("message") ?? "").trim();
 
-    if (
-      name.length === 0 ||
-      name.length > CONTACT_LIMITS.name
-    ) {
+    if (name.length === 0 || name.length > CONTACT_LIMITS.name) {
       setStatus("error");
-      setErrorMessage(
-        "Please enter a valid name.",
-      );
+      setErrorMessage("Please enter a valid name.");
       return;
     }
 
     if (
       email.length === 0 ||
       email.length > CONTACT_LIMITS.email ||
-      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
-        email,
-      )
+      !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
     ) {
       setStatus("error");
-      setErrorMessage(
-        "Please enter a valid email address.",
-      );
+      setErrorMessage("Please enter a valid email address.");
       return;
     }
 
     if (!isContactSubject(subject)) {
       setStatus("error");
-      setErrorMessage(
-        "Please select a valid subject.",
-      );
+      setErrorMessage("Please select a valid subject.");
       return;
     }
 
     if (
       submittedMessage.length === 0 ||
-      submittedMessage.length >
-        CONTACT_LIMITS.message
+      submittedMessage.length > CONTACT_LIMITS.message
     ) {
       setStatus("error");
-      setErrorMessage(
-        "Please enter a valid message.",
-      );
+      setErrorMessage("Please enter a valid message.");
+      return;
+    }
+
+    if (!captchaToken) {
+      setStatus("error");
+      setErrorMessage("Please complete the captcha verification.");
       return;
     }
 
@@ -161,33 +146,30 @@ export default function ContactForm() {
     setErrorMessage("");
 
     try {
-      const response = await fetch(
-        "https://api.web3forms.com/submit",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type":
-              "application/json",
-            Accept: "application/json",
-          },
-          body: JSON.stringify({
-            access_key: accessKey,
-
-            from_name: "Codey Contact",
-            subject: `[Codey Contact] ${subject}`,
-
-            name,
-            email,
-            contact_subject: subject,
-            message: submittedMessage,
-          }),
+      const response = await fetch("https://api.web3forms.com/submit", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
         },
-      );
+        body: JSON.stringify({
+          access_key: accessKey,
 
-      const data: Web3FormsResponse | null =
-        await response
-          .json()
-          .catch(() => null);
+          from_name: "Codey Contact",
+          subject: `[Codey Contact] ${subject}`,
+
+          name,
+          email,
+          contact_subject: subject,
+          message: submittedMessage,
+
+          "h-captcha-response": captchaToken,
+        }),
+      });
+
+      const data: Web3FormsResponse | null = await response
+        .json()
+        .catch(() => null);
 
       if (response.status === 429) {
         throw new Error(
@@ -195,13 +177,8 @@ export default function ContactForm() {
         );
       }
 
-      if (
-        !response.ok ||
-        data?.success !== true
-      ) {
-        throw new Error(
-          data?.message ?? DEFAULT_ERROR,
-        );
+      if (!response.ok || data?.success !== true) {
+        throw new Error(data?.message ?? DEFAULT_ERROR);
       }
 
       setMessage("");
@@ -209,20 +186,21 @@ export default function ContactForm() {
 
       /*
        * Remount the form so uncontrolled inputs,
-       * including the Combobox, are reset.
+       * including the Combobox and captcha, are reset.
        */
-      setFormVersion(
-        (current) => current + 1,
-      );
+      setFormVersion((current) => current + 1);
     } catch (error: unknown) {
       setStatus("error");
 
-      setErrorMessage(
-        error instanceof Error
-          ? error.message
-          : DEFAULT_ERROR,
-      );
+      setErrorMessage(error instanceof Error ? error.message : DEFAULT_ERROR);
     } finally {
+      /*
+       * hCaptcha tokens are single-use. Reset the
+       * captcha after a submission attempt so a fresh
+       * token is generated before another request.
+       */
+      captchaRef.current?.resetCaptcha();
+      setCaptchaToken(null);
       submittingRef.current = false;
     }
   }
@@ -233,16 +211,12 @@ export default function ContactForm() {
       className="rounded-2xl border bg-background/70 p-6 shadow-sm backdrop-blur-sm sm:p-8"
     >
       <div>
-        <h2
-          id="contact-form-heading"
-          className="text-2xl font-semibold"
-        >
+        <h2 id="contact-form-heading" className="text-2xl font-semibold">
           Send a message
         </h2>
 
         <p className="mt-2 text-sm leading-6 text-muted-foreground">
-          Complete the form below. All fields
-          are required.
+          Complete the form below. All fields are required.
         </p>
       </div>
 
@@ -251,19 +225,13 @@ export default function ContactForm() {
           role="status"
           className="mt-6 flex gap-3 rounded-lg border border-green-500/30 bg-green-500/10 p-4 text-sm text-green-700 dark:text-green-400"
         >
-          <CheckCircle2
-            className="mt-0.5 size-5 shrink-0"
-            aria-hidden="true"
-          />
+          <CheckCircle2 className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
 
           <div>
-            <p className="font-medium">
-              Message sent
-            </p>
+            <p className="font-medium">Message sent</p>
 
             <p className="mt-1 leading-6">
-              Your message has been sent
-              successfully.
+              Your message has been sent successfully.
             </p>
           </div>
         </div>
@@ -274,19 +242,12 @@ export default function ContactForm() {
           role="alert"
           className="mt-6 flex gap-3 rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-sm text-red-700 dark:text-red-400"
         >
-          <AlertCircle
-            className="mt-0.5 size-5 shrink-0"
-            aria-hidden="true"
-          />
+          <AlertCircle className="mt-0.5 size-5 shrink-0" aria-hidden="true" />
 
           <div>
-            <p className="font-medium">
-              Message not sent
-            </p>
+            <p className="font-medium">Message not sent</p>
 
-            <p className="mt-1 leading-6">
-              {errorMessage}
-            </p>
+            <p className="mt-1 leading-6">{errorMessage}</p>
           </div>
         </div>
       )}
@@ -299,10 +260,7 @@ export default function ContactForm() {
       >
         <div className="grid gap-6 sm:grid-cols-2">
           <div className="space-y-2">
-            <label
-              htmlFor="name"
-              className="text-sm font-medium"
-            >
+            <label htmlFor="name" className="text-sm font-medium">
               Name
             </label>
 
@@ -312,19 +270,14 @@ export default function ContactForm() {
               type="text"
               placeholder="Your name"
               autoComplete="name"
-              maxLength={
-                CONTACT_LIMITS.name
-              }
+              maxLength={CONTACT_LIMITS.name}
               disabled={isSending}
               required
             />
           </div>
 
           <div className="space-y-2">
-            <label
-              htmlFor="email"
-              className="text-sm font-medium"
-            >
+            <label htmlFor="email" className="text-sm font-medium">
               Email address
             </label>
 
@@ -334,9 +287,9 @@ export default function ContactForm() {
               type="email"
               placeholder="you@example.com"
               autoComplete="email"
-              maxLength={
-                CONTACT_LIMITS.email
-              }
+              maxLength={CONTACT_LIMITS.email}
+              pattern="^[^\s@]+@[^\s@]+\.[^\s@]+$"
+              title="Please enter a valid email address."
               disabled={isSending}
               required
             />
@@ -344,10 +297,7 @@ export default function ContactForm() {
         </div>
 
         <div className="space-y-2">
-          <label
-            htmlFor="subject"
-            className="text-sm font-medium"
-          >
+          <label htmlFor="subject" className="text-sm font-medium">
             Subject
           </label>
 
@@ -364,16 +314,11 @@ export default function ContactForm() {
             />
 
             <ComboboxContent>
-              <ComboboxEmpty>
-                No items found.
-              </ComboboxEmpty>
+              <ComboboxEmpty>No items found.</ComboboxEmpty>
 
               <ComboboxList className="hover:cursor-pointer">
                 {(item) => (
-                  <ComboboxItem
-                    key={item}
-                    value={item}
-                  >
+                  <ComboboxItem key={item} value={item}>
                     {item}
                   </ComboboxItem>
                 )}
@@ -383,10 +328,7 @@ export default function ContactForm() {
         </div>
 
         <div className="space-y-2">
-          <label
-            htmlFor="message"
-            className="text-sm font-medium"
-          >
+          <label htmlFor="message" className="text-sm font-medium">
             Message
           </label>
 
@@ -396,13 +338,9 @@ export default function ContactForm() {
             placeholder="Describe your question, feedback or issue..."
             value={message}
             onChange={(event) => {
-              setMessage(
-                event.target.value,
-              );
+              setMessage(event.target.value);
             }}
-            maxLength={
-              CONTACT_LIMITS.message
-            }
+            maxLength={CONTACT_LIMITS.message}
             rows={9}
             disabled={isSending}
             required
@@ -412,18 +350,27 @@ export default function ContactForm() {
 
           <div className="flex items-start justify-between gap-4 text-xs text-muted-foreground">
             <p id="message-help">
-              Include relevant details such
-              as the problem name or error
+              Include relevant details such as the problem name or error
               message.
             </p>
 
-            <p
-              id="message-count"
-              className="shrink-0 tabular-nums"
-            >
-              {message.length}/
-              {CONTACT_LIMITS.message}
+            <p id="message-count" className="shrink-0 tabular-nums">
+              {message.length}/{CONTACT_LIMITS.message}
             </p>
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex">
+            <HCaptcha
+              ref={captchaRef}
+              sitekey={HCAPTCHA_SITE_KEY}
+              reCaptchaCompat={false}
+              theme={resolvedTheme === "dark" ? "dark" : "light"}
+              onVerify={handleCaptchaVerify}
+              onExpire={handleCaptchaExpire}
+              onError={handleCaptchaError}
+            />
           </div>
         </div>
 
@@ -436,18 +383,12 @@ export default function ContactForm() {
           >
             {isSending ? (
               <>
-                <Loader2
-                  className="size-4 animate-spin"
-                  aria-hidden="true"
-                />
+                <Loader2 className="size-4 animate-spin" aria-hidden="true" />
                 Sending...
               </>
             ) : (
               <>
-                <Send
-                  className="size-4"
-                  aria-hidden="true"
-                />
+                <Send className="size-4" aria-hidden="true" />
                 Send message
               </>
             )}
