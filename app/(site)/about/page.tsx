@@ -32,9 +32,7 @@ export default function AboutPage() {
 
         <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
           <Button asChild size="lg" className="hover:cursor-pointer">
-            <Link href="/problems">
-              Browse problems
-            </Link>
+            <Link href="/problems">Browse problems</Link>
           </Button>
 
           <Button asChild size="lg" variant="outline">
@@ -62,28 +60,40 @@ export default function AboutPage() {
 
         <div className="space-y-5 leading-8">
           <p>
-            I started building Codey while preparing for technical interviews.
-            I wanted to understand not only how to solve coding problems, but
-            also how platforms such as online judges execute code, evaluate
-            outputs, store submissions and measure user progress.
+            I started building Codey while preparing for technical interviews. I
+            wanted to understand not only how to solve coding problems, but also
+            how platforms such as online judges execute code, evaluate outputs,
+            store submissions and measure user progress.
           </p>
 
           <p>
             The project developed into a complete coding-practice application
             with authentication, multi-language execution, public and hidden
-            test cases, persistent submissions, progress tracking and a
-            personal analytics dashboard.
+            test cases, persistent submissions, progress tracking and a personal
+            analytics dashboard.
           </p>
 
           <p>
-            Codey is inspired by platforms such as <Link href="https://leetcode.com" target="_blank" rel="noreferrer" className="underline hover:no-underline">
+            Codey is inspired by platforms such as{" "}
+            <Link
+              href="https://leetcode.com"
+              target="_blank"
+              rel="noreferrer"
+              className="underline hover:no-underline"
+            >
               LeetCode
-            </Link> and by the
-            structured topic-based approach of <Link href="https://neetcode.io" target="_blank" rel="noreferrer" className="underline hover:no-underline">
+            </Link>{" "}
+            and by the structured topic-based approach of{" "}
+            <Link
+              href="https://neetcode.io"
+              target="_blank"
+              rel="noreferrer"
+              className="underline hover:no-underline"
+            >
               NeetCode
-            </Link>. It is an independent
-            personal learning project and is not affiliated with either
-            platform.
+            </Link>
+            . It is an independent personal learning project and is not
+            affiliated with either platform.
           </p>
         </div>
       </section>
@@ -116,9 +126,7 @@ export default function AboutPage() {
 
               <h3 className="mt-5 font-semibold">{title}</h3>
 
-              <p className="mt-2 text-sm leading-6">
-                {description}
-              </p>
+              <p className="mt-2 text-sm leading-6">{description}</p>
             </article>
           ))}
         </div>
@@ -155,9 +163,7 @@ export default function AboutPage() {
                   {index + 1}
                 </span>
 
-                <p className="pt-1 text-sm leading-6 sm:text-base">
-                  {step}
-                </p>
+                <p className="pt-1 text-sm leading-6 sm:text-base">{step}</p>
               </li>
             ))}
           </ol>
@@ -180,8 +186,8 @@ export default function AboutPage() {
 
               <p className="mt-2 leading-7 ">
                 JavaScript, Python, Java and C# each require different handling
-                for method calls, data structures, return values, booleans,
-                null values and runtime errors.
+                for method calls, data structures, return values, booleans, null
+                values and runtime errors.
               </p>
             </div>
 
@@ -212,8 +218,8 @@ export default function AboutPage() {
 
               <p className="mt-2 leading-7 ">
                 Raw submission and completion records are transformed into
-                metrics that describe consistency, language performance,
-                problem difficulty and active practice time.
+                metrics that describe consistency, language performance, problem
+                difficulty and active practice time.
               </p>
             </div>
           </div>
@@ -250,8 +256,8 @@ export default function AboutPage() {
               <li>Code execution depends on the JDoodle API.</li>
               <li>External usage, request and output limits apply.</li>
               <li>
-                The execution environment does not provide the same isolation
-                as a dedicated container-based judge.
+                The execution environment does not provide the same isolation as
+                a dedicated container-based judge.
               </li>
               <li>
                 The problem catalogue is curated rather than user-generated.
@@ -288,9 +294,7 @@ export default function AboutPage() {
                 </span>
               </summary>
 
-              <p className="mt-4 pr-8 text-sm leading-7 ">
-                {answer}
-              </p>
+              <p className="mt-4 pr-8 text-sm leading-7 ">{answer}</p>
             </details>
           ))}
         </div>

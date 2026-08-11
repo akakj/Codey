@@ -13,7 +13,5 @@ export default async function AccountPage() {
     redirect("/login");
   }
 
-  return (
-    <AccountClient email={data.user.email ?? ''} />
-  );
+  return <AccountClient email={data.user.email ?? ""} />;
 }

@@ -1,17 +1,13 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import {
-  LegalSection,
-  OPERATOR_NAME,
-} from "../../components/LegalSection";
+import { LegalSection, OPERATOR_NAME } from "../../components/LegalSection";
 
 export const metadata: Metadata = {
   title: "Terms and Conditions | Codey",
   description: "The terms governing access to and use of Codey.",
 };
 
-const listClassName =
-  "list-disc space-y-2 pl-6 marker:text-muted-foreground";
+const listClassName = "list-disc space-y-2 pl-6 marker:text-muted-foreground";
 
 const linkClassName =
   "font-medium text-foreground underline underline-offset-4 hover:text-foreground/80";
@@ -31,22 +27,22 @@ export default function TermsPage() {
 
           <div className="space-y-4 leading-7 text-muted-foreground">
             <p>
-              These Terms and Conditions (“Terms”) govern your access to and
-              use of Codey, including its website, programming problems, code
+              These Terms and Conditions (“Terms”) govern your access to and use
+              of Codey, including its website, programming problems, code
               editor, code-execution features, account features, submission
-              history, progress tracking and personal analytics (“Codey” or
-              the “service”).
+              history, progress tracking and personal analytics (“Codey” or the
+              “service”).
             </p>
 
             <p>
-              Codey is a personal, non-commercial educational project
-              operated by {OPERATOR_NAME}. In these Terms, “we”, “us”, “our”
-              and “the operator” refer to {OPERATOR_NAME}.
+              Codey is a personal, non-commercial educational project operated
+              by {OPERATOR_NAME}. In these Terms, “we”, “us”, “our” and “the
+              operator” refer to {OPERATOR_NAME}.
             </p>
 
             <p>
-              By creating an account or using Codey, you agree to these
-              Terms. If you do not agree to them, do not use the service.
+              By creating an account or using Codey, you agree to these Terms.
+              If you do not agree to them, do not use the service.
             </p>
           </div>
         </header>
@@ -68,39 +64,37 @@ export default function TermsPage() {
 
             <li>retrieve previously submitted code; and</li>
 
-            <li>
-              view activity statistics and personal learning analytics.
-            </li>
+            <li>view activity statistics and personal learning analytics.</li>
           </ul>
 
           <p>
             Codey is currently provided without charge. If paid features are
-            introduced in the future, any relevant prices and additional
-            terms will be presented before you agree to use them.
+            introduced in the future, any relevant prices and additional terms
+            will be presented before you agree to use them.
           </p>
 
           <p>
-            Codey is not an official examination, accreditation,
-            recruitment or professional assessment service. It is an
-            independent project and is not sponsored by, endorsed by or
-            affiliated with LeetCode, NeetCode, Supabase, Vercel, JDoodle or
-            any other third-party platform unless expressly stated.
+            Codey is not an official examination, accreditation, recruitment or
+            professional assessment service. It is an independent project and is
+            not sponsored by, endorsed by or affiliated with LeetCode, NeetCode,
+            Supabase, Vercel, JDoodle or any other third-party platform unless
+            expressly stated.
           </p>
         </LegalSection>
 
         <LegalSection title="2. Eligibility">
           <p>
-            Codey is not intended for children under 13. You must not create
-            an account for a child under 13 or knowingly allow a child under
-            13 to provide personal information through the service.
+            Codey is not intended for children under 13. You must not create an
+            account for a child under 13 or knowingly allow a child under 13 to
+            provide personal information through the service.
           </p>
 
           <p>
-            If you are under 18, you should use Codey only with the
-            permission and supervision of a parent, legal guardian, teacher
-            or other responsible adult. If the law where you live does not
-            allow you to agree to these Terms yourself, a parent or legal
-            guardian must agree on your behalf.
+            If you are under 18, you should use Codey only with the permission
+            and supervision of a parent, legal guardian, teacher or other
+            responsible adult. If the law where you live does not allow you to
+            agree to these Terms yourself, a parent or legal guardian must agree
+            on your behalf.
           </p>
         </LegalSection>
 
@@ -115,25 +109,24 @@ export default function TermsPage() {
             <li>keep your login credentials secure;</li>
 
             <li>
-              not share your account or allow another person to impersonate
-              you;
+              not share your account or allow another person to impersonate you;
             </li>
 
             <li>
-              notify us promptly if you believe your account has been
-              accessed without permission; and
+              notify us promptly if you believe your account has been accessed
+              without permission; and
             </li>
 
             <li>
-              remain responsible for activity carried out through your
-              account, except where it results from a security failure for
-              which we are legally responsible.
+              remain responsible for activity carried out through your account,
+              except where it results from a security failure for which we are
+              legally responsible.
             </li>
           </ul>
 
           <p>
-            We may require email verification or other reasonable security
-            steps before allowing access to account features.
+            We may require email verification or other reasonable security steps
+            before allowing access to account features.
           </p>
         </LegalSection>
 
@@ -144,18 +137,15 @@ export default function TermsPage() {
           </p>
 
           <ul className={listClassName}>
+            <li>use Codey for an unlawful, fraudulent or harmful purpose;</li>
+
             <li>
-              use Codey for an unlawful, fraudulent or harmful purpose;
+              attempt to gain unauthorised access to another account, database,
+              server, network or system;
             </li>
 
             <li>
-              attempt to gain unauthorised access to another account,
-              database, server, network or system;
-            </li>
-
-            <li>
-              interfere with the availability, operation or security of
-              Codey;
+              interfere with the availability, operation or security of Codey;
             </li>
 
             <li>
@@ -163,8 +153,8 @@ export default function TermsPage() {
             </li>
 
             <li>
-              make excessive automated requests or conduct load,
-              penetration or stress testing without prior permission;
+              make excessive automated requests or conduct load, penetration or
+              stress testing without prior permission;
             </li>
 
             <li>
@@ -181,8 +171,8 @@ export default function TermsPage() {
             </li>
 
             <li>
-              submit passwords, API keys, access tokens, private keys or
-              other confidential credentials;
+              submit passwords, API keys, access tokens, private keys or other
+              confidential credentials;
             </li>
 
             <li>
@@ -190,31 +180,28 @@ export default function TermsPage() {
               intellectual-property, confidentiality or privacy rights;
             </li>
 
-            <li>
-              impersonate another person or create accounts in bulk; or
-            </li>
+            <li>impersonate another person or create accounts in bulk; or</li>
 
             <li>use Codey to collect information about other users.</li>
           </ul>
 
           <p>
-            We may restrict or suspend access where we reasonably believe
-            these Terms have been breached or continued access presents a
-            security, legal or operational risk.
+            We may restrict or suspend access where we reasonably believe these
+            Terms have been breached or continued access presents a security,
+            legal or operational risk.
           </p>
         </LegalSection>
 
         <LegalSection title="5. Source-code execution">
           <p>
-            Code submitted through Codey may be sent to a third-party
-            execution service, currently JDoodle, together with the selected
-            programming language, execution instructions and relevant test
-            inputs.
+            Code submitted through Codey may be sent to a third-party execution
+            service, currently JDoodle, together with the selected programming
+            language, execution instructions and relevant test inputs.
           </p>
 
           <p>
-            Treat the execution environment as untrusted and temporary. Do
-            not include:
+            Treat the execution environment as untrusted and temporary. Do not
+            include:
           </p>
 
           <ul className={listClassName}>
@@ -223,27 +210,25 @@ export default function TermsPage() {
             <li>personal, financial or confidential information;</li>
 
             <li>
-              proprietary source code that you are not permitted to
-              disclose; or
+              proprietary source code that you are not permitted to disclose; or
             </li>
 
             <li>any other secret or sensitive material.</li>
           </ul>
 
           <p>
-            Codey is intended for programming practice and is not designed
-            to process confidential or production data. Execution time,
-            memory reporting and output may be limited, approximate, delayed
-            or temporarily unavailable.
+            Codey is intended for programming practice and is not designed to
+            process confidential or production data. Execution time, memory
+            reporting and output may be limited, approximate, delayed or
+            temporarily unavailable.
           </p>
         </LegalSection>
 
         <LegalSection title="6. Judging, results and analytics">
           <p>
             Codey compares submitted output with expected results using its
-            configured test cases and judging logic. A result marked
-            “accepted”, “failed”, “passed” or similar is educational feedback
-            only.
+            configured test cases and judging logic. A result marked “accepted”,
+            “failed”, “passed” or similar is educational feedback only.
           </p>
 
           <p>It does not guarantee that:</p>
@@ -257,13 +242,9 @@ export default function TermsPage() {
 
             <li>the test cases cover every relevant situation;</li>
 
-            <li>
-              runtime, memory or active-time measurements are exact;
-            </li>
+            <li>runtime, memory or active-time measurements are exact;</li>
 
-            <li>
-              the same solution will be accepted on another platform; or
-            </li>
+            <li>the same solution will be accepted on another platform; or</li>
 
             <li>
               the problem statement, expected output or judging logic is
@@ -280,8 +261,8 @@ export default function TermsPage() {
 
         <LegalSection title="7. Your code and content">
           <p>
-            You retain ownership of source code and other original material
-            that you submit to Codey.
+            You retain ownership of source code and other original material that
+            you submit to Codey.
           </p>
 
           <p>
@@ -300,48 +281,44 @@ export default function TermsPage() {
             <li>produce your personal account analytics;</li>
 
             <li>
-              investigate technical faults, security incidents or misuse;
-              and
+              investigate technical faults, security incidents or misuse; and
             </li>
 
-            <li>
-              maintain and improve the security and reliability of Codey.
-            </li>
+            <li>maintain and improve the security and reliability of Codey.</li>
           </ul>
 
           <p>
-            This licence does not transfer ownership of your material to us
-            or give us the right to sell or publicly distribute your source
-            code.
+            This licence does not transfer ownership of your material to us or
+            give us the right to sell or publicly distribute your source code.
           </p>
 
           <p>
-            The licence ends when the relevant material is deleted, subject
-            to reasonable backup, security and legal-retention requirements.
-            You confirm that you have the right to submit and use all
-            material you provide.
+            The licence ends when the relevant material is deleted, subject to
+            reasonable backup, security and legal-retention requirements. You
+            confirm that you have the right to submit and use all material you
+            provide.
           </p>
         </LegalSection>
 
         <LegalSection title="8. Codey content and intellectual property">
           <p>
-            The Codey application, original source code, interface, design
-            and branding are protected by applicable intellectual-property
-            laws and any licences stated in the Codey repository.
+            The Codey application, original source code, interface, design and
+            branding are protected by applicable intellectual-property laws and
+            any licences stated in the Codey repository.
           </p>
 
           <p>
             Problem statements, examples, libraries, trademarks and other
-            third-party materials remain the property of their respective
-            owners or licensors. These Terms do not transfer ownership of
-            Codey or third-party content to you.
+            third-party materials remain the property of their respective owners
+            or licensors. These Terms do not transfer ownership of Codey or
+            third-party content to you.
           </p>
 
           <p>
-            You may use Codey content for personal learning. You may not
-            sell, commercially redistribute or systematically reproduce
-            substantial parts of the service unless applicable law or an
-            applicable open-source licence permits it.
+            You may use Codey content for personal learning. You may not sell,
+            commercially redistribute or systematically reproduce substantial
+            parts of the service unless applicable law or an applicable
+            open-source licence permits it.
           </p>
         </LegalSection>
 
@@ -360,8 +337,8 @@ export default function TermsPage() {
           </ul>
 
           <p>
-            Account information, submitted code and technical information
-            may be processed by these providers as described in the Codey{" "}
+            Account information, submitted code and technical information may be
+            processed by these providers as described in the Codey{" "}
             <Link href="/privacy" className={linkClassName}>
               Privacy Policy
             </Link>
@@ -369,10 +346,10 @@ export default function TermsPage() {
           </p>
 
           <p>
-            These providers operate their own infrastructure and may
-            experience outages or changes outside our reasonable control.
-            We will not use this section to exclude responsibility that
-            applicable law places on us.
+            These providers operate their own infrastructure and may experience
+            outages or changes outside our reasonable control. We will not use
+            this section to exclude responsibility that applicable law places on
+            us.
           </p>
         </LegalSection>
 
@@ -386,8 +363,7 @@ export default function TermsPage() {
             <li>add, remove or modify features;</li>
 
             <li>
-              change supported programming languages, test cases or
-              problems;
+              change supported programming languages, test cases or problems;
             </li>
 
             <li>impose reasonable usage or rate limits;</li>
@@ -397,8 +373,7 @@ export default function TermsPage() {
             </li>
 
             <li>
-              correct or remove inaccurate, unlawful or infringing content;
-              or
+              correct or remove inaccurate, unlawful or infringing content; or
             </li>
 
             <li>discontinue part or all of the service.</li>
@@ -406,13 +381,13 @@ export default function TermsPage() {
 
           <p>
             Where reasonably practical, we will provide notice of a material
-            change or discontinuation that is likely to affect access to
-            stored account information.
+            change or discontinuation that is likely to affect access to stored
+            account information.
           </p>
 
           <p>
-            We will try to avoid unnecessary loss of stored account data,
-            but you should keep your own copy of any source code or other
+            We will try to avoid unnecessary loss of stored account data, but
+            you should keep your own copy of any source code or other
             information you consider important.
           </p>
 
@@ -426,11 +401,10 @@ export default function TermsPage() {
           <p>You may stop using Codey at any time.</p>
 
           <p>
-            You may delete your account through the account settings.
-            Account deletion is irreversible and cannot be undone. The
-            handling of your submissions, progress, analytics, browser
-            storage and provider backups following deletion is explained in
-            the{" "}
+            You may delete your account through the account settings. Account
+            deletion is irreversible and cannot be undone. The handling of your
+            submissions, progress, analytics, browser storage and provider
+            backups following deletion is explained in the{" "}
             <Link href="/privacy" className={linkClassName}>
               Privacy Policy
             </Link>
@@ -438,26 +412,23 @@ export default function TermsPage() {
           </p>
 
           <p>
-  If you cannot access the account-deletion feature or need
-  assistance with deleting your account, you can contact us through
-  the{" "}
-  <Link href="/contact" className={linkClassName}>
-    Contact page
-  </Link>
-  .
-</p>
+            If you cannot access the account-deletion feature or need assistance
+            with deleting your account, you can contact us through the{" "}
+            <Link href="/contact" className={linkClassName}>
+              Contact page
+            </Link>
+            .
+          </p>
 
           <p>
-            We may suspend or terminate an account where reasonably
-            necessary because of:
+            We may suspend or terminate an account where reasonably necessary
+            because of:
           </p>
 
           <ul className={listClassName}>
             <li>a serious or repeated breach of these Terms;</li>
 
-            <li>
-              unlawful conduct or misuse of code-execution facilities;
-            </li>
+            <li>unlawful conduct or misuse of code-execution facilities;</li>
 
             <li>a threat to Codey, its users or a third party;</li>
 
@@ -467,24 +438,22 @@ export default function TermsPage() {
           </ul>
 
           <p>
-            Where appropriate and reasonably possible, we will provide
-            notice or an opportunity to correct the issue before suspending
-            or terminating an account. Immediate action may be taken where
-            necessary to address a serious security, legal or operational
-            risk.
+            Where appropriate and reasonably possible, we will provide notice or
+            an opportunity to correct the issue before suspending or terminating
+            an account. Immediate action may be taken where necessary to address
+            a serious security, legal or operational risk.
           </p>
 
           <p>
             Provisions that are intended to continue after termination,
-            including intellectual-property, liability and dispute
-            provisions, remain effective.
+            including intellectual-property, liability and dispute provisions,
+            remain effective.
           </p>
         </LegalSection>
 
         <LegalSection title="12. Privacy">
           <p>
-            Our collection and use of personal information are explained in
-            the{" "}
+            Our collection and use of personal information are explained in the{" "}
             <Link href="/privacy" className={linkClassName}>
               Codey Privacy Policy
             </Link>
@@ -492,9 +461,9 @@ export default function TermsPage() {
           </p>
 
           <p>
-            When you use code-execution features, submitted code and
-            relevant execution inputs may be transmitted to third-party
-            infrastructure for processing.
+            When you use code-execution features, submitted code and relevant
+            execution inputs may be transmitted to third-party infrastructure
+            for processing.
           </p>
         </LegalSection>
 
@@ -512,22 +481,21 @@ export default function TermsPage() {
             <li>secure from every possible threat;</li>
 
             <li>
-              suitable for a particular course, examination, qualification
-              or employer;
+              suitable for a particular course, examination, qualification or
+              employer;
             </li>
 
             <li>compatible with every device or browser; or</li>
 
             <li>
-              free from inaccurate, incomplete or outdated educational
-              content.
+              free from inaccurate, incomplete or outdated educational content.
             </li>
           </ul>
 
           <p>
-            These statements do not exclude any duty to provide the service
-            with reasonable care and skill or any other legal right that
-            cannot lawfully be excluded.
+            These statements do not exclude any duty to provide the service with
+            reasonable care and skill or any other legal right that cannot
+            lawfully be excluded.
           </p>
         </LegalSection>
 
@@ -540,11 +508,11 @@ export default function TermsPage() {
           </p>
 
           <p>
-            If we fail to comply with these Terms, we are responsible for
-            loss or damage that is a foreseeable result of our breach or our
-            failure to use reasonable care and skill. Loss is foreseeable
-            where it was an obvious consequence or was contemplated by both
-            you and us when you began using Codey.
+            If we fail to comply with these Terms, we are responsible for loss
+            or damage that is a foreseeable result of our breach or our failure
+            to use reasonable care and skill. Loss is foreseeable where it was
+            an obvious consequence or was contemplated by both you and us when
+            you began using Codey.
           </p>
 
           <p>Subject to the protections above, we are not responsible for:</p>
@@ -553,8 +521,7 @@ export default function TermsPage() {
             <li>loss or damage that was not reasonably foreseeable;</li>
 
             <li>
-              loss caused by information, code or instructions that you
-              submit;
+              loss caused by information, code or instructions that you submit;
             </li>
 
             <li>
@@ -563,53 +530,52 @@ export default function TermsPage() {
             </li>
 
             <li>
-              unauthorised account use caused by your failure to take
-              reasonable care of your login credentials;
+              unauthorised account use caused by your failure to take reasonable
+              care of your login credentials;
             </li>
 
             <li>
-              outages or failures caused solely by events outside our
-              reasonable control, except where applicable law makes us
-              responsible; or
+              outages or failures caused solely by events outside our reasonable
+              control, except where applicable law makes us responsible; or
             </li>
 
             <li>
-              business, commercial or professional losses where you use
-              Codey primarily for personal and educational purposes.
+              business, commercial or professional losses where you use Codey
+              primarily for personal and educational purposes.
             </li>
           </ul>
 
           <p>
-            You should keep your own backup of important source code. We are
-            not responsible for data loss caused by your failure to keep a
+            You should keep your own backup of important source code. We are not
+            responsible for data loss caused by your failure to keep a
             reasonable backup where the loss was not caused by our breach or
             negligence.
           </p>
 
           <p>
             You are responsible for deciding whether to rely on any output,
-            result, explanation, runtime, memory figure or statistic
-            displayed by Codey.
+            result, explanation, runtime, memory figure or statistic displayed
+            by Codey.
           </p>
         </LegalSection>
 
         <LegalSection title="15. Changes to these Terms">
           <p>
-            We may update these Terms to reflect changes to Codey, its
-            service providers or applicable law. The date at the top shows
-            when the Terms were most recently updated.
+            We may update these Terms to reflect changes to Codey, its service
+            providers or applicable law. The date at the top shows when the
+            Terms were most recently updated.
           </p>
 
           <p>
-            Where reasonably practical, material changes will be
-            communicated through the service before or when they take
-            effect. Updated Terms apply to your subsequent use of Codey and
-            will not remove rights that cannot lawfully be removed.
+            Where reasonably practical, material changes will be communicated
+            through the service before or when they take effect. Updated Terms
+            apply to your subsequent use of Codey and will not remove rights
+            that cannot lawfully be removed.
           </p>
 
           <p>
-            If you do not agree to an updated version of the Terms, you
-            should stop using Codey and may delete your account.
+            If you do not agree to an updated version of the Terms, you should
+            stop using Codey and may delete your account.
           </p>
         </LegalSection>
 
@@ -621,16 +587,15 @@ export default function TermsPage() {
 
           <p>
             If you are a consumer, you also retain any mandatory legal
-            protections that apply in the country or part of the United
-            Kingdom where you live and that cannot lawfully be excluded by
-            these Terms.
+            protections that apply in the country or part of the United Kingdom
+            where you live and that cannot lawfully be excluded by these Terms.
           </p>
 
           <p>
-            The Scottish courts will have jurisdiction over disputes
-            relating to these Terms. If you are a consumer living elsewhere
-            in the United Kingdom, you may also be entitled to bring
-            proceedings in the courts where you live.
+            The Scottish courts will have jurisdiction over disputes relating to
+            these Terms. If you are a consumer living elsewhere in the United
+            Kingdom, you may also be entitled to bring proceedings in the courts
+            where you live.
           </p>
 
           <p>
@@ -641,8 +606,8 @@ export default function TermsPage() {
 
         <LegalSection title="17. General provisions">
           <p>
-            If a court finds part of these Terms invalid or unenforceable,
-            the remaining provisions continue to apply.
+            If a court finds part of these Terms invalid or unenforceable, the
+            remaining provisions continue to apply.
           </p>
 
           <p>
@@ -651,25 +616,23 @@ export default function TermsPage() {
           </p>
 
           <p>
-            These Terms and the Privacy Policy form the agreement governing
-            your use of Codey.
+            These Terms and the Privacy Policy form the agreement governing your
+            use of Codey.
           </p>
         </LegalSection>
 
         <LegalSection title="18. Contact">
-  <p>
-    If you have questions about these Terms, need help with your
-    account or want to report an issue with Codey, please use the{" "}
-    <Link href="/contact" className={linkClassName}>
-      Contact page
-    </Link>
-    .
-  </p>
+          <p>
+            If you have questions about these Terms, need help with your account
+            or want to report an issue with Codey, please use the{" "}
+            <Link href="/contact" className={linkClassName}>
+              Contact page
+            </Link>
+            .
+          </p>
 
-  <p>
-    Codey is operated by {OPERATOR_NAME}.
-  </p>
-</LegalSection>
+          <p>Codey is operated by {OPERATOR_NAME}.</p>
+        </LegalSection>
       </article>
     </main>
   );

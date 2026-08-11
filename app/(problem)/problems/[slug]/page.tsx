@@ -1,14 +1,15 @@
-import React from 'react';
+import React from "react";
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import ProblemWorkspace from "@/app/components/ProblemWorkspace/ProblemWorkspace";
 import rawData from "@/app/data/neetcode_150_problems_with_entry.json";
 import { ProblemsFile } from "@/lib/problem";
 
-
-export async function generateMetadata(
-  { params }: { params: Promise<{ slug: string }> }
-): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
   const { slug } = await params;
 
   const data = rawData as ProblemsFile;
@@ -34,7 +35,7 @@ export default async function ProblemPage({
   const tabParam = Array.isArray(sp.tab) ? sp.tab[0] : sp.tab;
   const initialTab = tabParam ?? "description";
 
-   const submissionIdParam = Array.isArray(sp.submissionId)
+  const submissionIdParam = Array.isArray(sp.submissionId)
     ? sp.submissionId[0]
     : sp.submissionId;
 

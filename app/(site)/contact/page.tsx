@@ -1,10 +1,5 @@
 import type { Metadata } from "next";
-import {
-  BriefcaseBusiness,
-  Bug,
-  Lightbulb,
-  MessageSquare,
-} from "lucide-react";
+import { BriefcaseBusiness, Bug, Lightbulb, MessageSquare } from "lucide-react";
 import ContactForm from "@/app/(site)/contact/ContactForm";
 
 export const metadata: Metadata = {
@@ -19,8 +14,7 @@ const contactReasons = [
     description:
       "Found a broken test case, incorrect problem statement or unexpected error?",
     icon: Bug,
-    iconStyle:
-      "border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400",
+    iconStyle: "border-red-500/30 bg-red-500/10 text-red-600 dark:text-red-400",
   },
   {
     title: "Share feedback",
@@ -89,8 +83,8 @@ export default function ContactPage() {
               <h2 className="text-xl font-semibold">What can I help with?</h2>
 
               <p className="mt-2 leading-7 text-muted-foreground">
-                Select the most relevant subject in the form so your message
-                can be understood quickly.
+                Select the most relevant subject in the form so your message can
+                be understood quickly.
               </p>
 
               <div className="mt-7 space-y-6">
