@@ -2,18 +2,16 @@
 
 A full-stack coding challenge platform for practising algorithms, executing code in the browser and analysing problem-solving progress.
 
-Codey was built as a personal engineering project to explore the systems behind online coding judges: multi-language execution, test-case evaluation, authentication, submission persistence and user analytics.
+Codey is a full-stack engineering project that implements the core systems behind an online coding judge: multi-language code execution, server-side test-case evaluation, authentication, submission persistence and user analytics.
 
-## Features
+## Key highlights
 
-### Coding problems
-
-* 150 curated algorithm and data-structure problems
-* Easy, Medium and Hard difficulty levels
-* Search and difficulty filtering
-* Sortable problem catalogue
-* Structured descriptions, examples, hints and starter code
-* Random unsolved-problem navigation
+* 150 curated algorithm and data-structure problems with search, filtering and progress tracking
+* Multi-language execution for JavaScript, Python, Java and C# through the JDoodle API
+* Server-side submission judging with hidden test cases, output normalisation and failed-case feedback
+* Supabase authentication, PostgreSQL persistence and Row Level Security
+* Monaco-based coding workspace with autosave, resizable panels and submission recovery
+* Personal analytics dashboard covering acceptance rates, submission trends, language performance and active problem-solving time
 
 ### Browser-based editor
 
