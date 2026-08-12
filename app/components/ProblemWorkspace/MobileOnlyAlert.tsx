@@ -11,15 +11,25 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 
+const MOBILE_ALERT_KEY = "codey-mobile-workspace-alert-seen";
+
 function useIsMobileSm() {
   const [isMobile, setIsMobile] = React.useState(false);
 
   React.useEffect(() => {
-    const mq = window.matchMedia("(max-width: 400px)");
-    const onChange = () => setIsMobile(mq.matches);
+    const mq = window.matchMedia("(max-width: 639px)");
+
+    const onChange = () => {
+      setIsMobile(mq.matches);
+    };
+
     onChange();
+
     mq.addEventListener("change", onChange);
-    return () => mq.removeEventListener("change", onChange);
+
+    return () => {
+      mq.removeEventListener("change", onChange);
+    };
   }, []);
 
   return isMobile;
@@ -30,24 +40,40 @@ export function MobileOnlyAlert() {
   const [open, setOpen] = React.useState(false);
 
   React.useEffect(() => {
-    if (isMobile) setOpen(true);
+    if (!isMobile) return;
+
+    const hasSeenAlert = localStorage.getItem(MOBILE_ALERT_KEY);
+
+    if (!hasSeenAlert) {
+      setOpen(true);
+    }
   }, [isMobile]);
 
+  function handleOpenChange(isOpen: boolean) {
+    setOpen(isOpen);
+
+    if (!isOpen) {
+      localStorage.setItem(MOBILE_ALERT_KEY, "true");
+    }
+  }
+
   return (
-    <div className="sm:hidden">
-      <AlertDialog open={open} onOpenChange={setOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="">Mobile view</AlertDialogTitle>
-            <AlertDialogDescription className="text-gray-800 dark:text-gray-200">
-              You can only view the problem description on mobile. Please use a desktop or laptop to access the full experience, including the code editor, run and submit functionality.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogAction className="">OK</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+    <AlertDialog open={open} onOpenChange={handleOpenChange}>
+      <AlertDialogContent className="top-[35%]">
+        <AlertDialogHeader>
+          <AlertDialogTitle>Mobile view</AlertDialogTitle>
+
+          <AlertDialogDescription className="text-gray-800 dark:text-gray-200">
+            You can only view the problem description on mobile. Please use a
+            desktop or laptop to access the full experience, including the code
+            editor, run and submit functionality.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+
+        <AlertDialogFooter>
+          <AlertDialogAction>OK</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

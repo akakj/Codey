@@ -26,7 +26,7 @@ export default async function ProblemWorkspace({
 
   return (
     <div className="px-0.5 sm:px-1 py-0.5 sm:py-1">
-      <div className="w-full h-[91dvh] rounded-lg border overflow-hidden">
+      <div className="w-full h-[90dvh] rounded-lg border overflow-hidden">
         {/* Mobile: only problem panel */}
         <div className="h-full sm:hidden">
           <MobileOnlyAlert />
