@@ -59,7 +59,7 @@ export function MobileOnlyAlert() {
 
   return (
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
-      <AlertDialogContent className="top-[35%]">
+      <AlertDialogContent className="top-[45%]">
         <AlertDialogHeader>
           <AlertDialogTitle>Mobile view</AlertDialogTitle>
 

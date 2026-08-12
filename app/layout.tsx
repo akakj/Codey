@@ -5,6 +5,8 @@ import { ThemeProvider } from "next-themes";
 import Footer from "@/app/components/Footer";
 import "./globals.css";
 
+import { Analytics } from "@vercel/analytics/next"
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -51,6 +53,8 @@ export default function RootLayout({
             <Footer />
           </div>
         </ThemeProvider>
+
+        <Analytics />
       </body>
     </html>
   );
