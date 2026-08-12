@@ -30,7 +30,7 @@ export default function PrivacyPage() {
             Privacy Policy
           </h1>
 
-          <div className="space-y-4 leading-7 text-muted-foreground">
+          <div className="space-y-4 leading-7">
             <p>
               This Privacy Policy explains how Codey collects, uses, stores and
               shares personal information when you use its programming problems,

@@ -25,7 +25,7 @@ export default function TermsPage() {
             Terms and Conditions
           </h1>
 
-          <div className="space-y-4 leading-7 text-muted-foreground">
+          <div className="space-y-4 leading-7">
             <p>
               These Terms and Conditions (“Terms”) govern your access to and use
               of Codey, including its website, programming problems, code
