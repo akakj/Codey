@@ -137,7 +137,7 @@ export default function LoginClient() {
               </Link>{" "}
               and{" "}
               <Link
-                href="/privacy-policy"
+                href="/privacy"
                 className="underline underline-offset-2 hover:text-foreground"
               >
                 Privacy Policy
