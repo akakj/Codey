@@ -361,18 +361,20 @@ export default function ContactForm() {
         </div>
 
         <div className="space-y-2">
-          <div className="flex">
-            <HCaptcha
-              ref={captchaRef}
-              sitekey={HCAPTCHA_SITE_KEY}
-              reCaptchaCompat={false}
-              theme={resolvedTheme === "dark" ? "dark" : "light"}
-              onVerify={handleCaptchaVerify}
-              onExpire={handleCaptchaExpire}
-              onError={handleCaptchaError}
-            />
-          </div>
-        </div>
+  <div className="flex">
+    <div className="origin-top-left scale-[0.85] sm:scale-100">
+      <HCaptcha
+        ref={captchaRef}
+        sitekey={HCAPTCHA_SITE_KEY}
+        reCaptchaCompat={false}
+        theme={resolvedTheme === "dark" ? "dark" : "light"}
+        onVerify={handleCaptchaVerify}
+        onExpire={handleCaptchaExpire}
+        onError={handleCaptchaError}
+      />
+    </div>
+  </div>
+</div>
 
         <div className="flex flex-col-reverse items-stretch gap-4 border-t pt-6 sm:flex-row sm:items-center sm:justify-between">
           <Button
