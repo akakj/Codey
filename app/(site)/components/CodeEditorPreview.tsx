@@ -38,7 +38,7 @@ export default function CodeEditorPreview() {
     <div className="min-w-0 lg:order-1">
       {/* Mobile testing workflow */}
       <div className="overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/10 dark:bg-[#1e1e1e] md:hidden">
-        <div className="flex items-center gap-1 overflow-x-auto border-b border-gray-300 bg-[#e5e7ebd4] px-3 py-2 dark:border-white/10 dark:bg-[#181818]">
+        <div className="flex items-center gap-1 overflow-x-auto border-b border-gray-300 bg-[#e5e7ebd4] px-3 pt-3 pb-2 dark:border-white/10 dark:bg-[#181818]">
           {(Object.keys(codeExamples) as LanguageKey[]).map((key) => {
             const example = codeExamples[key];
             const isActive = language === key;
@@ -137,7 +137,7 @@ export default function CodeEditorPreview() {
 
       {/* Tablet/desktop: keep the Monaco-based editor preview. */}
       <div className="hidden overflow-hidden rounded-xl border border-gray-200 bg-white dark:border-white/10 dark:bg-[#1e1e1e] md:block">
-        <div className="flex flex-wrap items-center gap-1 border-b border-gray-300 bg-[#e5e7ebd4] px-3 py-2 dark:border-white/10 dark:bg-[#181818]">
+        <div className="flex flex-wrap items-center gap-1 border-b border-gray-300 bg-[#e5e7ebd4] px-3 py-3 dark:border-white/10 dark:bg-[#181818]">
           {(Object.keys(codeExamples) as LanguageKey[]).map((key) => {
             const example = codeExamples[key];
             const isActive = language === key;

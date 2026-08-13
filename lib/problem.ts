@@ -53,6 +53,7 @@ export type ProblemLite = {
   slug: string;
   title: string;
   difficulty: "Easy" | "Medium" | "Hard" | string;
+  algorithm?: string;
 };
 
 export interface ProblemsFile {

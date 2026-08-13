@@ -30,8 +30,8 @@ export default function Description({ problem }: { problem: Problem }) {
     <article
       className={cn(
         "prose dark:prose-invert max-w-none m-2",
-        "[&_pre]:whitespace-pre-wrap [&_pre]:break-words [&_pre]:overflow-x-auto",
-        "[&_code]:break-words"
+        "[&_pre]:whitespace-pre-wrap [&_pre]:wrap-break-word [&_pre]:overflow-x-auto",
+        "[&_code]:wrap-break-word"
       )}
     >
       <h1 className="mt-0 text-2xl font-bold">{problem.title}</h1>

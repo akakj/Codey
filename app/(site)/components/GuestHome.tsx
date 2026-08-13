@@ -91,28 +91,7 @@ export default function GuestHome() {
           ))}
         </section>
 
-        <section className="grid gap-4 py-16 sm:py-20 md:grid-cols-3">
-          {features.map(
-            ({ title, description, icon: Icon, accent, iconStyle }) => (
-              <article
-                key={title}
-                className={`rounded-xl border border-t-2 bg-white/2 p-6 transition duration-200 hover:-translate-y-1 hover:bg-black/2 dark:hover:bg-white/4 ${accent}`}
-              >
-                <div
-                  className={`flex size-11 items-center justify-center rounded-lg border ${iconStyle}`}
-                >
-                  <Icon className="size-5" />
-                </div>
-
-                <h2 className="mt-5 text-lg font-semibold">{title}</h2>
-
-                <p className="mt-2 leading-7 text-gray-700 dark:text-gray-200">
-                  {description}
-                </p>
-              </article>
-            ),
-          )}
-        </section>
+       
 
         <section className="py-6 sm:py-10">
           <div className="mx-auto max-w-2xl text-center">

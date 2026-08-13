@@ -28,11 +28,13 @@ const columns: SortColumn[] = [
 type ProblemsListProps = {
   problems: ProblemLite[];
   completedProblemIds: number[];
+  initialTopic?: string;
 };
 
 export default function ProblemsList({
   problems,
   completedProblemIds,
+  initialTopic = "",
 }: ProblemsListProps) {
   const [search, setSearch] = useState("");
   const [filters, setFilters] = useState<string[]>([]);
@@ -51,10 +53,7 @@ export default function ProblemsList({
     setSort((currentSort) => {
       // First click, or clicking a different column:
       // start the selected column in ascending order.
-      if (
-        currentSort !== ascendingSort &&
-        currentSort !== descendingSort
-      ) {
+      if (currentSort !== ascendingSort && currentSort !== descendingSort) {
         return ascendingSort;
       }
 
@@ -79,17 +78,24 @@ export default function ProblemsList({
       );
     }
 
-    if (filters.length > 0) {
+    if (initialTopic) {
+      const normalizedTopic = initialTopic.toLowerCase();
+
       list = list.filter((problem) =>
-        filters.includes(problem.difficulty),
+        problem.algorithm
+          ?.split(",")
+          .map((topic) => topic.trim().toLowerCase())
+          .includes(normalizedTopic),
       );
+    }
+
+    if (filters.length > 0) {
+      list = list.filter((problem) => filters.includes(problem.difficulty));
     }
 
     if (completionFilters.length > 0) {
       list = list.filter((problem) => {
-        const completionStatus = completedProblemIdSet.has(
-          problem.problemID,
-        )
+        const completionStatus = completedProblemIdSet.has(problem.problemID)
           ? "Completed"
           : "Uncompleted";
 
@@ -134,6 +140,7 @@ export default function ProblemsList({
   }, [
     problems,
     search,
+    initialTopic,
     filters,
     completionFilters,
     sort,
@@ -152,6 +159,23 @@ export default function ProblemsList({
         onCompletionFiltersChange={setCompletionFilters}
         onSortChange={(value) => setSort(value as SortValue)}
       />
+
+      {initialTopic && (
+        <div className="mt-4 flex items-center gap-2 text-sm">
+          <span className="text-muted-foreground">Topic:</span>
+
+          <span className="rounded-full border bg-muted px-3 py-1 font-medium">
+            {initialTopic}
+          </span>
+
+          <Link
+            href="/problems"
+            className="text-muted-foreground hover:text-foreground"
+          >
+            Clear
+          </Link>
+        </div>
+      )}
 
       <div className="mt-4 mb-10 overflow-hidden rounded-md border border-border">
         <table
@@ -178,9 +202,7 @@ export default function ProblemsList({
 
           <tbody>
             {filtered.map((problem) => {
-              const isCompleted = completedProblemIdSet.has(
-                problem.problemID,
-              );
+              const isCompleted = completedProblemIdSet.has(problem.problemID);
 
               return (
                 <tr

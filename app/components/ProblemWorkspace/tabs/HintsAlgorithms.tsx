@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import {
   Accordion,
   AccordionItem,
@@ -36,15 +37,19 @@ export default function HintsAlgorithms({
             </AccordionTrigger>
             <AccordionContent className="px-3 pb-3">
               <div className="flex flex-wrap gap-2">
-                {algorithms.map((t, i) => (
-                  <Badge
-                    key={i}
-                    variant="outline"
-                    className="rounded-full bg-gray-100 dark:bg-gray-700 px-3 py-1 text-xs"
-                  >
-                    {t}
-                  </Badge>
-                ))}
+                {algorithms.map((t) => (
+  <Link
+    key={t}
+    href={`/problems?topic=${encodeURIComponent(t)}`}
+  >
+    <Badge
+      variant="outline"
+      className="cursor-pointer rounded-full bg-gray-100 px-3 py-1 text-xs transition-colors hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600"
+    >
+      {t}
+    </Badge>
+  </Link>
+))}
               </div>
             </AccordionContent>
           </AccordionItem>
