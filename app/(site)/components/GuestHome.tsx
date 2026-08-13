@@ -1,53 +1,10 @@
 import Link from "next/link";
-import { Braces, ChartNoAxesCombined, TestTube2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AnimatedGradientText } from "@/components/ui/animated-gradient-text";
 import CodePreview from "./CodePreview";
-
-const features = [
-  {
-    title: "Solve coding problems",
-    description:
-      "Practise algorithms and data structures across a range of topics and difficulty levels.",
-    icon: Braces,
-    accent: "border-t-blue-500",
-    iconStyle:
-      "border-blue-500/30 bg-blue-500/10 text-blue-500 dark:text-blue-400",
-  },
-  {
-    title: "Run and test your code",
-    description:
-      "Write code in the browser and test your solution using provided or custom test cases.",
-    icon: TestTube2,
-    accent: "border-t-orange-500",
-    iconStyle:
-      "border-orange-500/30 bg-orange-500/10 text-orange-500 dark:text-orange-400",
-  },
-  {
-    title: "Track your progress",
-    description:
-      "Submit solutions, review previous attempts, and follow your progress over time.",
-    icon: ChartNoAxesCombined,
-    accent: "border-t-purple-500",
-    iconStyle:
-      "border-purple-500/30 bg-purple-500/10 text-purple-500 dark:text-purple-400",
-  },
-];
-
-const stats = [
-  {
-    value: "150+",
-    label: "Coding problems",
-  },
-  {
-    value: "4",
-    label: "Supported languages",
-  },
-  {
-    value: "Instant",
-    label: "Test feedback",
-  },
-];
+import { features, stats } from "./guestHomeData";
+import { CheckCircle2 } from "lucide-react";
+import CodeEditorPreview from "./CodeEditorPreview";
 
 export default function GuestHome() {
   return (
@@ -94,9 +51,8 @@ export default function GuestHome() {
             </h1>
 
             <p className="mt-6 leading-8 text-gray-700 dark:text-gray-200 sm:text-lg">
-              Codey is a problem-solving platform where you can practise coding
-              challenges, run and submit solutions, and improve your algorithmic
-              thinking.
+              Practise algorithms and data structures, test your solutions in
+              the browser and track your progress over time.
             </p>
 
             <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row lg:justify-start">
@@ -129,7 +85,7 @@ export default function GuestHome() {
                 index > 0 ? "border-t md:border-l md:border-t-0" : ""
               }`}
             >
-              <p className="text-3xl font-semibold">{value}</p>
+              <p className="text-2xl font-semibold">{value}</p>
               <p className="mt-1 text-sm text-muted-foreground">{label}</p>
             </div>
           ))}
@@ -156,6 +112,136 @@ export default function GuestHome() {
               </article>
             ),
           )}
+        </section>
+
+        <section className="py-6 sm:py-10">
+          <div className="mx-auto max-w-2xl text-center">
+            <p className="text-sm font-medium uppercase tracking-[0.18em] text-[#1918FF] dark:text-[#B4BFFF]">
+              How Codey works
+            </p>
+            <h2 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">
+              From problem to accepted solution
+            </h2>
+            <p className="mt-4 leading-7 text-gray-700 dark:text-gray-200">
+              Choose a challenge, test your approach, then submit your solution
+              and keep track of what you have solved.
+            </p>
+          </div>
+
+          <div className="mt-12 space-y-8 sm:mt-14 sm:space-y-10">
+            <article className="grid items-center gap-8 rounded-2xl border bg-background/20 p-6 backdrop-blur-sm sm:p-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-12">
+              <div>
+                <p className="text-sm font-semibold text-[#1918FF] dark:text-[#B4BFFF]">
+                  01
+                </p>
+                <h3 className="mt-2 text-xl font-semibold">Choose a problem</h3>
+                <p className="mt-3 max-w-md leading-7 text-gray-700 dark:text-gray-200">
+                  Pick from problems across different topics and difficulty
+                  levels, then work through the description and examples.
+                </p>
+              </div>
+
+              <div className="overflow-hidden rounded-xl border bg-background/70">
+                <div className="flex items-center justify-between border-b px-5 py-4">
+                  <div>
+                    <p className="font-medium text-c">Two Sum</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      Arrays · Hash Table
+                    </p>
+                  </div>
+
+                  <span className="rounded-full border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1 text-xs font-medium text-green-700 dark:text-green-500">
+                    Easy
+                  </span>
+                </div>
+
+                <div className="space-y-4 px-5 py-5 text-sm leading-6 text-gray-800 dark:text-gray-200">
+                  <p>
+                    Given an array of integers{" "}
+                    <code className="rounded bg-muted px-1 py-0.5">nums</code>{" "}
+                    and an integer{" "}
+                    <code className="rounded bg-muted px-1 py-0.5">target</code>
+                    , return the indices of the two numbers that add up to the
+                    target.
+                  </p>
+
+                  <div className="rounded-lg border bg-muted/40 p-3 font-mono text-xs">
+                    <p>nums = [2, 7, 11, 15]</p>
+                    <p>target = 9</p>
+                  </div>
+                </div>
+              </div>
+            </article>
+
+            <article className="grid items-center gap-8 rounded-2xl border bg-background/20 p-6 backdrop-blur-sm sm:p-8 lg:grid-cols-[1.2fr_0.8fr] lg:gap-12">
+              <CodeEditorPreview />
+              <div className="lg:order-2">
+                <p className="text-sm font-semibold text-[#1918FF] dark:text-[#B4BFFF]">
+                  02
+                </p>
+                <h3 className="mt-2 text-xl font-semibold">
+                  Write and test your solution
+                </h3>
+                <p className="mt-3 max-w-md leading-7 text-gray-700 dark:text-gray-200">
+                  Write code directly in the browser and check it against
+                  provided or custom test cases before submitting.
+                </p>
+              </div>
+            </article>
+
+            <article className="grid items-center gap-8 rounded-xl border bg-background/20 p-6 backdrop-blur-sm sm:p-8 lg:grid-cols-[0.8fr_1.2fr] lg:gap-12">
+              <div>
+                <p className="text-sm font-semibold text-[#1918FF] dark:text-[#B4BFFF]">
+                  03
+                </p>
+                <h3 className="mt-2 text-xl font-semibold">
+                  Submit and track your progress
+                </h3>
+                <p className="mt-3 max-w-md leading-7 text-gray-700 dark:text-gray-200">
+                  Submit against the larger number of test cases, revisit previous attempts
+                  and see your progress build over time.
+                </p>
+              </div>
+
+              <div className="overflow-hidden rounded-xl border bg-background/70">
+                <div className="flex items-center gap-3 border-b px-5 py-4">
+                  <div className="flex size-9 items-center justify-center rounded-full bg-emerald-500/10 text-green-800 dark:text-green-400">
+                    <CheckCircle2 className="size-5" />
+                  </div>
+
+                  <div>
+                    <p className="font-semibold text-green-800 dark:text-green-400">
+                      Accepted
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      25 / 25 test cases passed
+                    </p>
+                  </div>
+                </div>
+
+                <div className="grid gap-4 p-5 sm:grid-cols-3">
+                  <div className="rounded-lg border bg-muted/30 dark:bg-muted/20 p-4">
+                    <p className="text-xs text-muted-foreground">
+                      Problems solved
+                    </p>
+                    <p className="mt-1 text-xl font-semibold">47</p>
+                  </div>
+
+                  <div className="rounded-lg border bg-muted/30 dark:bg-muted/20 p-4">
+                    <p className="text-xs text-muted-foreground">Submissions</p>
+                    <p className="mt-1 text-xl font-semibold">86</p>
+                  </div>
+
+                  <div className="rounded-lg border bg-muted/30 dark:bg-muted/20 p-4">
+                    <p className="text-xs text-muted-foreground">
+                      Acceptance rate
+                    </p>
+                    <p className="mt-1 text-xl font-semibold">54.7%</p>
+                  </div>
+                </div>
+              </div>
+            </article>
+          </div>
         </section>
 
         <section className="mx-auto mb-16 max-w-3xl rounded-2xl border bg-background/35 px-6 py-12 text-center backdrop-blur-sm sm:mb-20 sm:px-12">

@@ -21,7 +21,7 @@ export default function AboutPage() {
         </p>
 
         <h1 className="mt-4 text-3xl font-semibold tracking-tight sm:text-5xl">
-          A coding platform built to explore how online judges work
+          A coding platform for practising problems and testing solutions
         </h1>
 
         <p className="mt-6 text-base leading-8 sm:text-lg">
