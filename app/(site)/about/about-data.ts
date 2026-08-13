@@ -135,4 +135,16 @@ export const questions = [
     answer:
       "No. Codey is a personal learning project created to explore the engineering behind coding platforms. Code execution relies on the JDoodle API, so external request, usage and output limits apply.",
   },
+  {
+    question:
+      "I get an error message saying 'JDoodle API rate limit exceeded'. What should I do?",
+    answer:
+      "Due to the current JDoodle API tier used by Codey, code executions are limited to 22 per day. If this limit has been reached, please try again the following day. I apologise for any inconvenience caused.",
+  },
+  {
+    question:
+      "When trying to log in, I get an 'Email rate limit exceeded' error. What should I do?",
+    answer:
+      "This means that too many authentication emails have been requested within a short period of time. Please wait a while before trying again. If the issue persists, please contact me through the Contact page.",
+  },
 ];

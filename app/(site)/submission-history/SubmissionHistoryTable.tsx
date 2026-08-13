@@ -183,13 +183,13 @@ export default function SubmissionHistoryTable({
     <div className="mt-4 mb-10 overflow-hidden rounded-md border border-border">
       <div className="overflow-x-auto">
         <table
-          className="
-            min-w-212.5 w-full divide-y divide-border
-            text-xs
-            sm:text-sm
-            md:text-base
-          "
-        >
+  className="
+    w-full min-w-175 divide-y divide-border
+    text-xs
+    sm:text-sm
+    md:text-base
+  "
+>
           <thead className="bg-muted/25 dark:bg-muted/30">
             <tr>
               <SortableHeader
@@ -303,8 +303,8 @@ export default function SubmissionHistoryTable({
                     <tr className="border-t">
                       <td colSpan={4} className="p-0">
                         <div className="bg-muted/10 p-3">
-                          <div className="overflow-hidden rounded-md border border-border">
-                            <table className="w-full text-sm">
+                          <div className="overflow-x-auto rounded-md border border-border">
+                            <table className="w-full min-w-162.5 text-sm">
                               <thead className="bg-muted/25 dark:bg-muted/30">
                                 <tr>
                                   <th className="px-4 py-2 text-left font-medium">
