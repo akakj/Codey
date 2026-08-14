@@ -182,15 +182,15 @@ Progress update
 
 ### Problem workspace
 
-<!-- Add problem workspace screenshot here -->
+<img width="839" height="618" alt="ProblemWorkspace_compressed" src="https://github.com/user-attachments/assets/84829071-bd74-4a3e-b8f2-00f5362d5f32" />
 
 ### Analytics dashboard
 
-<!-- Add analytics dashboard screenshot here -->
+<img width="770" height="605" alt="Dashboard_compressed" src="https://github.com/user-attachments/assets/579217b6-9d0b-4750-8705-4b851e9ec663" />
 
 ### Submission history
 
-<!-- Add submission history screenshot here -->
+<img width="618" height="622" alt="SubmissionHistory_expanded_compressed" src="https://github.com/user-attachments/assets/e9df0f0c-0f0e-4200-aefd-25b96902dbcf" />
 
 ## Technology Stack
 
@@ -300,8 +300,6 @@ Codey is designed as a portfolio-scale online judge rather than a production san
 
 * Code execution depends on the JDoodle API and its request limits.
 * Large execution outputs may be truncated by the external execution service.
-* The problem catalogue is curated rather than user-generated.
-* Execution does not provide the isolation guarantees of a dedicated container-based judging infrastructure.
 
 ## Acknowledgements
 
