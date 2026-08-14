@@ -1,250 +1,246 @@
 # Codey
 
-A full-stack coding challenge platform for practising algorithms, executing code in the browser and analysing problem-solving progress.
+A full-stack coding practice platform with multi-language code execution, server-side judging, progress tracking and personalised analytics.
 
-Codey is a full-stack engineering project that implements the core systems behind an online coding judge: multi-language code execution, server-side test-case evaluation, authentication, submission persistence and user analytics.
+**Live demo:** https://codey-lyart.vercel.app/
 
-## Key highlights
+Codey implements the core systems behind an online coding judge. Users can solve algorithm and data-structure problems in a Monaco-based coding workspace, run solutions against visible or custom test cases, and submit them for evaluation against hidden test cases.
 
-* 150 curated algorithm and data-structure problems with search, filtering and progress tracking
-* Multi-language execution for JavaScript, Python, Java and C# through the JDoodle API
-* Server-side submission judging with hidden test cases, output normalisation and failed-case feedback
-* Supabase authentication, PostgreSQL persistence and Row Level Security
-* Monaco-based coding workspace with autosave, resizable panels and submission recovery
-* Personal analytics dashboard covering acceptance rates, submission trends, language performance and active problem-solving time
+<img width="839" height="618" alt="ProblemWorkspace_compressed" src="https://github.com/user-attachments/assets/508510c7-c9bf-4d96-b94b-52c155b700bc" />
 
-### Browser-based editor
+## Features
 
-* Monaco code editor
-* Per-language starter code
-* Automatic local draft persistence
-* Light and dark editor themes
-* Resizable editor and console panels
-* Reset-to-starter-code functionality
-* Retrieval of the user's latest submitted solution
+* **150 coding problems** across common algorithm and data-structure topics
+* **Multi-language execution** for JavaScript, Python, Java and C#
+* **Server-side judging** against hidden test cases with failed-case feedback
+* **Monaco coding workspace** with starter code, persistent drafts and custom test cases
+* **Authentication and persistence** using Supabase and PostgreSQL
+* **Progress tracking** for solved and attempted problems
+* **Submission history** with runtime, memory usage and submitted code
+* **Personal analytics** covering acceptance rates, languages, submission trends and problem-solving time
+* **Responsive interface** with light and dark themes
 
-### Supported languages
+## Engineering
 
-Codey currently supports:
+### Server-side judging
 
-* JavaScript
-* Python 3
-* Java
-* C#
+Codey separates interactive test runs from authoritative submissions.
 
-Each problem defines language-specific starter code and entry-point metadata so that user solutions can be executed through a shared judging flow.
-
-### Run and Submit
-
-**Run** allows users to test a solution against visible or custom test cases without creating a submission.
-
-**Submit** evaluates a solution through the server-side submission route, records the result and updates the user's progress.
-
-The execution system handles:
-
-* Language-specific wrapper generation
-* Structured test-case input
-* Output serialisation
-* JSON and plain-text output comparison
-* Python literal normalisation
-* Runtime and memory results
-* Compilation and runtime errors
-* Passed and total test-case counts
-* Failed-case feedback
-
-### Accounts and progress
-
-Authenticated users can:
-
-* Save submissions
-* Track completed problems
-* Review every attempt made for a problem
-* Retrieve their most recently submitted code
-* View runtime and memory results
-* Access a complete submission history
-* Delete their account and associated data
-
-Authentication and application data are managed with Supabase.
-
-### Analytics dashboard
-
-The authenticated homepage provides a personal problem-solving dashboard with:
-
-* Problems solved by difficulty
-* Submission and acceptance trends
-* Completion rate
-* Problems attempted
-* First-attempt success
-* Average attempts per solved problem
-* Language usage and acceptance rates
-* Recently solved problems
-* Frequently attempted unsolved problems
-* Active practice days
-* Submission performance insights
-* Total active problem-solving time
-* Average and median time per submission
-* Average time to first accepted solution
-
-## How code execution works
-
-```text
-User solution
-    ↓
-Monaco editor
-    ↓
-Language-specific runner wrapper
-    ↓
-Next.js execution or submission route
-    ↓
-JDoodle execution API
-    ↓
-Structured output parsing
-    ↓
-Expected-output comparison
-    ↓
-Result returned to the interface
-    ↓
-Submission and progress saved in Supabase
-```
-
-### Run flow
-
-The client creates a runner script using the selected language, problem entry point and visible test cases.
-
-The script is sent to:
-
-```text
-POST /api/execute
-```
-
-The API route forwards it to JDoodle and returns the execution response to the console.
-
-### Submit flow
-
-The editor sends the original source code, selected language and active-time measurement to:
-
-```text
-POST /api/submit/[slug]
-```
-
-The server then:
+When a solution is submitted, the server:
 
 1. Verifies the authenticated user.
-2. Loads the problem and its submission test cases.
-3. Builds the appropriate language-specific script.
-4. Executes the script through JDoodle.
-5. Parses the structured result for each case.
-6. Normalises and compares the actual and expected outputs.
-7. Records the submission in Supabase.
-8. Updates the user's completion status when accepted.
-9. Returns the result and failed-case information to the editor.
+2. Loads the problem and its hidden test cases.
+3. Generates the appropriate language-specific runner.
+4. Executes the solution through the JDoodle API.
+5. Parses structured test results.
+6. Normalises and compares actual and expected outputs.
+7. Records the submission in PostgreSQL.
+8. Updates the user's problem-completion state when accepted.
+9. Returns the result and failed-case information to the workspace.
 
-Keeping submission evaluation in a server route prevents the client from deciding whether its own solution should be accepted.
-
-## Engineering highlights
+Keeping submission evaluation on the server prevents the browser from deciding whether its own solution should be accepted.
 
 ### Cross-language execution
 
-JavaScript, Python, Java and C# require different approaches to:
+JavaScript, Python, Java and C# require different handling for:
 
-* Calling the user's solution
-* Constructing arrays, lists and objects
-* Serialising return values
-* Representing booleans and null values
-* Capturing compilation and runtime errors
+* invoking user-defined solutions
+* constructing arrays, lists and objects
+* serialising return values
+* representing booleans and null values
+* handling compilation and runtime errors
 
-Codey uses language-specific wrappers while retaining a common result format for the rest of the application.
+Codey uses language-specific runner wrappers while converting execution results into a shared representation used by the judge and interface.
 
-### Structured runner output
+### Structured execution results
 
-Runner scripts emit machine-readable result markers. The application separates these structured results from ordinary user logs before evaluating each test case.
+User programs can print arbitrary output, so ordinary console output cannot safely be treated as judge data.
 
-This prevents normal console output from being mistaken for a judge result.
+Runner scripts emit machine-readable result markers separately from user logs. Codey parses those structured results before evaluating each test case.
 
-### Output normalisation
-
-Outputs may arrive as JSON, language-specific literals or plain text. The comparison layer attempts structured parsing first and falls back to trimmed text comparison when necessary.
-
-The comparison decision remains separate from how failed output is presented in the interface.
+Outputs may arrive as JSON, language-specific literals or plain text. The comparison layer attempts structured parsing and normalisation before falling back to trimmed text comparison.
 
 ### Persistent editor state
 
-Draft code is stored independently for each:
+Draft code is stored independently for each combination of:
 
 ```text
 problem + programming language
 ```
 
-Switching languages or leaving a problem does not discard the user's work. Authenticated users can also retrieve their latest database-backed submission.
+Switching languages or leaving a problem does not discard the user's work.
 
-### Analytics architecture
+Authenticated users can also retrieve their most recently submitted solution for a problem and language.
 
-The analytics implementation separates:
+### Authentication and data access
 
-1. Database retrieval
-2. Metric calculation
-3. Chart and component presentation
+Authentication and application data are managed with Supabase.
 
-This keeps Supabase queries, analytical logic and interface rendering independently maintainable.
+Row Level Security policies restrict users to their own:
 
-### Data access
+* profile
+* submissions
+* problem-completion records
 
-Supabase Row Level Security policies restrict users to their own:
+Administrative database operations use a separate server-only Supabase client.
 
-* Profile
-* Submissions
-* Problem-completion records
+### Analytics
 
-Administrative operations use a separate server-only Supabase client.
+The analytics system separates:
 
-## Technology stack
+1. database retrieval
+2. metric calculation
+3. presentation
 
-| Area                        | Technologies                      |
-| --------------------------- | --------------------------------- |
-| Framework                   | Next.js 15, React 19              |
-| Language                    | TypeScript                        |
-| Styling                     | Tailwind CSS, shadcn/ui, Radix UI |
-| Editor                      | Monaco Editor                     |
-| Authentication              | Supabase Auth                     |
-| Database                    | Supabase, PostgreSQL              |
-| Code execution              | JDoodle API                       |
-| Charts                      | Recharts                          |
-| Icons                       | Lucide React                      |
-| Theme support               | next-themes                       |
-| Validation and sanitisation | TypeScript guards, sanitize-html  |
+Users can track:
 
-## Project structure
+* solved problems by difficulty
+* submission and acceptance trends
+* completion rate
+* language usage and acceptance rates
+* attempts per problem
+* recently solved problems
+* active practice days
+* total problem-solving time
+* average and median submission time
+* average time to first accepted solution
+
+## Architecture
+
+```mermaid
+flowchart TD
+    A[User solution] --> B[Monaco Editor]
+
+    B --> C{Action}
+
+    C -->|Run| D[Execute API]
+    C -->|Submit| E[Submission API]
+
+    D --> F[Visible / Custom Test Cases]
+    E --> G[Hidden Test Cases]
+
+    F --> H[Language-specific Runner]
+    G --> H
+
+    H --> I[JDoodle API]
+
+    I --> J[Structured Result Parsing]
+    J --> K[Output Normalisation]
+    K --> L[Expected Output Comparison]
+
+    L --> M[Result returned to UI]
+    L -->|Submission| N[(Supabase / PostgreSQL)]
+
+    N --> O[Submission History]
+    N --> P[Problem Progress]
+    N --> Q[Analytics]
+```
+
+### Run
+
+**Run** lets users execute their solution against visible or custom test cases without creating a submission.
+
+```text
+Editor
+  ↓
+POST /api/execute
+  ↓
+Language-specific runner
+  ↓
+JDoodle
+  ↓
+Parsed test results
+  ↓
+Console
+```
+
+### Submit
+
+**Submit** evaluates the solution against the complete server-side test suite and records the attempt.
+
+```text
+Editor
+  ↓
+POST /api/submit/[slug]
+  ↓
+Authentication
+  ↓
+Hidden test cases
+  ↓
+Language-specific runner
+  ↓
+JDoodle
+  ↓
+Result parsing and comparison
+  ↓
+Submission persistence
+  ↓
+Progress update
+```
+
+## Screenshots
+
+### Problem workspace
+
+<!-- Add problem workspace screenshot here -->
+
+### Analytics dashboard
+
+<!-- Add analytics dashboard screenshot here -->
+
+### Submission history
+
+<!-- Add submission history screenshot here -->
+
+## Technology Stack
+
+| Area           | Technology                        |
+| -------------- | --------------------------------- |
+| Frontend       | Next.js 16, React 19, TypeScript  |
+| UI             | Tailwind CSS, shadcn/ui, Radix UI |
+| Code editor    | Monaco Editor                     |
+| Backend        | Next.js Route Handlers            |
+| Database       | PostgreSQL / Supabase             |
+| Authentication | Supabase Auth                     |
+| Code execution | JDoodle API                       |
+| Charts         | Recharts                          |
+| Deployment     | Vercel                            |
+
+## Project Structure
 
 ```text
 Codey/
 ├── app/
-│   ├── (site)/                    # Public and authenticated pages
-│   │   ├── problems/              # Problem catalogue and problem routes
-│   │   ├── submission-history/    # Grouped submission history
-│   │   ├── account/               # User account management
-│   │   └── components/            # Landing page and analytics
+│   ├── (site)/
+│   │   ├── problems/
+│   │   ├── submission-history/
+│   │   ├── account/
+│   │   └── components/
 │   ├── api/
-│   │   ├── execute/               # Run-code API route
-│   │   └── submit/[slug]/         # Server-side submission judge
+│   │   ├── execute/
+│   │   └── submit/[slug]/
 │   ├── components/
-│   │   ├── editor/                # Editor, runner and console logic
-│   │   └── ProblemWorkspace/      # Problem interface and tabs
-│   └── data/                      # Problem definitions and test cases
-├── components/ui/                 # Shared shadcn UI components
-├── lib/                           # Shared types and utilities
-├── public/                        # Static assets
-├── supabase/migrations/           # Database migrations
-├── utils/supabase/                # Browser, server and admin clients
-└── middleware.ts                  # Supabase session middleware
+│   │   ├── editor/
+│   │   └── ProblemWorkspace/
+│   └── data/
+├── components/
+│   └── ui/
+├── lib/
+├── public/
+├── supabase/
+│   └── migrations/
+├── utils/
+│   └── supabase/
+└── middleware.ts
 ```
 
-## Getting started
+## Getting Started
 
 ### Prerequisites
 
 * Node.js 20 or later
 * npm
-* A Supabase project
+* Supabase project
 * JDoodle API credentials
 
 ### 1. Clone the repository
@@ -274,17 +270,15 @@ JDOODLE_CLIENT_ID="your-jdoodle-client-id"
 JDOODLE_CLIENT_SECRET="your-jdoodle-client-secret"
 ```
 
-`SUPABASE_SECRET_KEY` and the JDoodle credentials must remain server-only. Do not prefix them with `NEXT_PUBLIC_`.
+`SUPABASE_SECRET_KEY` and the JDoodle credentials must remain server-only and must not use the `NEXT_PUBLIC_` prefix.
 
 ### 4. Configure Supabase
 
-Apply the SQL migrations from:
+Apply the SQL migrations in:
 
 ```text
 supabase/migrations/
 ```
-
-The application expects the relevant Supabase tables, relationships and Row Level Security policies to be available.
 
 The IDs stored in the database `problems` table must correspond to the `problemID` values in the problem catalogue because submissions and completion records reference those IDs.
 
@@ -294,65 +288,26 @@ The IDs stored in the database `problems` table must correspond to the `problemI
 npm run dev
 ```
 
-Open:
+Then open:
 
 ```text
 http://localhost:3000
 ```
 
-## Available scripts
+## Limitations
 
-```bash
-npm run dev
-```
+Codey is designed as a portfolio-scale online judge rather than a production sandboxing platform.
 
-Starts the development server.
-
-```bash
-npm run build
-```
-
-Creates a production build.
-
-```bash
-npm start
-```
-
-Runs the production build.
-
-## Current limitations
-
-Codey is a personal learning project rather than a production code-execution service.
-
-Current limitations include:
-
-* Code execution depends on the JDoodle API.
-* JDoodle request, output and usage limits apply.
-* Large outputs may be truncated by the external execution service.
+* Code execution depends on the JDoodle API and its request limits.
+* Large execution outputs may be truncated by the external execution service.
 * The problem catalogue is curated rather than user-generated.
-* Execution is not intended to provide the isolation guarantees of a dedicated container-based judge.
-* Some earlier Prisma artefacts remain in the repository, while the active application data flow uses Supabase directly.
-
-## Purpose
-
-The project was created to develop practical experience with:
-
-* Full-stack TypeScript development
-* Next.js server and client boundaries
-* Third-party execution APIs
-* Cross-language code generation
-* Authentication and authorisation
-* Relational data modelling
-* Row Level Security
-* Stateful editor interfaces
-* Responsive data visualisation
-* Error handling across distributed application layers
+* Execution does not provide the isolation guarantees of a dedicated container-based judging infrastructure.
 
 ## Acknowledgements
 
 Codey is inspired by coding-practice platforms such as LeetCode and by the structured topic-based approach of NeetCode.
 
-It is an independent personal learning project and is not affiliated with either platform.
+It is an independent project and is not affiliated with either platform.
 
 ## License
 
